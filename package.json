@@ -1,0 +1,37 @@
+{
+  "name": "zod-kit",
+  "version": "1.0.0",
+  "description": "Zod Kit",
+  "keywords": [
+    "zod",
+    "kit"
+  ],
+  "homepage": "https://github.com/hy-ong/zod-kit#readme",
+  "bugs": {
+    "url": "https://github.com/hy-ong/zod-kit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hy-ong/zod-kit.git"
+  },
+  "license": "ISC",
+  "author": "Ong Hoe Yuan",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "eslint": "^9.32.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0",
+    "vitest": "^3.2.4"
+  }
+}
