@@ -1,4 +1,4 @@
-# Zod Kit
+# Zod Helpers
 
 A TypeScript library that provides common validation schemas built on top of [Zod](https://github.com/colinhacks/zod) with internationalization support.
 
@@ -13,16 +13,16 @@ A TypeScript library that provides common validation schemas built on top of [Zo
 ## Installation
 
 ```bash
-npm install zod-kit
+npm install zod-helpers 
 ```
 
 ## Quick Start
 
 ```typescript
-import { email, password, text, number } from 'zod-kit'
+import {email, password, text, number} from 'zod-helpers'
 
 // Email validation
-const emailSchema = email({ label: 'Email' })
+const emailSchema = email({label: 'Email'})
 emailSchema.parse('user@example.com') // ✅
 
 // Password validation with requirements
@@ -46,82 +46,89 @@ const nameSchema = text({
 ## Available Schemas
 
 ### Email
+
 ```typescript
 email({
   label: string,           // Field label for error messages
-  required?: boolean,      // Default: true
-  domain?: string,         // Restrict to specific domain
-  min?: number,           // Minimum length
-  max?: number,           // Maximum length
-  includes?: string       // Must include substring
+  required? : boolean,      // Default: true
+  domain? : string,         // Restrict to specific domain
+  min? : number,           // Minimum length
+  max? : number,           // Maximum length
+  includes? : string       // Must include substring
 })
 ```
 
 ### Password
+
 ```typescript
 password({
   label: string,          // Field label for error messages
-  required?: boolean,     // Default: true
-  min?: number,          // Minimum length
-  max?: number,          // Maximum length
-  uppercase?: boolean,   // Require uppercase letters
-  lowercase?: boolean,   // Require lowercase letters
-  digits?: boolean,      // Require digits
-  special?: boolean      // Require special characters
+  required? : boolean,     // Default: true
+  min? : number,          // Minimum length
+  max? : number,          // Maximum length
+  uppercase? : boolean,   // Require uppercase letters
+  lowercase? : boolean,   // Require lowercase letters
+  digits? : boolean,      // Require digits
+  special? : boolean      // Require special characters
 })
 ```
 
 ### Text
+
 ```typescript
 text({
   label: string,          // Field label for error messages
-  required?: boolean,     // Default: true
-  min?: number,          // Minimum length
-  max?: number,          // Maximum length
-  includes?: string,     // Must include substring
-  regex?: RegExp         // Custom regex pattern
+  required? : boolean,     // Default: true
+  min? : number,          // Minimum length
+  max? : number,          // Maximum length
+  includes? : string,     // Must include substring
+  regex? : RegExp         // Custom regex pattern
 })
 ```
 
 ### Number
+
 ```typescript
 number({
   label: string,          // Field label for error messages
-  required?: boolean,     // Default: true
-  min?: number,          // Minimum value
-  max?: number,          // Maximum value
-  positive?: boolean,    // Must be positive
-  negative?: boolean,    // Must be negative
-  finite?: boolean       // Must be finite
+  required? : boolean,     // Default: true
+  min? : number,          // Minimum value
+  max? : number,          // Maximum value
+  positive? : boolean,    // Must be positive
+  negative? : boolean,    // Must be negative
+  finite? : boolean       // Must be finite
 })
 ```
 
 ### Integer
+
 ```typescript
 integer({
   label: string,          // Field label for error messages
-  required?: boolean,     // Default: true
-  min?: number,          // Minimum value
-  max?: number,          // Maximum value
-  positive?: boolean,    // Must be positive
-  negative?: boolean     // Must be negative
+  required? : boolean,     // Default: true
+  min? : number,          // Minimum value
+  max? : number,          // Maximum value
+  positive? : boolean,    // Must be positive
+  negative? : boolean     // Must be negative
 })
 ```
 
 ### URL
+
 ```typescript
 url({
   label: string,          // Field label for error messages
-  required?: boolean,     // Default: true
-  protocol?: string[]     // Allowed protocols (e.g., ['https'])
+  required? : boolean,     // Default: true
+  protocol? : string[]     // Allowed protocols (e.g., ['https'])
 })
 ```
 
 ### Boolean
+
 ```typescript
 boolean({
   label: string,          // Field label for error messages
-  required?: boolean      // Default: true
+  required? : boolean      // Default: true
 })
 ```
 
@@ -130,7 +137,7 @@ boolean({
 Set the locale for error messages:
 
 ```typescript
-import { setLocale } from 'zod-kit'
+import {setLocale} from 'zod-helpers'
 
 // Set to English (default is Traditional Chinese)
 setLocale('en')
