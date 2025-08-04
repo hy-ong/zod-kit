@@ -1,4 +1,4 @@
-# Zod Helpers
+# Zod Kit
 
 A TypeScript library that provides common validation schemas built on top of [Zod](https://github.com/colinhacks/zod) with internationalization support.
 
@@ -13,16 +13,16 @@ A TypeScript library that provides common validation schemas built on top of [Zo
 ## Installation
 
 ```bash
-npm install zod-helpers 
+npm install zod-kit 
 ```
 
 ## Quick Start
 
 ```typescript
-import {email, password, text, number} from 'zod-helpers'
+import { email, password, text, number } from 'zod-kit'
 
 // Email validation
-const emailSchema = email({label: 'Email'})
+const emailSchema = email({ label: 'Email' })
 emailSchema.parse('user@example.com') // ✅
 
 // Password validation with requirements
@@ -137,7 +137,7 @@ boolean({
 Set the locale for error messages:
 
 ```typescript
-import {setLocale} from 'zod-helpers'
+import { setLocale } from 'zod-kit'
 
 // Set to English (default is Traditional Chinese)
 setLocale('en')

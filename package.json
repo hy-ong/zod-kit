@@ -1,18 +1,19 @@
 {
-  "name": "zod-helpers",
-  "version": "1.0.1",
-  "description": "Zod Helpers",
+  "name": "@hy_ong/zod-kit",
+  "version": "0.0.1",
+  "description": "Zod Kit",
   "keywords": [
     "zod",
-    "helpers"
+    "kit",
+    "zod-kit"
   ],
-  "homepage": "https://github.com/hy-ong/zod-helpers#readme",
+  "homepage": "https://github.com/hy-ong/zod-kit#readme",
   "bugs": {
-    "url": "https://github.com/hy-ong/zod-helpers/issues"
+    "url": "https://github.com/hy-ong/zod-kit/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hy-ong/zod-helpers.git"
+    "url": "git+https://github.com/hy-ong/zod-kit.git"
   },
   "license": "ISC",
   "author": "Ong Hoe Yuan",
