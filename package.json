@@ -15,6 +15,9 @@
     "type": "git",
     "url": "git+https://github.com/hy-ong/zod-kit.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "ISC",
   "author": "Ong Hoe Yuan",
   "type": "commonjs",
