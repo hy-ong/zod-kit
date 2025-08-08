@@ -1,8 +1,9 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Zod Kit",
   "keywords": [
+    "hy_ong",
     "zod",
     "kit",
     "zod-kit"
@@ -21,7 +22,16 @@
   "license": "ISC",
   "author": "Ong Hoe Yuan",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
     "test": "vitest"
