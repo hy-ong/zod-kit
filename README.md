@@ -19,7 +19,7 @@ npm install zod-kit
 ## Quick Start
 
 ```typescript
-import { email, password, text, number } from 'zod-kit'
+import { email, password, text, number } from '@hy_ong/zod-kit'
 
 // Email validation
 const emailSchema = email({ label: 'Email' })
@@ -137,7 +137,7 @@ boolean({
 Set the locale for error messages:
 
 ```typescript
-import { setLocale } from 'zod-kit'
+import { setLocale } from '@hy_ong/zod-kit'
 
 // Set to English (default is Traditional Chinese)
 setLocale('en')
