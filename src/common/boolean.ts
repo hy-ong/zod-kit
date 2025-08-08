@@ -3,7 +3,6 @@ import { t } from "../i18n"
 
 export type BooleanOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
-  label: string
   defaultValue?: IsRequired extends true ? boolean : boolean | null
   shouldBe?: boolean
 }
@@ -11,7 +10,7 @@ export type BooleanOptions<IsRequired extends boolean = true> = {
 export type BooleanSchema<IsRequired extends boolean> = IsRequired extends true ? ZodBoolean : ZodNullable<ZodBoolean>
 
 export function boolean<IsRequired extends boolean = true>(options?: BooleanOptions<IsRequired>): BooleanSchema<IsRequired> {
-  const { required = true, label, defaultValue = null, shouldBe } = options ?? {}
+  const { required = true, defaultValue = null, shouldBe } = options ?? {}
 
   let result: ZodType = z.preprocess(
     (val) => {
@@ -24,13 +23,13 @@ export function boolean<IsRequired extends boolean = true>(options?: BooleanOpti
   )
 
   if (required && defaultValue === null) {
-    result = result.refine((val) => val !== null, { message: t("common.boolean.required", { label }) })
+    result = result.refine((val) => val !== null, { message: t("common.boolean.required") })
   }
 
   if (shouldBe === true) {
-    result = result.refine((val) => val === true, { message: t("common.boolean.shouldBe.true", { label }) })
+    result = result.refine((val) => val === true, { message: t("common.boolean.shouldBe.true") })
   } else if (shouldBe === false) {
-    result = result.refine((val) => val === false, { message: t("common.boolean.shouldBe.false", { label }) })
+    result = result.refine((val) => val === false, { message: t("common.boolean.shouldBe.false") })
   }
 
   return result as IsRequired extends true ? ZodBoolean : ZodNullable<ZodBoolean>

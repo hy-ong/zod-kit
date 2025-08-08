@@ -11,7 +11,6 @@ dayjs.extend(customParseFormat)
 
 export type DateOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
-  label: string
   min?: number
   max?: number
   format?: string
@@ -22,7 +21,7 @@ export type DateOptions<IsRequired extends boolean = true> = {
 export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 export function date<IsRequired extends boolean = true>(options?: DateOptions<IsRequired>): DateSchema<IsRequired> {
-  const { required = true, label, min, max, format = "YYYY-MM-DD", includes, defaultValue = null } = options ?? {}
+  const { required = true, min, max, format = "YYYY-MM-DD", includes, defaultValue = null } = options ?? {}
 
   const baseSchema = required
     ? z.preprocess((val) => (val === "" || val === null || val === undefined ? defaultValue : val), z.coerce.string().trim())
@@ -34,11 +33,11 @@ export function date<IsRequired extends boolean = true>(options?: DateOptions<Is
         if (!val) return !required
         return dayjs(val, format, true).isValid()
       },
-      { message: t("common.date.format", { label, format }) }
+      { message: t("common.date.format", { format }) }
     )
-    .refine((val) => val === null || min === undefined || dayjs(val, format).isSameOrAfter(dayjs(min, format)), { message: t("common.date.min", { label, min }) })
-    .refine((val) => val === null || max === undefined || dayjs(val, format).isSameOrBefore(dayjs(max, format)), { message: t("common.date.max", { label, max }) })
-    .refine((val) => val === null || includes === undefined || val.includes(includes), { message: t("common.date.includes", { label, includes }) })
+    .refine((val) => val === null || min === undefined || dayjs(val, format).isSameOrAfter(dayjs(min, format)), { message: t("common.date.min", { min }) })
+    .refine((val) => val === null || max === undefined || dayjs(val, format).isSameOrBefore(dayjs(max, format)), { message: t("common.date.max", { max }) })
+    .refine((val) => val === null || includes === undefined || val.includes(includes), { message: t("common.date.includes", { includes }) })
 
   return schema as unknown as DateSchema<IsRequired>
 }

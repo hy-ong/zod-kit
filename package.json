@@ -1,6 +1,6 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Zod Kit",
   "keywords": [
     "hy_ong",
@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.13",
-    "zod": "^4.0.14"
+    "zod": "^4.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -47,7 +47,7 @@
     "prettier": "^3.6.2",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0",
+    "typescript-eslint": "^8.39.0",
     "vitest": "^3.2.4"
   }
 }

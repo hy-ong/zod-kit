@@ -1,65 +1,65 @@
 {
   "common": {
     "boolean": {
-      "required": "請輸入 ${label}",
+      "required": "必填",
       "shouldBe": {
-        "true": "${label} 必須為是",
-        "false": "${label} 必須為否"
+        "true": "必須為是",
+        "false": "必須為否"
       }
     },
     "email": {
-      "required": "請輸入 ${label}",
-      "min": "${label} 長度至少 ${min} 字元",
-      "max": "${label} 長度最多 ${max} 字元",
-      "includes": "${label} 必須包含「${includes}」",
-      "invalid": "${label} 格式錯誤",
-      "domain": "${label} 必須為 @${domain} 網域"
+      "required": "必填",
+      "min": "長度至少 ${min} 字元",
+      "max": "長度最多 ${max} 字元",
+      "includes": "必須包含「${includes}」",
+      "invalid": "格式錯誤",
+      "domain": "必須為 @${domain} 網域"
     },
     "url": {
-      "required": "請輸入 ${label}",
-      "min": "${label} 長度至少 ${min} 字元",
-      "max": "${label} 長度最多 ${max} 字元",
-      "includes": "${label} 必須包含「${includes}」",
-      "invalid": "${label} 格式錯誤"
+      "required": "必填",
+      "min": "長度至少 ${min} 字元",
+      "max": "長度最多 ${max} 字元",
+      "includes": "必須包含「${includes}」",
+      "invalid": "格式錯誤"
     },
     "password": {
-      "required": "請輸入 ${label}",
-      "min": "${label} 長度至少 ${min} 字元",
-      "max": "${label} 長度最多 ${max} 字元",
-      "uppercase": "${label} 必須包含至少一個大寫字母",
-      "lowercase": "${label} 必須包含至少一個小寫字母",
-      "digits": "${label} 必須包含至少一個數字",
-      "special": "${label} 必須包含至少一個特殊符號"
+      "required": "必填",
+      "min": "長度至少 ${min} 字元",
+      "max": "長度最多 ${max} 字元",
+      "uppercase": "必須包含至少一個大寫字母",
+      "lowercase": "必須包含至少一個小寫字母",
+      "digits": "必須包含至少一個數字",
+      "special": "必須包含至少一個特殊符號"
     },
     "number": {
-      "required": "請輸入 ${label}",
-      "min": "${label} 最小值 ${min}",
-      "max": "${label} 最大值 ${max}"
+      "required": "必填",
+      "min": "最小值 ${min}",
+      "max": "最大值 ${max}"
     },
     "id": {
-      "required": "請選擇 ${label}",
-      "invalid": "${label} 無效"
+      "required": "請選擇",
+      "invalid": "無效"
     },
     "integer": {
-      "required": "請輸入 ${label}",
-      "min": "${label} 最小值 ${min}",
-      "max": "${label} 最大值 ${max}",
-      "integer": "${label} 必須為整數"
+      "required": "必填",
+      "min": "最小值 ${min}",
+      "max": "最大值 ${max}",
+      "integer": "必須為整數"
     },
     "float": {
-      "required": "請輸入 ${label}",
-      "float": "${label} 必須為浮點數",
-      "min": "${label} 最小值 ${min}",
-      "max": "${label} 最大值 ${max}"
+      "required": "必填",
+      "float": "必須為浮點數",
+      "min": "最小值 ${min}",
+      "max": "最大值 ${max}"
     },
     "text": {
-      "required": "請輸入 ${label}",
-      "min": "${label} 長度至少 ${min} 字元",
-      "max": "${label} 長度最多 ${max} 字元",
-      "startsWith": "${label} 必須以「${startsWith}」開頭",
-      "endsWith": "${label} 必須以「${endsWith}」結尾",
-      "includes": "${label} 必須包含「${includes}」",
-      "invalid": "${label} 格式錯誤"
+      "required": "必填",
+      "min": "長度至少 ${min} 字元",
+      "max": "長度最多 ${max} 字元",
+      "startsWith": "必須以「${startsWith}」開頭",
+      "endsWith": "必須以「${endsWith}」結尾",
+      "includes": "必須包含「${includes}」",
+      "invalid": "格式錯誤"
     }
   }
 }
