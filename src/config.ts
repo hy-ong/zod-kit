@@ -1,6 +1,6 @@
 export type Locale = "zh-TW" | "en"
 
-let currentLocale: Locale = "zh-TW"
+let currentLocale: Locale = "en"
 
 export const setLocale = (locale: Locale) => {
   currentLocale = locale

@@ -139,11 +139,11 @@ Set the locale for error messages:
 ```typescript
 import { setLocale } from '@hy_ong/zod-kit'
 
-// Set to English (default is Traditional Chinese)
-setLocale('en')
-
-// Set to Traditional Chinese
+// Set to Traditional Chinese (default is English)
 setLocale('zh-TW')
+
+// Set to English (default)
+setLocale('en')
 ```
 
 ## Optional Fields
