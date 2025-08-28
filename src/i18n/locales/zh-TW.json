@@ -8,11 +8,14 @@
     },
     "email": {
       "required": "必填",
-      "min": "長度至少 ${min} 字元",
-      "max": "長度最多 ${max} 字元",
+      "invalid": "電子郵件格式錯誤",
+      "minLength": "長度至少 ${minLength} 字元",
+      "maxLength": "長度最多 ${maxLength} 字元",
       "includes": "必須包含「${includes}」",
-      "invalid": "格式錯誤",
-      "domain": "必須為 @${domain} 網域"
+      "domain": "必須為 ${domain} 網域",
+      "domainBlacklist": "不允許使用 ${domain} 網域",
+      "businessOnly": "僅允許企業郵箱地址",
+      "noDisposable": "不允許使用臨時郵箱地址"
     },
     "url": {
       "required": "必填",

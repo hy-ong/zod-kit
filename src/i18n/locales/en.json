@@ -8,11 +8,14 @@
     },
     "email": {
       "required": "Required",
-      "min": "Must be at least ${min} characters",
-      "max": "Must be at most ${max} characters",
+      "invalid": "Invalid email format",
+      "minLength": "Must be at least ${minLength} characters",
+      "maxLength": "Must be at most ${maxLength} characters",
       "includes": "Must include ${includes}",
-      "invalid": "Invalid format",
-      "domain": "Must be under the domain @${domain}"
+      "domain": "Must be from domain: ${domain}",
+      "domainBlacklist": "Domain ${domain} is not allowed",
+      "businessOnly": "Only business email addresses are allowed",
+      "noDisposable": "Disposable email addresses are not allowed"
     },
     "url": {
       "required": "Required",
