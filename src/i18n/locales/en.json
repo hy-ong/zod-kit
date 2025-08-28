@@ -50,11 +50,13 @@
     },
     "text": {
       "required": "Required",
-      "min": "Must be at least ${min} characters",
-      "max": "Must be at most ${max} characters",
+      "notEmpty": "Cannot be empty or whitespace only",
+      "minLength": "Must be at least ${minLength} characters",
+      "maxLength": "Must be at most ${maxLength} characters",
       "startsWith": "Must start with ${startsWith}",
       "endsWith": "Must end with ${endsWith}",
       "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
       "invalid": "Invalid format"
     },
     "date": {

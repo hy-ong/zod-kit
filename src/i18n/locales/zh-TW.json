@@ -54,12 +54,21 @@
     },
     "text": {
       "required": "必填",
-      "min": "長度至少 ${min} 字元",
-      "max": "長度最多 ${max} 字元",
+      "notEmpty": "不可為空白或僅含空格",
+      "minLength": "長度至少 ${minLength} 字元",
+      "maxLength": "長度最多 ${maxLength} 字元",
       "startsWith": "必須以「${startsWith}」開頭",
       "endsWith": "必須以「${endsWith}」結尾",
       "includes": "必須包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
       "invalid": "格式錯誤"
+    },
+    "date": {
+      "required": "必填",
+      "min": "日期不得早於 ${min}",
+      "max": "日期不得晚於 ${max}",
+      "includes": "必須包含「${includes}」",
+      "format": "必須為 ${format} 格式"
     }
   }
 }
