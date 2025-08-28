@@ -2,10 +2,9 @@
   "common": {
     "boolean": {
       "required": "必填",
-      "shouldBe": {
-        "true": "必須為是",
-        "false": "必須為否"
-      }
+      "shouldBeTrue": "必須為是",
+      "shouldBeFalse": "必須為否",
+      "invalid": "必須為布林值"
     },
     "email": {
       "required": "必填",

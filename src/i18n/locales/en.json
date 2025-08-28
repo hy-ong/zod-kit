@@ -2,10 +2,9 @@
   "common": {
     "boolean": {
       "required": "Required",
-      "shouldBe": {
-        "true": "Must be True",
-        "false": "Must be False"
-      }
+      "shouldBeTrue": "Must be True",
+      "shouldBeFalse": "Must be False",
+      "invalid": "Must be a boolean value"
     },
     "email": {
       "required": "Required",
