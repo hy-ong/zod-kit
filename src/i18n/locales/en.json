@@ -32,20 +32,18 @@
     },
     "number": {
       "required": "Required",
-      "min": "Must be at least ${min}",
-      "max": "Must be at most ${max}"
-    },
-    "integer": {
-      "required": "Required",
+      "invalid": "Must be a valid number",
+      "integer": "Must be an integer",
+      "float": "Must be a decimal number",
       "min": "Must be at least ${min}",
       "max": "Must be at most ${max}",
-      "integer": "Must be an integer"
-    },
-    "float": {
-      "required": "Required",
-      "min": "Must be at least ${min}",
-      "max": "Must be at most ${max}",
-      "float": "Must be an float"
+      "positive": "Must be positive",
+      "negative": "Must be negative", 
+      "nonNegative": "Must be non-negative",
+      "nonPositive": "Must be non-positive",
+      "multipleOf": "Must be a multiple of ${multipleOf}",
+      "finite": "Must be a finite number",
+      "precision": "Must have at most ${precision} decimal places"
     },
     "text": {
       "required": "Required",

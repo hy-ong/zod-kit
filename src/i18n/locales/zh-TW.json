@@ -32,24 +32,22 @@
     },
     "number": {
       "required": "必填",
+      "invalid": "必須為有效數字",
+      "integer": "必須為整數",
+      "float": "必須為小數",
       "min": "最小值 ${min}",
-      "max": "最大值 ${max}"
+      "max": "最大值 ${max}",
+      "positive": "必須為正數",
+      "negative": "必須為負數",
+      "nonNegative": "不可為負數",
+      "nonPositive": "不可為正數",
+      "multipleOf": "必須為 ${multipleOf} 的倍數",
+      "finite": "必須為有限數字",
+      "precision": "小數位數不可超過 ${precision} 位"
     },
     "id": {
       "required": "請選擇",
       "invalid": "無效"
-    },
-    "integer": {
-      "required": "必填",
-      "min": "最小值 ${min}",
-      "max": "最大值 ${max}",
-      "integer": "必須為整數"
-    },
-    "float": {
-      "required": "必填",
-      "float": "必須為浮點數",
-      "min": "最小值 ${min}",
-      "max": "最大值 ${max}"
     },
     "text": {
       "required": "必填",
