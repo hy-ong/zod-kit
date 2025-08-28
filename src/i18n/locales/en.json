@@ -19,10 +19,23 @@
     },
     "url": {
       "required": "Required",
+      "invalid": "Invalid URL format",
       "min": "Must be at least ${min} characters",
       "max": "Must be at most ${max} characters",
       "includes": "Must include ${includes}",
-      "invalid": "Invalid format"
+      "excludes": "Must not contain ${excludes}",
+      "protocol": "Protocol must be one of: ${protocols}",
+      "domain": "Domain must be one of: ${domains}",
+      "domainBlacklist": "Domain ${domain} is not allowed",
+      "port": "Port must be one of: ${ports}",
+      "pathStartsWith": "Path must start with ${path}",
+      "pathEndsWith": "Path must end with ${path}",
+      "hasQuery": "URL must have query parameters",
+      "noQuery": "URL must not have query parameters",
+      "hasFragment": "URL must have a fragment",
+      "noFragment": "URL must not have a fragment",
+      "localhost": "Localhost URLs are not allowed",
+      "noLocalhost": "Localhost URLs are not allowed"
     },
     "password": {
       "required": "Required",

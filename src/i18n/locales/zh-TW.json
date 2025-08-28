@@ -19,10 +19,23 @@
     },
     "url": {
       "required": "必填",
+      "invalid": "無效的 URL 格式",
       "min": "長度至少 ${min} 字元",
       "max": "長度最多 ${max} 字元",
       "includes": "必須包含「${includes}」",
-      "invalid": "格式錯誤"
+      "excludes": "不得包含「${excludes}」",
+      "protocol": "協議必須為：${protocols}",
+      "domain": "網域必須為：${domains}",
+      "domainBlacklist": "不允許使用網域 ${domain}",
+      "port": "連接埠必須為：${ports}",
+      "pathStartsWith": "路徑必須以「${path}」開頭",
+      "pathEndsWith": "路徑必須以「${path}」結尾",
+      "hasQuery": "URL 必須包含查詢參數",
+      "noQuery": "URL 不得包含查詢參數",
+      "hasFragment": "URL 必須包含錨點",
+      "noFragment": "URL 不得包含錨點",
+      "localhost": "不允許使用本機 URL",
+      "noLocalhost": "不允許使用本機 URL"
     },
     "password": {
       "required": "必填",
