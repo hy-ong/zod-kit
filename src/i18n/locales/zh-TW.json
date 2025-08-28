@@ -65,10 +65,18 @@
     },
     "date": {
       "required": "必填",
+      "invalid": "無效日期",
+      "format": "必須為 ${format} 格式",
       "min": "日期不得早於 ${min}",
       "max": "日期不得晚於 ${max}",
       "includes": "必須包含「${includes}」",
-      "format": "必須為 ${format} 格式"
+      "excludes": "不得包含「${excludes}」",
+      "past": "必須為過去的日期",
+      "future": "必須為未來的日期",
+      "today": "必須為今天",
+      "notToday": "不得為今天",
+      "weekday": "必須為工作日（週一至週五）",
+      "weekend": "必須為週末（週六至週日）"
     }
   }
 }

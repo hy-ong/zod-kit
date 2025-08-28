@@ -61,10 +61,18 @@
     },
     "date": {
       "required": "Required",
-      "min": "Must be at least ${min} characters",
-      "max": "Must be at most ${max} characters",
+      "invalid": "Invalid date",
+      "format": "Must be in ${format} format",
+      "min": "Date must be on or after ${min}",
+      "max": "Date must be on or before ${max}",
       "includes": "Must include ${includes}",
-      "format": "Must be in ${format} format"
+      "excludes": "Must not contain ${excludes}",
+      "past": "Date must be in the past",
+      "future": "Date must be in the future",
+      "today": "Date must be today",
+      "notToday": "Date must not be today",
+      "weekday": "Date must be a weekday (Monday-Friday)",
+      "weekend": "Date must be a weekend (Saturday-Sunday)"
     }
   }
 }
