@@ -1,6 +1,5 @@
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../i18n"
-import { TextSchema } from "./text"
 
 export type EmailOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
@@ -40,5 +39,5 @@ export function email<IsRequired extends boolean = true>(options?: EmailOptions<
       },
       { message: t("common.email.domain", { domain }) }
     )
-  return schema as unknown as TextSchema<IsRequired>
+  return schema as unknown as EmailSchema<IsRequired>
 }

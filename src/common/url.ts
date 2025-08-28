@@ -1,6 +1,5 @@
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../i18n"
-import { TextSchema } from "./text"
 
 export type UrlOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
@@ -33,5 +32,5 @@ export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRe
     .refine((val) => val === null || max === undefined || val.length <= max, { message: t("common.text.max", { max }) })
     .refine((val) => val === null || includes === undefined || val.includes(includes), { message: t("common.text.includes", { includes }) })
 
-  return schema as unknown as TextSchema<IsRequired>
+  return schema as unknown as UrlSchema<IsRequired>
 }
