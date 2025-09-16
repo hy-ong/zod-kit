@@ -1,6 +1,6 @@
 import { z, ZodNullable, ZodString } from "zod"
-import { t } from "../i18n"
-import { getLocale, type Locale } from "../config"
+import { t } from "../../i18n"
+import { getLocale, type Locale } from "../../config"
 
 export type TextMessages = {
   required?: string

@@ -1,6 +1,6 @@
 import { z, ZodBoolean, ZodNullable, ZodType } from "zod"
-import { t } from "../i18n"
-import { getLocale, type Locale } from "../config"
+import { t } from "../../i18n"
+import { getLocale, type Locale } from "../../config"
 
 export type BooleanMessages = {
   required?: string
@@ -23,17 +23,17 @@ export type BooleanOptions<IsRequired extends boolean = true> = {
 export type BooleanSchema<IsRequired extends boolean> = IsRequired extends true ? ZodBoolean : ZodNullable<ZodBoolean>
 
 export function boolean<IsRequired extends boolean = true>(options?: BooleanOptions<IsRequired>): BooleanSchema<IsRequired> {
-  const { 
-    required = true, 
-    defaultValue = null, 
-    shouldBe, 
+  const {
+    required = true,
+    defaultValue = null,
+    shouldBe,
     truthyValues = [true, "true", 1, "1", "yes", "on"],
     falsyValues = [false, "false", 0, "0", "no", "off"],
     strict = false,
     transform,
-    i18n 
+    i18n,
   } = options ?? {}
-  
+
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof BooleanMessages, params?: Record<string, any>) => {
     if (i18n) {
@@ -50,25 +50,25 @@ export function boolean<IsRequired extends boolean = true>(options?: BooleanOpti
   let result: ZodType = z.preprocess(
     (val) => {
       if (val === "" || val === undefined || val === null) return defaultValue
-      
-      if (strict && typeof val !== 'boolean' && val !== null) {
+
+      if (strict && typeof val !== "boolean" && val !== null) {
         return val // Let it fail in validation
       }
-      
+
       // Check truthy values
       if (truthyValues.includes(val)) {
         let processed = true
         if (transform) processed = transform(processed)
         return processed
       }
-      
+
       // Check falsy values
       if (falsyValues.includes(val)) {
         let processed = false
         if (transform) processed = transform(processed)
         return processed
       }
-      
+
       return val
     },
     z.union([z.literal(true), z.literal(false), z.literal(null)])
@@ -83,11 +83,14 @@ export function boolean<IsRequired extends boolean = true>(options?: BooleanOpti
   } else if (shouldBe === false) {
     result = result.refine((val) => val === false, { message: getMessage("shouldBeFalse") })
   }
-  
+
   if (strict) {
-    result = result.refine((val) => {
-      return val === null || typeof val === 'boolean'
-    }, { message: getMessage("invalid") })
+    result = result.refine(
+      (val) => {
+        return val === null || typeof val === "boolean"
+      },
+      { message: getMessage("invalid") }
+    )
   }
 
   return result as IsRequired extends true ? ZodBoolean : ZodNullable<ZodBoolean>

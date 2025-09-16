@@ -44,7 +44,14 @@
       "uppercase": "必須包含至少一個大寫字母",
       "lowercase": "必須包含至少一個小寫字母",
       "digits": "必須包含至少一個數字",
-      "special": "必須包含至少一個特殊符號"
+      "special": "必須包含至少一個特殊符號",
+      "noRepeating": "不可包含重複字元",
+      "noSequential": "不可包含連續字元",
+      "noCommonWords": "不可包含常見密碼或模式",
+      "minStrength": "密碼強度必須至少為 ${minStrength}",
+      "excludes": "不得包含「${excludes}」",
+      "includes": "必須包含「${includes}」",
+      "invalid": "密碼格式錯誤"
     },
     "number": {
       "required": "必填",

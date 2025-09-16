@@ -1,6 +1,6 @@
 import { z, ZodNullable, ZodString } from "zod"
-import { t } from "../i18n"
-import { getLocale, type Locale } from "../config"
+import { t } from "../../i18n"
+import { getLocale, type Locale } from "../../config"
 
 export type UrlMessages = {
   required?: string
@@ -71,7 +71,7 @@ export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRe
     blockLocalhost,
     transform,
     defaultValue = null,
-    i18n
+    i18n,
   } = options ?? {}
 
   const actualDefaultValue = defaultValue ?? (required ? "" : null)
@@ -104,9 +104,7 @@ export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRe
     return processed
   }
 
-  const baseSchema = required
-    ? z.preprocess(preprocessFn, z.string())
-    : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
@@ -152,16 +150,16 @@ export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRe
 
     // Domain validation
     const hostname = urlObj.hostname.toLowerCase()
-    if (allowedDomains && !allowedDomains.some(domain => hostname === domain || hostname.endsWith(`.${domain}`))) {
+    if (allowedDomains && !allowedDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))) {
       throw new z.ZodError([{ code: "custom", message: getMessage("domain", { domains: allowedDomains.join(", ") }), path: [] }])
     }
-    if (blockedDomains && blockedDomains.some(domain => hostname === domain || hostname.endsWith(`.${domain}`))) {
-      const blockedDomain = blockedDomains.find(domain => hostname === domain || hostname.endsWith(`.${domain}`))
+    if (blockedDomains && blockedDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))) {
+      const blockedDomain = blockedDomains.find((domain) => hostname === domain || hostname.endsWith(`.${domain}`))
       throw new z.ZodError([{ code: "custom", message: getMessage("domainBlacklist", { domain: blockedDomain }), path: [] }])
     }
 
     // Port validation
-    const port = urlObj.port ? parseInt(urlObj.port) : (urlObj.protocol === "https:" ? 443 : 80)
+    const port = urlObj.port ? parseInt(urlObj.port) : urlObj.protocol === "https:" ? 443 : 80
     if (allowedPorts && !allowedPorts.includes(port)) {
       throw new z.ZodError([{ code: "custom", message: getMessage("port", { ports: allowedPorts.join(", ") }), path: [] }])
     }

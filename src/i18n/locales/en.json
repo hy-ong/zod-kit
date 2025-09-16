@@ -44,7 +44,14 @@
       "uppercase": "Must include at least one uppercase letter",
       "lowercase": "Must include at least one lowercase letter",
       "digits": "Must include at least one digit",
-      "special": "Must include at least one special character"
+      "special": "Must include at least one special character",
+      "noRepeating": "Must not contain repeating characters",
+      "noSequential": "Must not contain sequential characters",
+      "noCommonWords": "Must not contain common words or patterns",
+      "minStrength": "Password strength must be at least ${minStrength}",
+      "excludes": "Must not contain ${excludes}",
+      "includes": "Must include ${includes}",
+      "invalid": "Invalid password format"
     },
     "number": {
       "required": "Required",

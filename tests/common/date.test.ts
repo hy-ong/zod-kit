@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { date } from "../../src/common/date"
-import { setLocale } from "../../src"
+import { setLocale, date } from "../../src"
 
 describe("date", () => {
   describe("required (default)", () => {
@@ -202,15 +201,24 @@ describe("date", () => {
   })
 
   describe("time-based validations", () => {
+    // Use local dates to avoid timezone issues
     const today = new Date()
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    const todayStr = today.toISOString().split('T')[0]
-    const yesterdayStr = yesterday.toISOString().split('T')[0]
-    const tomorrowStr = tomorrow.toISOString().split('T')[0]
+    // Format dates in local timezone
+    const formatLocalDate = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    const todayStr = formatLocalDate(today)
+    const yesterdayStr = formatLocalDate(yesterday)
+    const tomorrowStr = formatLocalDate(tomorrow)
 
     describe("mustBePast", () => {
       it("should accept past date", () => {
@@ -329,26 +337,26 @@ describe("date", () => {
 
   describe("transform function", () => {
     it("should apply custom transform function", () => {
-      const schema = date({ 
+      const schema = date({
         format: "YYYY/MM/DD",
-        transform: (val) => val.replace(/-/g, "/") 
+        transform: (val) => val.replace(/-/g, "/"),
       })
       expect(schema.parse("2023-12-25")).toBe("2023/12/25")
     })
 
     it("should apply transform before validation", () => {
-      const schema = date({ 
+      const schema = date({
         format: "YYYY/MM/DD",
-        transform: (val) => val.replace(/-/g, "/")
+        transform: (val) => val.replace(/-/g, "/"),
       })
       expect(schema.parse("2023-12-25")).toBe("2023/12/25")
     })
 
     it("should work with other validations after transform", () => {
-      const schema = date({ 
+      const schema = date({
         format: "YYYY/MM/DD",
         includes: "/",
-        transform: (val) => val.replace(/-/g, "/")
+        transform: (val) => val.replace(/-/g, "/"),
       })
       expect(schema.parse("2023-12-25")).toBe("2023/12/25")
     })
@@ -358,9 +366,9 @@ describe("date", () => {
     it("should use custom English messages", () => {
       const schema = date({
         i18n: {
-          "en": { format: "Custom date format error: ${format}" },
-          "zh-TW": { format: "自定義日期格式錯誤: ${format}" }
-        }
+          en: { format: "Custom date format error: ${format}" },
+          "zh-TW": { format: "自定義日期格式錯誤: ${format}" },
+        },
       })
 
       setLocale("en")
@@ -374,9 +382,9 @@ describe("date", () => {
     it("should use custom Chinese messages", () => {
       const schema = date({
         i18n: {
-          "en": { format: "Custom date format error: ${format}" },
-          "zh-TW": { format: "自定義日期格式錯誤: ${format}" }
-        }
+          en: { format: "Custom date format error: ${format}" },
+          "zh-TW": { format: "自定義日期格式錯誤: ${format}" },
+        },
       })
 
       setLocale("zh-TW")
@@ -390,9 +398,9 @@ describe("date", () => {
     it("should fallback to default messages when custom not provided", () => {
       const schema = date({
         i18n: {
-          "en": { format: "Custom format error" },
-          "zh-TW": { format: "自定義格式錯誤" }
-        }
+          en: { format: "Custom format error" },
+          "zh-TW": { format: "自定義格式錯誤" },
+        },
       })
 
       setLocale("en")
@@ -407,14 +415,14 @@ describe("date", () => {
       const schema = date({
         mustBePast: true,
         i18n: {
-          "en": { past: "Date must be in the past!" },
-          "zh-TW": { past: "日期必須在過去！" }
-        }
+          en: { past: "Date must be in the past!" },
+          "zh-TW": { past: "日期必須在過去！" },
+        },
       })
 
       const tomorrow = new Date()
       tomorrow.setDate(tomorrow.getDate() + 1)
-      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+      const tomorrowStr = tomorrow.toISOString().split("T")[0]
 
       setLocale("en")
       try {

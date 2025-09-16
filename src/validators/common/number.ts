@@ -1,6 +1,6 @@
 import { z, ZodNullable, ZodNumber } from "zod"
-import { t } from "../i18n"
-import { getLocale, type Locale } from "../config"
+import { t } from "../../i18n"
+import { getLocale, type Locale } from "../../config"
 
 export type NumberMessages = {
   required?: string
@@ -23,7 +23,7 @@ export type NumberOptions<IsRequired extends boolean = true> = {
   min?: number
   max?: number
   defaultValue?: IsRequired extends true ? number : number | null
-  type?: 'integer' | 'float' | 'both'
+  type?: "integer" | "float" | "both"
   positive?: boolean
   negative?: boolean
   nonNegative?: boolean
@@ -39,14 +39,14 @@ export type NumberOptions<IsRequired extends boolean = true> = {
 export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ? ZodNumber : ZodNullable<ZodNumber>
 
 export function number<IsRequired extends boolean = true>(options?: NumberOptions<IsRequired>): NumberSchema<IsRequired> {
-  const { 
-    required = true, 
-    min, 
-    max, 
+  const {
+    required = true,
+    min,
+    max,
     defaultValue,
-    type = 'both',
+    type = "both",
     positive,
-    negative, 
+    negative,
     nonNegative,
     nonPositive,
     multipleOf,
@@ -54,9 +54,9 @@ export function number<IsRequired extends boolean = true>(options?: NumberOption
     finite = true,
     transform,
     parseCommas = false,
-    i18n
+    i18n,
   } = options ?? {}
-  
+
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof NumberMessages, params?: Record<string, any>) => {
     if (i18n) {
@@ -69,7 +69,7 @@ export function number<IsRequired extends boolean = true>(options?: NumberOption
     }
     return t(`common.number.${key}`, params)
   }
-  
+
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? null
 
@@ -79,38 +79,38 @@ export function number<IsRequired extends boolean = true>(options?: NumberOption
         if (val === "" || val === undefined || val === null) {
           return actualDefaultValue
         }
-        
+
         // Handle string input
         if (typeof val === "string") {
           let processedVal = val.trim()
-          
+
           // Parse comma-separated numbers like "1,234.56"
           if (parseCommas) {
-            processedVal = processedVal.replace(/,/g, '')
+            processedVal = processedVal.replace(/,/g, "")
           }
-          
+
           const parsed = Number(processedVal)
-          
+
           // Return NaN as is so it can be caught in refine
           if (isNaN(parsed)) {
             return parsed
           }
-          
+
           if (transform) {
             return transform(parsed)
           }
-          
+
           return parsed
         }
-        
+
         // Handle existing numbers (including Infinity)
-        if (typeof val === 'number') {
+        if (typeof val === "number") {
           if (transform && Number.isFinite(val)) {
             return transform(val)
           }
           return val
         }
-        
+
         return val
       },
       z.union([z.number(), z.null(), z.nan(), z.custom<number>((val) => val === Infinity || val === -Infinity)])
@@ -118,75 +118,75 @@ export function number<IsRequired extends boolean = true>(options?: NumberOption
     .refine((val) => {
       // Required check first
       if (required && val === null) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("required"), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
       }
-      
+
       if (val === null) return true
-      
+
       // Type validation for invalid inputs (NaN)
-      if (typeof val === 'number' && isNaN(val)) {
-        if (type === 'integer') {
-          throw new z.ZodError([{ code: 'custom', message: getMessage("integer"), path: [] }])
-        } else if (type === 'float') {
-          throw new z.ZodError([{ code: 'custom', message: getMessage("float"), path: [] }])
+      if (typeof val === "number" && isNaN(val)) {
+        if (type === "integer") {
+          throw new z.ZodError([{ code: "custom", message: getMessage("integer"), path: [] }])
+        } else if (type === "float") {
+          throw new z.ZodError([{ code: "custom", message: getMessage("float"), path: [] }])
         } else {
-          throw new z.ZodError([{ code: 'custom', message: getMessage("invalid"), path: [] }])
+          throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
         }
       }
-      
+
       // Invalid number check for non-numbers
-      if (typeof val !== 'number') {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("invalid"), path: [] }])
+      if (typeof val !== "number") {
+        throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
       }
-      
+
       // Finite check
       if (finite && !Number.isFinite(val)) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("finite"), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("finite"), path: [] }])
       }
-      
+
       // Type validation for valid numbers
-      if (type === 'integer' && !Number.isInteger(val)) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("integer"), path: [] }])
+      if (type === "integer" && !Number.isInteger(val)) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("integer"), path: [] }])
       }
-      if (type === 'float' && Number.isInteger(val)) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("float"), path: [] }])
+      if (type === "float" && Number.isInteger(val)) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("float"), path: [] }])
       }
-      
+
       // Sign checks (more specific, should come first)
       if (positive && val <= 0) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("positive"), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("positive"), path: [] }])
       }
       if (negative && val >= 0) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("negative"), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("negative"), path: [] }])
       }
       if (nonNegative && val < 0) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("nonNegative"), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("nonNegative"), path: [] }])
       }
       if (nonPositive && val > 0) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("nonPositive"), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("nonPositive"), path: [] }])
       }
-      
+
       // Range checks
       if (min !== undefined && val < min) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("min", { min }), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("min", { min }), path: [] }])
       }
       if (max !== undefined && val > max) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("max", { max }), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("max", { max }), path: [] }])
       }
-      
+
       // Multiple of check
       if (multipleOf !== undefined && val % multipleOf !== 0) {
-        throw new z.ZodError([{ code: 'custom', message: getMessage("multipleOf", { multipleOf }), path: [] }])
+        throw new z.ZodError([{ code: "custom", message: getMessage("multipleOf", { multipleOf }), path: [] }])
       }
-      
+
       // Precision check
       if (precision !== undefined) {
-        const decimalPlaces = (val.toString().split('.')[1] || '').length
+        const decimalPlaces = (val.toString().split(".")[1] || "").length
         if (decimalPlaces > precision) {
-          throw new z.ZodError([{ code: 'custom', message: getMessage("precision", { precision }), path: [] }])
+          throw new z.ZodError([{ code: "custom", message: getMessage("precision", { precision }), path: [] }])
         }
       }
-      
+
       return true
     })
 

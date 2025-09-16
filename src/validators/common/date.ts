@@ -1,6 +1,6 @@
 import { z, ZodNullable, ZodString } from "zod"
-import { t } from "../i18n"
-import { getLocale, type Locale } from "../config"
+import { t } from "../../i18n"
+import { getLocale, type Locale } from "../../config"
 import dayjs from "dayjs"
 import customParseFormat from "dayjs/plugin/customParseFormat"
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
@@ -68,7 +68,7 @@ export function date<IsRequired extends boolean = true>(options?: DateOptions<Is
     weekendsOnly,
     transform,
     defaultValue = null,
-    i18n
+    i18n,
   } = options ?? {}
 
   const actualDefaultValue = defaultValue ?? (required ? "" : null)
@@ -101,9 +101,7 @@ export function date<IsRequired extends boolean = true>(options?: DateOptions<Is
     return processed
   }
 
-  const baseSchema = required
-    ? z.preprocess(preprocessFn, z.string())
-    : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
@@ -142,16 +140,19 @@ export function date<IsRequired extends boolean = true>(options?: DateOptions<Is
     }
 
     // Time-based validations
-    if (val !== null && mustBePast && !dateObj.isBefore(dayjs(), 'day')) {
+    const today = dayjs().startOf('day')
+    const targetDate = dateObj.startOf('day')
+
+    if (val !== null && mustBePast && !targetDate.isBefore(today)) {
       throw new z.ZodError([{ code: "custom", message: getMessage("past"), path: [] }])
     }
-    if (val !== null && mustBeFuture && !dateObj.isAfter(dayjs(), 'day')) {
+    if (val !== null && mustBeFuture && !targetDate.isAfter(today)) {
       throw new z.ZodError([{ code: "custom", message: getMessage("future"), path: [] }])
     }
-    if (val !== null && mustBeToday && !dateObj.isToday()) {
+    if (val !== null && mustBeToday && !targetDate.isSame(today)) {
       throw new z.ZodError([{ code: "custom", message: getMessage("today"), path: [] }])
     }
-    if (val !== null && mustNotBeToday && dateObj.isToday()) {
+    if (val !== null && mustNotBeToday && targetDate.isSame(today)) {
       throw new z.ZodError([{ code: "custom", message: getMessage("notToday"), path: [] }])
     }
 

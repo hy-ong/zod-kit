@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { url } from "../../src/common/url"
-import { setLocale } from "../../src"
+import { setLocale, url } from "../../src"
 
 describe("url", () => {
   describe("basic validation", () => {
@@ -281,17 +280,17 @@ describe("url", () => {
     })
 
     it("should apply transform before validation", () => {
-      const schema = url({ 
+      const schema = url({
         protocols: ["https"],
-        transform: (val) => val.replace("http://", "https://")
+        transform: (val) => val.replace("http://", "https://"),
       })
       expect(schema.parse("http://example.com")).toBe("https://example.com")
     })
 
     it("should work with other validations after transform", () => {
-      const schema = url({ 
+      const schema = url({
         includes: "https",
-        transform: (val) => val.replace("http://", "https://")
+        transform: (val) => val.replace("http://", "https://"),
       })
       expect(schema.parse("http://example.com")).toBe("https://example.com")
     })
@@ -317,9 +316,9 @@ describe("url", () => {
     it("should use custom English messages", () => {
       const schema = url({
         i18n: {
-          "en": { invalid: "Custom URL format error" },
-          "zh-TW": { invalid: "自定義 URL 格式錯誤" }
-        }
+          en: { invalid: "Custom URL format error" },
+          "zh-TW": { invalid: "自定義 URL 格式錯誤" },
+        },
       })
 
       setLocale("en")
@@ -333,9 +332,9 @@ describe("url", () => {
     it("should use custom Chinese messages", () => {
       const schema = url({
         i18n: {
-          "en": { invalid: "Custom URL format error" },
-          "zh-TW": { invalid: "自定義 URL 格式錯誤" }
-        }
+          en: { invalid: "Custom URL format error" },
+          "zh-TW": { invalid: "自定義 URL 格式錯誤" },
+        },
       })
 
       setLocale("zh-TW")
@@ -349,9 +348,9 @@ describe("url", () => {
     it("should fallback to default messages when custom not provided", () => {
       const schema = url({
         i18n: {
-          "en": { invalid: "Custom invalid error" },
-          "zh-TW": { invalid: "自定義無效錯誤" }
-        }
+          en: { invalid: "Custom invalid error" },
+          "zh-TW": { invalid: "自定義無效錯誤" },
+        },
       })
 
       setLocale("en")
@@ -366,9 +365,9 @@ describe("url", () => {
       const schema = url({
         protocols: ["https"],
         i18n: {
-          "en": { protocol: "Only HTTPS allowed!" },
-          "zh-TW": { protocol: "僅允許 HTTPS！" }
-        }
+          en: { protocol: "Only HTTPS allowed!" },
+          "zh-TW": { protocol: "僅允許 HTTPS！" },
+        },
       })
 
       setLocale("en")
@@ -383,9 +382,9 @@ describe("url", () => {
       const schema = url({
         allowedDomains: ["example.com"],
         i18n: {
-          "en": { domain: "Only example.com allowed!" },
-          "zh-TW": { domain: "僅允許 example.com！" }
-        }
+          en: { domain: "Only example.com allowed!" },
+          "zh-TW": { domain: "僅允許 example.com！" },
+        },
       })
 
       setLocale("en")
@@ -440,11 +439,11 @@ describe("url", () => {
         min: 20,
         max: 50,
         pathStartsWith: "/api",
-        mustHaveQuery: true
+        mustHaveQuery: true,
       })
 
       expect(schema.parse("https://example.com/api/users?id=1")).toBe("https://example.com/api/users?id=1")
-      
+
       expect(() => schema.parse("http://example.com/api/users?id=1")).toThrow() // Wrong protocol
       expect(() => schema.parse("https://other.com/api/users?id=1")).toThrow() // Wrong domain
       expect(() => schema.parse("https://example.com/web/users?id=1")).toThrow() // Wrong path
@@ -453,7 +452,7 @@ describe("url", () => {
 
     it("should handle localhost detection in private networks", () => {
       const schema = url({ blockLocalhost: true })
-      
+
       expect(() => schema.parse("http://10.0.0.1")).toThrow()
       expect(() => schema.parse("http://172.16.0.1")).toThrow()
       expect(() => schema.parse("http://192.168.0.1")).toThrow()
@@ -462,7 +461,7 @@ describe("url", () => {
 
     it("should handle edge cases with ports", () => {
       const schema = url({ allowedPorts: [443, 8080] })
-      
+
       expect(schema.parse("https://example.com")).toBe("https://example.com") // Default 443
       expect(schema.parse("https://example.com:8080")).toBe("https://example.com:8080")
       expect(() => schema.parse("https://example.com:3000")).toThrow()
