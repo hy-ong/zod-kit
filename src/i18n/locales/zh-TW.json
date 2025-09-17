@@ -117,9 +117,7 @@
   "taiwan": {
     "businessId": {
       "required": "必填",
-      "format": "必須為8位數字",
-      "checksum": "統一編號檢查碼錯誤",
-      "numeric": "只能包含數字"
+      "invalid": "無效的統一編號"
     }
   }
 }

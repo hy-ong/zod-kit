@@ -4,9 +4,7 @@ import { getLocale, type Locale } from "../../config"
 
 export type BusinessIdMessages = {
   required?: string
-  format?: string
-  checksum?: string
-  numeric?: string
+  invalid?: string
 }
 
 export type BusinessIdOptions<IsRequired extends boolean = true> = {
@@ -127,19 +125,9 @@ export function businessId<IsRequired extends boolean = true>(options?: Business
     if (val === null) return true
     if (!required && val === "") return true
 
-    // Check if it's numeric
-    if (!/^\d+$/.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("numeric"), path: [] }])
-    }
-
-    // Format validation (8 digits)
-    if (val.length !== 8) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("format"), path: [] }])
-    }
-
-    // Taiwan Business ID checksum validation
+    // Taiwan Business ID format validation (8 digits + checksum)
     if (!validateTaiwanBusinessId(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("checksum"), path: [] }])
+      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
     }
 
     return true

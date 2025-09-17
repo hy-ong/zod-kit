@@ -117,9 +117,7 @@
   "taiwan": {
     "businessId": {
       "required": "Required",
-      "format": "Must be exactly 8 digits",
-      "checksum": "Invalid Taiwan Business ID checksum",
-      "numeric": "Must contain only numbers"
+      "invalid": "Invalid Taiwan Business ID"
     }
   }
 }

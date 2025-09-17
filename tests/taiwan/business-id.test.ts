@@ -18,25 +18,25 @@ describe("Taiwan businessId() validator", () => {
       const schema = businessId()
 
       // Invalid checksums
-      expect(() => schema.parse("12345672")).toThrow("Invalid Taiwan Business ID checksum")
-      expect(() => schema.parse("12345673")).toThrow("Invalid Taiwan Business ID checksum")
-      expect(() => schema.parse("12345674")).toThrow("Invalid Taiwan Business ID checksum")
+      expect(() => schema.parse("12345672")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("12345673")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("12345674")).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should reject non-numeric inputs", () => {
       const schema = businessId()
 
-      expect(() => schema.parse("1234567A")).toThrow("Must contain only numbers")
-      expect(() => schema.parse("abcdefgh")).toThrow("Must contain only numbers")
-      expect(() => schema.parse("123-45-67")).toThrow("Must contain only numbers")
+      expect(() => schema.parse("1234567A")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("abcdefgh")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("123-45-67")).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should reject wrong length inputs", () => {
       const schema = businessId()
 
-      expect(() => schema.parse("1234567")).toThrow("Must be exactly 8 digits")
-      expect(() => schema.parse("123456789")).toThrow("Must be exactly 8 digits")
-      expect(() => schema.parse("12")).toThrow("Must be exactly 8 digits")
+      expect(() => schema.parse("1234567")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("123456789")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("12")).toThrow("Invalid Taiwan Business ID")
       expect(() => schema.parse("")).toThrow("Required")
     })
   })
@@ -108,7 +108,7 @@ describe("Taiwan businessId() validator", () => {
 
       expect(schema.parse("1234-5675")).toBe("12345675")
       // Note: This will fail validation since the cleaned value has wrong checksum
-      expect(() => schema.parse("1234-5672")).toThrow("Invalid Taiwan Business ID checksum")
+      expect(() => schema.parse("1234-5672")).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should apply transform before validation", () => {
@@ -117,7 +117,7 @@ describe("Taiwan businessId() validator", () => {
       })
 
       expect(schema.parse(" 12345675 ")).toBe("12345675")
-      expect(() => schema.parse(" 1234567 2 ")).toThrow("Invalid Taiwan Business ID checksum")
+      expect(() => schema.parse(" 1234567 2 ")).toThrow("Invalid Taiwan Business ID")
     })
   })
 
@@ -126,7 +126,7 @@ describe("Taiwan businessId() validator", () => {
       const schema = businessId()
 
       expect(schema.parse(12345675)).toBe("12345675")
-      expect(() => schema.parse(12345672)).toThrow("Invalid Taiwan Business ID checksum")
+      expect(() => schema.parse(12345672)).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should trim whitespace", () => {
@@ -143,8 +143,8 @@ describe("Taiwan businessId() validator", () => {
       const schema = businessId()
 
       expect(() => schema.parse("")).toThrow("Required")
-      expect(() => schema.parse("1234567")).toThrow("Must be exactly 8 digits")
-      expect(() => schema.parse("12345672")).toThrow("Invalid Taiwan Business ID checksum")
+      expect(() => schema.parse("1234567")).toThrow("Invalid Taiwan Business ID")
+      expect(() => schema.parse("12345672")).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should use Chinese messages when locale is zh-TW", () => {
@@ -152,8 +152,8 @@ describe("Taiwan businessId() validator", () => {
       const schema = businessId()
 
       expect(() => schema.parse("")).toThrow("必填")
-      expect(() => schema.parse("1234567")).toThrow("必須為8位數字")
-      expect(() => schema.parse("12345672")).toThrow("統一編號檢查碼錯誤")
+      expect(() => schema.parse("1234567")).toThrow("無效的統一編號")
+      expect(() => schema.parse("12345672")).toThrow("無效的統一編號")
     })
 
     it("should support custom i18n messages", () => {
@@ -161,22 +161,22 @@ describe("Taiwan businessId() validator", () => {
         i18n: {
           en: {
             required: "Business ID is required",
-            checksum: "Business ID checksum is invalid",
+            invalid: "Business ID is invalid",
           },
           "zh-TW": {
             required: "請輸入統一編號",
-            checksum: "統一編號驗證碼不正確",
+            invalid: "統一編號格式錯誤",
           },
         },
       })
 
       setLocale("en")
       expect(() => schema.parse("")).toThrow("Business ID is required")
-      expect(() => schema.parse("12345672")).toThrow("Business ID checksum is invalid")
+      expect(() => schema.parse("12345672")).toThrow("Business ID is invalid")
 
       setLocale("zh-TW")
       expect(() => schema.parse("")).toThrow("請輸入統一編號")
-      expect(() => schema.parse("12345672")).toThrow("統一編號驗證碼不正確")
+      expect(() => schema.parse("12345672")).toThrow("統一編號格式錯誤")
     })
   })
 
@@ -221,7 +221,7 @@ describe("Taiwan businessId() validator", () => {
       const schema = businessId()
 
       expect(schema.parse("04595257")).toBe("04595257")
-      expect(() => schema.parse("00123456")).toThrow("Invalid Taiwan Business ID checksum")
+      expect(() => schema.parse("00123456")).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should handle empty and whitespace inputs", () => {
