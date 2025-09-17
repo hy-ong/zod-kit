@@ -118,6 +118,10 @@
     "businessId": {
       "required": "Required",
       "invalid": "Invalid Taiwan Business ID"
+    },
+    "nationalId": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan National ID"
     }
   }
 }

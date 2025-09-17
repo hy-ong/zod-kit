@@ -118,6 +118,10 @@
     "businessId": {
       "required": "必填",
       "invalid": "無效的統一編號"
+    },
+    "nationalId": {
+      "required": "必填",
+      "invalid": "無效的身分證字號"
     }
   }
 }
