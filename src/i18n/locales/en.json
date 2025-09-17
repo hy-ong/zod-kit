@@ -68,6 +68,25 @@
       "finite": "Must be a finite number",
       "precision": "Must have at most ${precision} decimal places"
     },
+    "id": {
+      "required": "Required",
+      "invalid": "Invalid ID format",
+      "minLength": "Must be at least ${minLength} characters",
+      "maxLength": "Must be at most ${maxLength} characters",
+      "numeric": "Must be a numeric ID",
+      "uuid": "Must be a valid UUID",
+      "objectId": "Must be a valid MongoDB ObjectId",
+      "nanoid": "Must be a valid Nano ID",
+      "snowflake": "Must be a valid Snowflake ID",
+      "cuid": "Must be a valid CUID",
+      "ulid": "Must be a valid ULID",
+      "shortid": "Must be a valid Short ID",
+      "customFormat": "Invalid ID format",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "startsWith": "Must start with ${startsWith}",
+      "endsWith": "Must end with ${endsWith}"
+    },
     "text": {
       "required": "Required",
       "notEmpty": "Cannot be empty or whitespace only",
@@ -93,6 +112,14 @@
       "notToday": "Date must not be today",
       "weekday": "Date must be a weekday (Monday-Friday)",
       "weekend": "Date must be a weekend (Saturday-Sunday)"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "Required",
+      "format": "Must be exactly 8 digits",
+      "checksum": "Invalid Taiwan Business ID checksum",
+      "numeric": "Must contain only numbers"
     }
   }
 }

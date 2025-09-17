@@ -69,8 +69,23 @@
       "precision": "小數位數不可超過 ${precision} 位"
     },
     "id": {
-      "required": "請選擇",
-      "invalid": "無效"
+      "required": "必填",
+      "invalid": "無效的 ID 格式",
+      "minLength": "長度至少 ${minLength} 字元",
+      "maxLength": "長度最多 ${maxLength} 字元",
+      "numeric": "必須為數字 ID",
+      "uuid": "必須為有效的 UUID",
+      "objectId": "必須為有效的 MongoDB ObjectId",
+      "nanoid": "必須為有效的 Nano ID",
+      "snowflake": "必須為有效的 Snowflake ID",
+      "cuid": "必須為有效的 CUID",
+      "ulid": "必須為有效的 ULID",
+      "shortid": "必須為有效的 Short ID",
+      "customFormat": "無效的 ID 格式",
+      "includes": "必須包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "startsWith": "必須以「${startsWith}」開頭",
+      "endsWith": "必須以「${endsWith}」結尾"
     },
     "text": {
       "required": "必填",
@@ -97,6 +112,14 @@
       "notToday": "不得為今天",
       "weekday": "必須為工作日（週一至週五）",
       "weekend": "必須為週末（週六至週日）"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "必填",
+      "format": "必須為8位數字",
+      "checksum": "統一編號檢查碼錯誤",
+      "numeric": "只能包含數字"
     }
   }
 }
