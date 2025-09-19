@@ -122,6 +122,21 @@
     "nationalId": {
       "required": "Required",
       "invalid": "Invalid Taiwan National ID"
+    },
+    "mobile": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan mobile phone format",
+      "notInWhitelist": "Not in allowed mobile phone list"
+    },
+    "tel": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan telephone format",
+      "notInWhitelist": "Not in allowed telephone list"
+    },
+    "fax": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan fax format",
+      "notInWhitelist": "Not in allowed fax list"
     }
   }
 }

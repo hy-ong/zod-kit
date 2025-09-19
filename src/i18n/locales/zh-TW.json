@@ -122,6 +122,21 @@
     "nationalId": {
       "required": "必填",
       "invalid": "無效的身分證字號"
+    },
+    "mobile": {
+      "required": "必填",
+      "invalid": "無效的手機號碼格式",
+      "notInWhitelist": "不在允許的手機號碼清單中"
+    },
+    "tel": {
+      "required": "必填",
+      "invalid": "無效的市話號碼格式",
+      "notInWhitelist": "不在允許的市話號碼清單中"
+    },
+    "fax": {
+      "required": "必填",
+      "invalid": "無效的傳真號碼格式",
+      "notInWhitelist": "不在允許的傳真號碼清單中"
     }
   }
 }

@@ -1,0 +1,373 @@
+import { describe, it, expect, beforeEach } from "vitest"
+import { mobile, setLocale, validateTaiwanMobile } from "../../src"
+
+describe("Taiwan mobile() validator", () => {
+  beforeEach(() => setLocale("en"))
+
+  describe("basic functionality", () => {
+    it("should validate correct Taiwan mobile phone numbers", () => {
+      const schema = mobile()
+
+      // Valid Taiwan mobile phone numbers
+      expect(schema.parse("0901234567")).toBe("0901234567")
+      expect(schema.parse("0911234567")).toBe("0911234567")
+      expect(schema.parse("0921234567")).toBe("0921234567")
+      expect(schema.parse("0931234567")).toBe("0931234567")
+      expect(schema.parse("0941234567")).toBe("0941234567")
+      expect(schema.parse("0951234567")).toBe("0951234567")
+      expect(schema.parse("0961234567")).toBe("0961234567")
+      expect(schema.parse("0971234567")).toBe("0971234567")
+      expect(schema.parse("0981234567")).toBe("0981234567")
+      expect(schema.parse("0991234567")).toBe("0991234567")
+    })
+
+    it("should reject invalid Taiwan mobile phone numbers", () => {
+      const schema = mobile()
+
+      // Invalid formats
+      expect(() => schema.parse("123456789")).toThrow("Invalid Taiwan mobile phone format") // Missing leading 09
+      expect(() => schema.parse("01234567890")).toThrow("Invalid Taiwan mobile phone format") // Too long
+      expect(() => schema.parse("090123456")).toThrow("Invalid Taiwan mobile phone format") // Too short
+      expect(() => schema.parse("0801234567")).toThrow("Invalid Taiwan mobile phone format") // Wrong prefix (08)
+      expect(() => schema.parse("0701234567")).toThrow("Invalid Taiwan mobile phone format") // Wrong prefix (07)
+      expect(() => schema.parse("1901234567")).toThrow("Invalid Taiwan mobile phone format") // Wrong prefix (19)
+      expect(() => schema.parse("")).toThrow("Required")
+      expect(() => schema.parse("abcdefghij")).toThrow("Invalid Taiwan mobile phone format")
+    })
+
+    it("should handle whitespace trimming", () => {
+      const schema = mobile()
+
+      expect(schema.parse("  0901234567  ")).toBe("0901234567")
+      expect(schema.parse("\t0911234567\n")).toBe("0911234567")
+    })
+  })
+
+  describe("whitelist functionality", () => {
+    it("should accept any string in whitelist regardless of format", () => {
+      const schema = mobile({
+        whitelist: ["custom-phone", "emergency-contact", "0801234567"],
+      })
+
+      // Allowlist entries should be accepted even if they don't match Taiwan mobile formats
+      expect(schema.parse("custom-phone")).toBe("custom-phone")
+      expect(schema.parse("emergency-contact")).toBe("emergency-contact")
+      expect(schema.parse("0801234567")).toBe("0801234567") // Invalid mobile but in allowlist
+
+      // Valid mobile phones not in the allowlist should be rejected
+      expect(() => schema.parse("0901234567")).toThrow("Not in allowed mobile phone list")
+      expect(() => schema.parse("0801111111")).toThrow("Not in allowed mobile phone list")
+    })
+
+    it("should reject values not in whitelist when whitelist is provided", () => {
+      const schema = mobile({
+        whitelist: ["allowed-value", "0901234567"],
+      })
+
+      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
+      expect(() => schema.parse("invalid-value")).toThrow("Not in allowed mobile phone list")
+    })
+
+    it("should work with empty whitelist", () => {
+      const schema = mobile({
+        whitelist: [],
+      })
+
+      // With empty allowlist, should still validate a mobile phone format
+      expect(schema.parse("0901234567")).toBe("0901234567")
+      expect(() => schema.parse("0801234567")).toThrow("Invalid Taiwan mobile phone format")
+    })
+
+    it("should prioritize whitelist over format validation", () => {
+      const schema = mobile({
+        required: false,
+        whitelist: ["not-a-phone", "123", ""],
+      })
+
+      // These should be accepted despite being invalid mobile phone formats
+      expect(schema.parse("not-a-phone")).toBe("not-a-phone")
+      expect(schema.parse("123")).toBe("123")
+      expect(schema.parse("")).toBe("")
+    })
+  })
+
+  describe("required/optional behavior", () => {
+    it("should handle required=true (default)", () => {
+      const schema = mobile()
+
+      expect(() => schema.parse("")).toThrow("Required")
+      expect(() => schema.parse(null)).toThrow()
+      expect(() => schema.parse(undefined)).toThrow()
+    })
+
+    it("should handle required=false", () => {
+      const schema = mobile({ required: false })
+
+      expect(schema.parse("")).toBe(null)
+      expect(schema.parse(null)).toBe(null)
+      expect(schema.parse(undefined)).toBe(null)
+      expect(schema.parse("0901234567")).toBe("0901234567")
+    })
+
+    it("should use default values", () => {
+      const requiredSchema = mobile({ defaultValue: "0901234567" })
+      const optionalSchema = mobile({ required: false, defaultValue: "0901234567" })
+
+      expect(requiredSchema.parse("")).toBe("0901234567")
+      expect(optionalSchema.parse("")).toBe("0901234567")
+    })
+
+    it("should handle whitelist with optional fields", () => {
+      const schema = mobile({
+        required: false,
+        whitelist: ["custom-value", "0901234567"],
+      })
+
+      expect(schema.parse("")).toBe(null)
+      expect(schema.parse("custom-value")).toBe("custom-value")
+      expect(schema.parse("0901234567")).toBe("0901234567")
+      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
+    })
+  })
+
+  describe("transform function", () => {
+    it("should apply custom transform", () => {
+      const schema = mobile({
+        transform: (val) => val.replace(/[-\s]/g, ""),
+      })
+
+      expect(schema.parse("090-123-4567")).toBe("0901234567")
+      expect(schema.parse("091 123 4567")).toBe("0911234567")
+    })
+
+    it("should apply transform before validation", () => {
+      const schema = mobile({
+        transform: (val) => val.replace(/\s+/g, ""),
+      })
+
+      expect(schema.parse(" 090 123 4567 ")).toBe("0901234567")
+      expect(() => schema.parse(" 080 123 4567 ")).toThrow("Invalid Taiwan mobile phone format")
+    })
+
+    it("should work with whitelist after transform", () => {
+      // First test basic transform without allowlist
+      const basicSchema = mobile({
+        transform: (val) => val.replace(/[-\s]/g, ""),
+      })
+      expect(basicSchema.parse("090-123-4567")).toBe("0901234567")
+
+      // Then test with whitelist - use simple value that transforms won't affect
+      const whitelistSchema = mobile({
+        transform: (val) => val.replace(/[-\s]/g, ""),
+        whitelist: ["0901234567", "customvalue"],
+      })
+
+      expect(whitelistSchema.parse("customvalue")).toBe("customvalue")
+      expect(() => whitelistSchema.parse("091-123-4567")).toThrow("Not in allowed mobile phone list")
+    })
+  })
+
+  describe("input preprocessing", () => {
+    it("should handle string conversion", () => {
+      const schema = mobile()
+
+      // Test string conversion of numbers
+      expect(() => schema.parse(901234567)).toThrow("Invalid Taiwan mobile phone format") // Invalid because missing leading 0
+    })
+
+    it("should trim whitespace", () => {
+      const schema = mobile()
+
+      expect(schema.parse("  0901234567  ")).toBe("0901234567")
+      expect(schema.parse("\t0911234567\n")).toBe("0911234567")
+    })
+  })
+
+  describe("utility function", () => {
+    describe("validateTaiwanMobile", () => {
+      it("should correctly validate Taiwan mobile phone numbers", () => {
+        // Valid numbers
+        expect(validateTaiwanMobile("0901234567")).toBe(true)
+        expect(validateTaiwanMobile("0911234567")).toBe(true)
+        expect(validateTaiwanMobile("0921234567")).toBe(true)
+        expect(validateTaiwanMobile("0931234567")).toBe(true)
+        expect(validateTaiwanMobile("0941234567")).toBe(true)
+        expect(validateTaiwanMobile("0951234567")).toBe(true)
+        expect(validateTaiwanMobile("0961234567")).toBe(true)
+        expect(validateTaiwanMobile("0971234567")).toBe(true)
+        expect(validateTaiwanMobile("0981234567")).toBe(true)
+        expect(validateTaiwanMobile("0991234567")).toBe(true)
+
+        // Invalid numbers
+        expect(validateTaiwanMobile("0801234567")).toBe(false) // Wrong prefix
+        expect(validateTaiwanMobile("1901234567")).toBe(false) // Wrong prefix
+        expect(validateTaiwanMobile("090123456")).toBe(false) // Too short
+        expect(validateTaiwanMobile("09012345678")).toBe(false) // Too long
+        expect(validateTaiwanMobile("901234567")).toBe(false) // Missing leading 0
+        expect(validateTaiwanMobile("")).toBe(false) // Empty
+        expect(validateTaiwanMobile("abcdefghij")).toBe(false) // Non-numeric
+      })
+    })
+  })
+
+  describe("i18n support", () => {
+    it("should use English messages by default", () => {
+      setLocale("en")
+      const schema = mobile()
+
+      expect(() => schema.parse("")).toThrow("Required")
+      expect(() => schema.parse("0801234567")).toThrow("Invalid Taiwan mobile phone format")
+    })
+
+    it("should use Chinese messages when locale is zh-TW", () => {
+      setLocale("zh-TW")
+      const schema = mobile()
+
+      expect(() => schema.parse("")).toThrow("必填")
+      expect(() => schema.parse("0801234567")).toThrow("無效的手機號碼格式")
+    })
+
+    it("should support whitelist error messages", () => {
+      setLocale("en")
+      const schema = mobile({
+        whitelist: ["0901234567"],
+      })
+
+      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
+
+      setLocale("zh-TW")
+      expect(() => schema.parse("0911234567")).toThrow("不在允許的手機號碼清單中")
+    })
+
+    it("should support custom i18n messages", () => {
+      const schema = mobile({
+        i18n: {
+          en: {
+            required: "Mobile phone is required",
+            invalid: "Mobile phone format is invalid",
+            notInWhitelist: "Mobile phone not allowed",
+          },
+          "zh-TW": {
+            required: "請輸入手機號碼",
+            invalid: "手機號碼格式錯誤",
+            notInWhitelist: "手機號碼不被允許",
+          },
+        },
+      })
+
+      setLocale("en")
+      expect(() => schema.parse("")).toThrow("Mobile phone is required")
+      expect(() => schema.parse("0801234567")).toThrow("Mobile phone format is invalid")
+
+      setLocale("zh-TW")
+      expect(() => schema.parse("")).toThrow("請輸入手機號碼")
+      expect(() => schema.parse("0801234567")).toThrow("手機號碼格式錯誤")
+    })
+
+    it("should support custom whitelist messages", () => {
+      const schema = mobile({
+        whitelist: ["0901234567"],
+        i18n: {
+          en: {
+            notInWhitelist: "This mobile phone number is not allowed",
+          },
+          "zh-TW": {
+            notInWhitelist: "此手機號碼不被允許",
+          },
+        },
+      })
+
+      setLocale("en")
+      expect(() => schema.parse("0911234567")).toThrow("This mobile phone number is not allowed")
+
+      setLocale("zh-TW")
+      expect(() => schema.parse("0911234567")).toThrow("此手機號碼不被允許")
+    })
+  })
+
+  describe("real world Taiwan mobile phone numbers", () => {
+    it("should validate all carrier prefixes", () => {
+      const schema = mobile()
+
+      // Test all valid Taiwan mobile prefixes (090-099)
+      const validPrefixes = ["090", "091", "092", "093", "094", "095", "096", "097", "098", "099"]
+
+      validPrefixes.forEach((prefix) => {
+        const phoneNumber = prefix + "1234567"
+        expect(schema.parse(phoneNumber)).toBe(phoneNumber)
+      })
+    })
+
+    it("should reject non-mobile phone prefixes", () => {
+      const schema = mobile()
+
+      // Test invalid prefixes
+      const invalidPrefixes = ["080", "081", "082", "083", "084", "085", "086", "087", "088", "089"]
+
+      invalidPrefixes.forEach((prefix) => {
+        const phoneNumber = prefix + "1234567"
+        expect(() => schema.parse(phoneNumber)).toThrow("Invalid Taiwan mobile phone format")
+      })
+    })
+
+    it("should validate realistic phone number patterns", () => {
+      const schema = mobile()
+
+      const realPhoneNumbers = ["0901234567", "0912345678", "0923456789", "0934567890", "0945678901", "0956789012", "0967890123", "0978901234", "0989012345", "0990123456"]
+
+      realPhoneNumbers.forEach((phone) => {
+        expect(schema.parse(phone)).toBe(phone)
+      })
+    })
+  })
+
+  describe("edge cases", () => {
+    it("should handle various input types", () => {
+      const schema = mobile()
+
+      // Test different input types that should be converted to string
+      expect(schema.parse("0901234567")).toBe("0901234567")
+    })
+
+    it("should handle empty and whitespace inputs", () => {
+      const schema = mobile()
+      const optionalSchema = mobile({ required: false })
+
+      expect(() => schema.parse("")).toThrow("Required")
+      expect(() => schema.parse("   ")).toThrow("Required")
+      expect(() => schema.parse("\t\n")).toThrow("Required")
+
+      expect(optionalSchema.parse("")).toBe(null)
+      expect(optionalSchema.parse("   ")).toBe(null)
+      expect(optionalSchema.parse("\t\n")).toBe(null)
+    })
+
+    it("should preserve valid format after transformation", () => {
+      const schema = mobile({
+        transform: (val) => val.replace(/[^0-9]/g, ""),
+      })
+
+      expect(schema.parse("090-123-4567")).toBe("0901234567")
+      expect(schema.parse("090 123 4567")).toBe("0901234567")
+      // Test with letters that should be filtered out, leaving a valid number
+      expect(schema.parse("090abc123def4567")).toBe("0901234567")
+    })
+
+    it("should work with complex whitelist scenarios", () => {
+      const schema = mobile({
+        whitelist: ["0901234567", "emergency", "custom-contact-123", ""],
+        required: false,
+      })
+
+      // Allowlist scenarios
+      expect(schema.parse("0901234567")).toBe("0901234567")
+      expect(schema.parse("emergency")).toBe("emergency")
+      expect(schema.parse("custom-contact-123")).toBe("custom-contact-123")
+      expect(schema.parse("")).toBe("")
+
+      // Not in the allowlist
+      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
+      expect(() => schema.parse("other-value")).toThrow("Not in allowed mobile phone list")
+    })
+  })
+})
