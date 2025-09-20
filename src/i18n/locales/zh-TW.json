@@ -112,6 +112,39 @@
       "notToday": "不得為今天",
       "weekday": "必須為工作日（週一至週五）",
       "weekend": "必須為週末（週六至週日）"
+    },
+    "time": {
+      "required": "必填",
+      "invalid": "無效的時間格式",
+      "format": "必須為 ${format} 格式",
+      "min": "時間不得早於 ${min}",
+      "max": "時間不得晚於 ${max}",
+      "hour": "小時必須介於 ${minHour} 與 ${maxHour} 之間",
+      "minute": "分鐘必須為 ${minuteStep} 分鐘間隔",
+      "second": "秒數必須為 ${secondStep} 秒間隔",
+      "includes": "必須包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "customRegex": "無效的時間格式",
+      "notInWhitelist": "時間不在允許清單中"
+    },
+    "datetime": {
+      "required": "必填",
+      "invalid": "無效的日期時間格式",
+      "format": "必須為 ${format} 格式",
+      "min": "日期時間不得早於 ${min}",
+      "max": "日期時間不得晚於 ${max}",
+      "hour": "小時必須介於 ${minHour} 與 ${maxHour} 之間",
+      "minute": "分鐘必須為 ${minuteStep} 分鐘間隔",
+      "includes": "必須包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "past": "必須為過去的日期時間",
+      "future": "必須為未來的日期時間",
+      "today": "必須為今天",
+      "notToday": "不得為今天",
+      "weekday": "必須為工作日（週一至週五）",
+      "weekend": "必須為週末（週六至週日）",
+      "customRegex": "無效的日期時間格式",
+      "notInWhitelist": "日期時間不在允許清單中"
     }
   },
   "taiwan": {

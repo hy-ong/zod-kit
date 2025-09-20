@@ -112,6 +112,39 @@
       "notToday": "Date must not be today",
       "weekday": "Date must be a weekday (Monday-Friday)",
       "weekend": "Date must be a weekend (Saturday-Sunday)"
+    },
+    "time": {
+      "required": "Required",
+      "invalid": "Invalid time format",
+      "format": "Must be in ${format} format",
+      "min": "Time must be after ${min}",
+      "max": "Time must be before ${max}",
+      "hour": "Hour must be between ${minHour} and ${maxHour}",
+      "minute": "Minutes must be in ${minuteStep}-minute intervals",
+      "second": "Seconds must be in ${secondStep}-second intervals",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "customRegex": "Invalid time format",
+      "notInWhitelist": "Time is not in the allowed list"
+    },
+    "datetime": {
+      "required": "Required",
+      "invalid": "Invalid datetime format",
+      "format": "Must be in ${format} format",
+      "min": "DateTime must be after ${min}",
+      "max": "DateTime must be before ${max}",
+      "hour": "Hour must be between ${minHour} and ${maxHour}",
+      "minute": "Minutes must be in ${minuteStep}-minute intervals",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "past": "DateTime must be in the past",
+      "future": "DateTime must be in the future",
+      "today": "DateTime must be today",
+      "notToday": "DateTime must not be today",
+      "weekday": "DateTime must be a weekday (Monday-Friday)",
+      "weekend": "DateTime must be a weekend (Saturday-Sunday)",
+      "customRegex": "Invalid datetime format",
+      "notInWhitelist": "DateTime is not in the allowed list"
     }
   },
   "taiwan": {
