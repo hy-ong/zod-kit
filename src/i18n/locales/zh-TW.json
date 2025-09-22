@@ -145,6 +145,23 @@
       "weekend": "必須為週末（週六至週日）",
       "customRegex": "無效的日期時間格式",
       "notInWhitelist": "日期時間不在允許清單中"
+    },
+    "file": {
+      "required": "必填",
+      "invalid": "無效的檔案格式",
+      "size": "檔案大小不得超過 ${size}",
+      "minSize": "檔案大小至少 ${minSize}",
+      "maxSize": "檔案大小不得超過 ${maxSize}",
+      "type": "檔案類型必須為：${type}",
+      "extension": "副檔名必須為：${extension}",
+      "extensionBlacklist": "不允許使用副檔名 ${extension}",
+      "name": "檔案名稱必須符合格式 ${pattern}",
+      "nameBlacklist": "檔案名稱不得符合格式 ${pattern}",
+      "imageOnly": "僅允許圖片檔案",
+      "documentOnly": "僅允許文件檔案",
+      "videoOnly": "僅允許影片檔案",
+      "audioOnly": "僅允許音訊檔案",
+      "archiveOnly": "僅允許壓縮檔案"
     }
   },
   "taiwan": {

@@ -145,6 +145,23 @@
       "weekend": "DateTime must be a weekend (Saturday-Sunday)",
       "customRegex": "Invalid datetime format",
       "notInWhitelist": "DateTime is not in the allowed list"
+    },
+    "file": {
+      "required": "Required",
+      "invalid": "Invalid file format",
+      "size": "File size must not exceed ${size}",
+      "minSize": "File size must be at least ${minSize}",
+      "maxSize": "File size must not exceed ${maxSize}",
+      "type": "File type must be one of: ${type}",
+      "extension": "File extension must be one of: ${extension}",
+      "extensionBlacklist": "File extension ${extension} is not allowed",
+      "name": "File name must match pattern ${pattern}",
+      "nameBlacklist": "File name must not match pattern ${pattern}",
+      "imageOnly": "Only image files are allowed",
+      "documentOnly": "Only document files are allowed",
+      "videoOnly": "Only video files are allowed",
+      "audioOnly": "Only audio files are allowed",
+      "archiveOnly": "Only archive files are allowed"
     }
   },
   "taiwan": {
