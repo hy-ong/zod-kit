@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Date validator for Zod Kit
+ *
+ * Provides comprehensive date validation with format support, range validation,
+ * temporal constraints, and weekday/weekend filtering using dayjs library.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
@@ -8,12 +18,33 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore"
 import isToday from "dayjs/plugin/isToday"
 import weekday from "dayjs/plugin/weekday"
 
+// Initialize dayjs plugins for extended date functionality
 dayjs.extend(isSameOrAfter)
 dayjs.extend(isSameOrBefore)
 dayjs.extend(customParseFormat)
 dayjs.extend(isToday)
 dayjs.extend(weekday)
 
+/**
+ * Type definition for date validation error messages
+ *
+ * @interface DateMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when date is invalid
+ * @property {string} [format] - Message when date doesn't match expected format
+ * @property {string} [min] - Message when date is before minimum allowed
+ * @property {string} [max] - Message when date is after maximum allowed
+ * @property {string} [includes] - Message when date string doesn't contain required text
+ * @property {string} [excludes] - Message when date string contains forbidden text
+ * @property {string} [past] - Message when date must be in the past
+ * @property {string} [future] - Message when date must be in the future
+ * @property {string} [today] - Message when date must be today
+ * @property {string} [notToday] - Message when date must not be today
+ * @property {string} [weekday] - Message when date must be a weekday
+ * @property {string} [notWeekday] - Message when date must not be a weekday
+ * @property {string} [weekend] - Message when date must be a weekend
+ * @property {string} [notWeekend] - Message when date must not be a weekend
+ */
 export type DateMessages = {
   required?: string
   invalid?: string
@@ -32,6 +63,28 @@ export type DateMessages = {
   notWeekend?: string
 }
 
+/**
+ * Configuration options for date validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface DateOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {string} [min] - Minimum allowed date (in same format as specified)
+ * @property {string} [max] - Maximum allowed date (in same format as specified)
+ * @property {string} [format="YYYY-MM-DD"] - Date format for parsing and validation
+ * @property {string} [includes] - String that must be included in the date
+ * @property {string | string[]} [excludes] - String(s) that must not be included
+ * @property {boolean} [mustBePast] - Whether date must be in the past
+ * @property {boolean} [mustBeFuture] - Whether date must be in the future
+ * @property {boolean} [mustBeToday] - Whether date must be today
+ * @property {boolean} [mustNotBeToday] - Whether date must not be today
+ * @property {boolean} [weekdaysOnly] - Whether date must be a weekday (Monday-Friday)
+ * @property {boolean} [weekendsOnly] - Whether date must be a weekend (Saturday-Sunday)
+ * @property {Function} [transform] - Custom transformation function for date strings
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, DateMessages>} [i18n] - Custom error messages for different locales
+ */
 export type DateOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   min?: string
@@ -50,8 +103,83 @@ export type DateOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, DateMessages>
 }
 
+/**
+ * Type alias for date validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef DateSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
+/**
+ * Creates a Zod schema for date validation with temporal constraints
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {DateOptions<IsRequired>} [options] - Configuration options for date validation
+ * @returns {DateSchema<IsRequired>} Zod schema for date validation
+ *
+ * @description
+ * Creates a comprehensive date validator with format support, range validation,
+ * temporal constraints, and weekday/weekend filtering using dayjs library.
+ *
+ * Features:
+ * - Flexible date format parsing (default: YYYY-MM-DD)
+ * - Range validation (min/max dates)
+ * - Temporal validation (past/future/today)
+ * - Weekday/weekend filtering
+ * - Content inclusion/exclusion
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ * - Strict date parsing with format validation
+ *
+ * @example
+ * ```typescript
+ * // Basic date validation (YYYY-MM-DD)
+ * const basicSchema = date()
+ * basicSchema.parse("2024-03-15") // ✓ Valid
+ * basicSchema.parse("2024-13-01") // ✗ Invalid (month 13)
+ *
+ * // Custom format
+ * const customFormatSchema = date({ format: "DD/MM/YYYY" })
+ * customFormatSchema.parse("15/03/2024") // ✓ Valid
+ * customFormatSchema.parse("2024-03-15") // ✗ Invalid (wrong format)
+ *
+ * // Date range validation
+ * const rangeSchema = date({
+ *   min: "2024-01-01",
+ *   max: "2024-12-31"
+ * })
+ * rangeSchema.parse("2024-06-15") // ✓ Valid
+ * rangeSchema.parse("2023-12-31") // ✗ Invalid (before min)
+ *
+ * // Future dates only
+ * const futureSchema = date({ mustBeFuture: true })
+ * futureSchema.parse("2030-01-01") // ✓ Valid (assuming current date < 2030)
+ * futureSchema.parse("2020-01-01") // ✗ Invalid (past date)
+ *
+ * // Weekdays only (Monday-Friday)
+ * const weekdaySchema = date({ weekdaysOnly: true })
+ * weekdaySchema.parse("2024-03-15") // ✓ Valid (if Friday)
+ * weekdaySchema.parse("2024-03-16") // ✗ Invalid (if Saturday)
+ *
+ * // Business date validation
+ * const businessSchema = date({
+ *   format: "YYYY-MM-DD",
+ *   mustBeFuture: true,
+ *   weekdaysOnly: true
+ * })
+ *
+ * // Optional with default
+ * const optionalSchema = date({
+ *   required: false,
+ *   defaultValue: "2024-01-01"
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link DateOptions} for all available configuration options
+ */
 export function date<IsRequired extends boolean = true>(options?: DateOptions<IsRequired>): DateSchema<IsRequired> {
   const {
     required = true,

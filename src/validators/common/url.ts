@@ -1,7 +1,40 @@
+/**
+ * @fileoverview URL validator for Zod Kit
+ *
+ * Provides comprehensive URL validation with protocol filtering, domain control,
+ * port validation, path constraints, and localhost handling.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for URL validation error messages
+ *
+ * @interface UrlMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when URL format is invalid
+ * @property {string} [min] - Message when URL is too short
+ * @property {string} [max] - Message when URL is too long
+ * @property {string} [includes] - Message when URL doesn't contain required string
+ * @property {string} [excludes] - Message when URL contains forbidden string
+ * @property {string} [protocol] - Message when protocol is not allowed
+ * @property {string} [domain] - Message when domain is not allowed
+ * @property {string} [domainBlacklist] - Message when domain is blacklisted
+ * @property {string} [port] - Message when port is not allowed
+ * @property {string} [pathStartsWith] - Message when path doesn't start with required string
+ * @property {string} [pathEndsWith] - Message when path doesn't end with required string
+ * @property {string} [hasQuery] - Message when query parameters are required
+ * @property {string} [noQuery] - Message when query parameters are forbidden
+ * @property {string} [hasFragment] - Message when fragment is required
+ * @property {string} [noFragment] - Message when fragment is forbidden
+ * @property {string} [localhost] - Message when localhost is forbidden
+ * @property {string} [noLocalhost] - Message when localhost is required
+ */
 export type UrlMessages = {
   required?: string
   invalid?: string
@@ -23,6 +56,34 @@ export type UrlMessages = {
   noLocalhost?: string
 }
 
+/**
+ * Configuration options for URL validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface UrlOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {number} [min] - Minimum length of URL
+ * @property {number} [max] - Maximum length of URL
+ * @property {string} [includes] - String that must be included in URL
+ * @property {string | string[]} [excludes] - String(s) that must not be included
+ * @property {string[]} [protocols] - Allowed protocols (e.g., ["https", "http"])
+ * @property {string[]} [allowedDomains] - Domains that are allowed
+ * @property {string[]} [blockedDomains] - Domains that are blocked
+ * @property {number[]} [allowedPorts] - Ports that are allowed
+ * @property {number[]} [blockedPorts] - Ports that are blocked
+ * @property {string} [pathStartsWith] - Path must start with this string
+ * @property {string} [pathEndsWith] - Path must end with this string
+ * @property {boolean} [mustHaveQuery] - Whether URL must have query parameters
+ * @property {boolean} [mustNotHaveQuery] - Whether URL must not have query parameters
+ * @property {boolean} [mustHaveFragment] - Whether URL must have fragment
+ * @property {boolean} [mustNotHaveFragment] - Whether URL must not have fragment
+ * @property {boolean} [allowLocalhost=true] - Whether to allow localhost URLs
+ * @property {boolean} [blockLocalhost] - Whether to explicitly block localhost URLs
+ * @property {Function} [transform] - Custom transformation function for URL strings
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, UrlMessages>} [i18n] - Custom error messages for different locales
+ */
 export type UrlOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   min?: number
@@ -47,8 +108,87 @@ export type UrlOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, UrlMessages>
 }
 
+/**
+ * Type alias for URL validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef UrlSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type UrlSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
+/**
+ * Creates a Zod schema for URL validation with comprehensive constraints
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {UrlOptions<IsRequired>} [options] - Configuration options for URL validation
+ * @returns {UrlSchema<IsRequired>} Zod schema for URL validation
+ *
+ * @description
+ * Creates a comprehensive URL validator with protocol filtering, domain control,
+ * port validation, path constraints, and localhost handling.
+ *
+ * Features:
+ * - RFC-compliant URL format validation
+ * - Protocol whitelist/blacklist (http, https, ftp, etc.)
+ * - Domain whitelist/blacklist with subdomain support
+ * - Port validation and filtering
+ * - Path prefix/suffix validation
+ * - Query parameter requirements
+ * - Fragment requirements
+ * - Localhost detection and control
+ * - Length validation
+ * - Content inclusion/exclusion
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ *
+ * @example
+ * ```typescript
+ * // Basic URL validation
+ * const basicSchema = url()
+ * basicSchema.parse("https://example.com") // ✓ Valid
+ *
+ * // HTTPS only
+ * const httpsSchema = url({ protocols: ["https"] })
+ * httpsSchema.parse("https://example.com") // ✓ Valid
+ * httpsSchema.parse("http://example.com") // ✗ Invalid
+ *
+ * // Domain restriction
+ * const domainSchema = url({
+ *   allowedDomains: ["company.com", "trusted.org"]
+ * })
+ * domainSchema.parse("https://app.company.com") // ✓ Valid (subdomain)
+ * domainSchema.parse("https://example.com") // ✗ Invalid
+ *
+ * // Block localhost
+ * const noLocalhostSchema = url({ blockLocalhost: true })
+ * noLocalhostSchema.parse("https://example.com") // ✓ Valid
+ * noLocalhostSchema.parse("http://localhost:3000") // ✗ Invalid
+ *
+ * // API endpoints with path requirements
+ * const apiSchema = url({
+ *   pathStartsWith: "/api/",
+ *   mustHaveQuery: true
+ * })
+ * apiSchema.parse("https://api.com/api/users?page=1") // ✓ Valid
+ *
+ * // Port restrictions
+ * const portSchema = url({
+ *   allowedPorts: [80, 443, 8080]
+ * })
+ * portSchema.parse("https://example.com:443") // ✓ Valid
+ * portSchema.parse("https://example.com:3000") // ✗ Invalid
+ *
+ * // Optional with default
+ * const optionalSchema = url({
+ *   required: false,
+ *   defaultValue: null
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link UrlOptions} for all available configuration options
+ */
 export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRequired>): UrlSchema<IsRequired> {
   const {
     required = true,

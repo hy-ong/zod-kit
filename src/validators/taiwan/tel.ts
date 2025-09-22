@@ -1,13 +1,43 @@
+/**
+ * @fileoverview Taiwan Landline Telephone Number validator for Zod Kit
+ *
+ * Provides validation for Taiwan landline telephone numbers according to the
+ * official 2024 telecom numbering plan with comprehensive area code support.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for telephone validation error messages
+ *
+ * @interface TelMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when telephone number format is invalid
+ * @property {string} [notInWhitelist] - Message when telephone number is not in whitelist
+ */
 export type TelMessages = {
   required?: string
   invalid?: string
   notInWhitelist?: string
 }
 
+/**
+ * Configuration options for Taiwan landline telephone validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface TelOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {string[]} [whitelist] - Array of specific telephone numbers that are always allowed
+ * @property {Function} [transform] - Custom transformation function for telephone number
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, TelMessages>} [i18n] - Custom error messages for different locales
+ */
 export type TelOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   whitelist?: string[]
@@ -16,9 +46,51 @@ export type TelOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, TelMessages>
 }
 
+/**
+ * Type alias for telephone validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef TelSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type TelSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
-// Taiwan landline telephone validation (Official 2024 rules)
+/**
+ * Validates Taiwan landline telephone number format (Official 2024 rules)
+ *
+ * @param {string} value - The telephone number to validate
+ * @returns {boolean} True if the telephone number is valid
+ *
+ * @description
+ * Validates Taiwan landline telephone numbers according to the official 2024
+ * telecom numbering plan. Supports all Taiwan area codes and their specific
+ * number patterns.
+ *
+ * Supported area codes and formats:
+ * - 02: Taipei, New Taipei, Keelung - 8 digits (2&3&5~8+7D)
+ * - 03: Taoyuan, Hsinchu, Yilan, Hualien - 7 digits
+ * - 037: Miaoli - 6 digits (2~9+5D)
+ * - 04: Taichung, Changhua - 7 digits
+ * - 049: Nantou - 7 digits (2~9+6D)
+ * - 05: Yunlin, Chiayi - 7 digits
+ * - 06: Tainan - 7 digits
+ * - 07: Kaohsiung - 7 digits (2~9+6D)
+ * - 08: Pingtung - 7 digits (4&7&8+6D)
+ * - 082: Kinmen - 6 digits (2~5&7~9+5D)
+ * - 0826: Wuqiu - 5 digits (6+4D)
+ * - 0836: Matsu - 5 digits (2~9+4D)
+ * - 089: Taitung - 6 digits (2~9+5D)
+ *
+ * @example
+ * ```typescript
+ * validateTaiwanTel("0223456789") // true (Taipei area)
+ * validateTaiwanTel("0312345678") // true (Taoyuan area)
+ * validateTaiwanTel("037234567") // true (Miaoli area)
+ * validateTaiwanTel("082234567") // true (Kinmen area)
+ * validateTaiwanTel("02-2345-6789") // true (with separators)
+ * validateTaiwanTel("0812345678") // false (invalid for 08 area)
+ * ```
+ */
 const validateTaiwanTel = (value: string): boolean => {
   // Official Taiwan landline formats according to telecom numbering plan:
   // 02: Taipei, New Taipei, Keelung - 8 digits (2&3&5~8+7D)
@@ -97,6 +169,68 @@ const validateTaiwanTel = (value: string): boolean => {
   return false
 }
 
+/**
+ * Creates a Zod schema for Taiwan landline telephone number validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {TelOptions<IsRequired>} [options] - Configuration options for telephone validation
+ * @returns {TelSchema<IsRequired>} Zod schema for telephone number validation
+ *
+ * @description
+ * Creates a comprehensive Taiwan landline telephone number validator with support for
+ * all Taiwan area codes according to the official 2024 telecom numbering plan.
+ *
+ * Features:
+ * - Complete Taiwan area code support (02, 03, 037, 04, 049, 05, 06, 07, 08, 082, 0826, 0836, 089)
+ * - Automatic separator handling (hyphens and spaces)
+ * - Area-specific number length and pattern validation
+ * - Whitelist functionality for specific allowed numbers
+ * - Automatic trimming and preprocessing
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ * - Optional field support
+ *
+ * @example
+ * ```typescript
+ * // Basic telephone number validation
+ * const basicSchema = tel()
+ * basicSchema.parse("0223456789") // ✓ Valid (Taipei)
+ * basicSchema.parse("0312345678") // ✓ Valid (Taoyuan)
+ * basicSchema.parse("02-2345-6789") // ✓ Valid (with separators)
+ * basicSchema.parse("0812345678") // ✗ Invalid (wrong format for 08)
+ *
+ * // With whitelist (only specific numbers allowed)
+ * const whitelistSchema = tel({
+ *   whitelist: ["0223456789", "0312345678"]
+ * })
+ * whitelistSchema.parse("0223456789") // ✓ Valid (in whitelist)
+ * whitelistSchema.parse("0287654321") // ✗ Invalid (not in whitelist)
+ *
+ * // Optional telephone number
+ * const optionalSchema = tel({ required: false })
+ * optionalSchema.parse("") // ✓ Valid (returns null)
+ * optionalSchema.parse("0223456789") // ✓ Valid
+ *
+ * // With custom transformation (remove separators)
+ * const transformSchema = tel({
+ *   transform: (value) => value.replace(/[^0-9]/g, '') // Keep only digits
+ * })
+ * transformSchema.parse("02-2345-6789") // ✓ Valid (separators removed)
+ * transformSchema.parse("02 2345 6789") // ✓ Valid (spaces removed)
+ *
+ * // With custom error messages
+ * const customSchema = tel({
+ *   i18n: {
+ *     en: { invalid: "Please enter a valid Taiwan landline number" },
+ *     'zh-TW': { invalid: "請輸入有效的台灣市話號碼" }
+ *   }
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link TelOptions} for all available configuration options
+ * @see {@link validateTaiwanTel} for validation logic details
+ */
 export function tel<IsRequired extends boolean = true>(options?: TelOptions<IsRequired>): TelSchema<IsRequired> {
   const { required = true, whitelist, transform, defaultValue, i18n } = options ?? {}
 
@@ -178,5 +312,19 @@ export function tel<IsRequired extends boolean = true>(options?: TelOptions<IsRe
   return schema as unknown as TelSchema<IsRequired>
 }
 
-// Export utility function for external use
+/**
+ * Utility function exported for external use
+ *
+ * @description
+ * The validation function can be used independently for telephone number validation
+ * without creating a full Zod schema.
+ *
+ * @example
+ * ```typescript
+ * import { validateTaiwanTel } from './tel'
+ *
+ * // Direct validation
+ * const isValid = validateTaiwanTel("0223456789") // boolean
+ * ```
+ */
 export { validateTaiwanTel }

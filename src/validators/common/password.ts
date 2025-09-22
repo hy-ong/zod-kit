@@ -1,7 +1,36 @@
+/**
+ * @fileoverview Password validator for Zod Kit
+ *
+ * Provides comprehensive password validation with strength analysis, character requirements,
+ * security checks, and protection against common weak passwords.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for password validation error messages
+ *
+ * @interface PasswordMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [min] - Message when password is too short
+ * @property {string} [max] - Message when password is too long
+ * @property {string} [uppercase] - Message when uppercase letters are required
+ * @property {string} [lowercase] - Message when lowercase letters are required
+ * @property {string} [digits] - Message when digits are required
+ * @property {string} [special] - Message when special characters are required
+ * @property {string} [noRepeating] - Message when repeating characters are forbidden
+ * @property {string} [noSequential] - Message when sequential characters are forbidden
+ * @property {string} [noCommonWords] - Message when common passwords are forbidden
+ * @property {string} [minStrength] - Message when password strength is insufficient
+ * @property {string} [excludes] - Message when password contains forbidden strings
+ * @property {string} [includes] - Message when password doesn't contain required string
+ * @property {string} [invalid] - Message when password doesn't match custom regex
+ */
 export type PasswordMessages = {
   required?: string
   min?: string
@@ -19,8 +48,42 @@ export type PasswordMessages = {
   invalid?: string
 }
 
+/**
+ * Password strength levels used for validation
+ *
+ * @typedef {"weak" | "medium" | "strong" | "very-strong"} PasswordStrength
+ * @description
+ * - weak: Basic passwords with minimal requirements
+ * - medium: Passwords with some character variety
+ * - strong: Passwords with good character variety and length
+ * - very-strong: Passwords with excellent character variety, length, and complexity
+ */
 export type PasswordStrength = "weak" | "medium" | "strong" | "very-strong"
 
+/**
+ * Configuration options for password validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface PasswordOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {number} [min] - Minimum length of password
+ * @property {number} [max] - Maximum length of password
+ * @property {boolean} [uppercase] - Whether uppercase letters are required
+ * @property {boolean} [lowercase] - Whether lowercase letters are required
+ * @property {boolean} [digits] - Whether digits are required
+ * @property {boolean} [special] - Whether special characters are required
+ * @property {boolean} [noRepeating] - Whether to forbid repeating characters (3+ in a row)
+ * @property {boolean} [noSequential] - Whether to forbid sequential characters (abc, 123)
+ * @property {boolean} [noCommonWords] - Whether to forbid common weak passwords
+ * @property {PasswordStrength} [minStrength] - Minimum required password strength
+ * @property {string | string[]} [excludes] - String(s) that must not be included
+ * @property {string} [includes] - String that must be included in password
+ * @property {RegExp} [regex] - Custom regex pattern for validation
+ * @property {Function} [transform] - Custom transformation function for password
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, PasswordMessages>} [i18n] - Custom error messages for different locales
+ */
 export type PasswordOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   min?: number
@@ -41,9 +104,21 @@ export type PasswordOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, PasswordMessages>
 }
 
+/**
+ * Type alias for password validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef PasswordSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type PasswordSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
-// Common weak passwords to check against
+/**
+ * List of common weak passwords to check against
+ *
+ * @constant {string[]} COMMON_PASSWORDS
+ * @description Contains frequently used weak passwords that should be avoided
+ */
 const COMMON_PASSWORDS = [
   "password",
   "123456",
@@ -63,7 +138,31 @@ const COMMON_PASSWORDS = [
   "princess",
 ]
 
-// Helper function to calculate password strength
+/**
+ * Calculates password strength based on various criteria
+ *
+ * @param {string} password - The password to analyze
+ * @returns {PasswordStrength} The calculated strength level
+ *
+ * @description
+ * Analyzes password strength using multiple factors:
+ * - Length bonuses (8+, 12+, 16+ characters)
+ * - Character variety (lowercase, uppercase, digits, special characters)
+ * - Deductions for repeating or sequential patterns
+ *
+ * Scoring system:
+ * - 0-2 points: weak
+ * - 3-4 points: medium
+ * - 5-6 points: strong
+ * - 7+ points: very-strong
+ *
+ * @example
+ * ```typescript
+ * calculatePasswordStrength("password") // "weak"
+ * calculatePasswordStrength("Password123") // "medium"
+ * calculatePasswordStrength("MyStr0ng!P@ssw0rd") // "very-strong"
+ * ```
+ */
 const calculatePasswordStrength = (password: string): PasswordStrength => {
   let score = 0
 
@@ -88,6 +187,79 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
   return "very-strong"
 }
 
+/**
+ * Creates a Zod schema for password validation with comprehensive security checks
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {PasswordOptions<IsRequired>} [options] - Configuration options for password validation
+ * @returns {PasswordSchema<IsRequired>} Zod schema for password validation
+ *
+ * @description
+ * Creates a comprehensive password validator with strength analysis, character requirements,
+ * security checks, and protection against common weak passwords.
+ *
+ * Features:
+ * - Length validation (min/max)
+ * - Character requirements (uppercase, lowercase, digits, special)
+ * - Security checks (no repeating, no sequential patterns)
+ * - Common password detection
+ * - Strength analysis with configurable minimum levels
+ * - Content inclusion/exclusion
+ * - Custom regex patterns
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ *
+ * @example
+ * ```typescript
+ * // Basic password validation
+ * const basicSchema = password()
+ * basicSchema.parse("MyPassword123!") // ✓ Valid
+ *
+ * // Strong password requirements
+ * const strongSchema = password({
+ *   min: 12,
+ *   uppercase: true,
+ *   lowercase: true,
+ *   digits: true,
+ *   special: true,
+ *   minStrength: "strong"
+ * })
+ *
+ * // No common passwords
+ * const secureSchema = password({
+ *   noCommonWords: true,
+ *   noRepeating: true,
+ *   noSequential: true
+ * })
+ * secureSchema.parse("password123") // ✗ Invalid (common password)
+ * secureSchema.parse("aaa123") // ✗ Invalid (repeating characters)
+ * secureSchema.parse("abc123") // ✗ Invalid (sequential characters)
+ *
+ * // Custom requirements
+ * const customSchema = password({
+ *   min: 8,
+ *   includes: "@", // Must contain @
+ *   excludes: ["admin", "user"], // Cannot contain these words
+ *   regex: /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/ // Custom pattern
+ * })
+ *
+ * // Minimum strength requirement
+ * const strengthSchema = password({ minStrength: "very-strong" })
+ * strengthSchema.parse("weak") // ✗ Invalid (insufficient strength)
+ * strengthSchema.parse("MyVeryStr0ng!P@ssw0rd2024") // ✓ Valid
+ *
+ * // Optional with default
+ * const optionalSchema = password({
+ *   required: false,
+ *   defaultValue: null
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link PasswordOptions} for all available configuration options
+ * @see {@link PasswordStrength} for strength level definitions
+ * @see {@link calculatePasswordStrength} for strength calculation logic
+ */
 export function password<IsRequired extends boolean = true>(options?: PasswordOptions<IsRequired>): PasswordSchema<IsRequired> {
   const {
     required = true,

@@ -1,13 +1,43 @@
+/**
+ * @fileoverview Taiwan Fax Number validator for Zod Kit
+ *
+ * Provides validation for Taiwan fax numbers according to the official 2024
+ * telecom numbering plan. Uses the same format as landline telephone numbers.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for fax number validation error messages
+ *
+ * @interface FaxMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when fax number format is invalid
+ * @property {string} [notInWhitelist] - Message when fax number is not in whitelist
+ */
 export type FaxMessages = {
   required?: string
   invalid?: string
   notInWhitelist?: string
 }
 
+/**
+ * Configuration options for Taiwan fax number validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface FaxOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {string[]} [whitelist] - Array of specific fax numbers that are always allowed
+ * @property {Function} [transform] - Custom transformation function for fax number
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, FaxMessages>} [i18n] - Custom error messages for different locales
+ */
 export type FaxOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   whitelist?: string[]
@@ -16,9 +46,49 @@ export type FaxOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, FaxMessages>
 }
 
+/**
+ * Type alias for fax number validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef FaxSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type FaxSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
-// Taiwan fax number validation (Official 2024 rules - same as landline)
+/**
+ * Validates Taiwan fax number format (Official 2024 rules - same as landline)
+ *
+ * @param {string} value - The fax number to validate
+ * @returns {boolean} True if the fax number is valid
+ *
+ * @description
+ * Validates Taiwan fax numbers according to the official 2024 telecom numbering plan.
+ * Fax numbers follow the same format as landline telephone numbers in Taiwan.
+ *
+ * Supported area codes and formats (same as landline):
+ * - 02: Taipei, New Taipei, Keelung - 8 digits (2&3&5~8+7D)
+ * - 03: Taoyuan, Hsinchu, Yilan, Hualien - 7 digits
+ * - 037: Miaoli - 6 digits (2~9+5D)
+ * - 04: Taichung, Changhua - 7 digits
+ * - 049: Nantou - 7 digits (2~9+6D)
+ * - 05: Yunlin, Chiayi - 7 digits
+ * - 06: Tainan - 7 digits
+ * - 07: Kaohsiung - 7 digits (2~9+6D)
+ * - 08: Pingtung - 7 digits (4&7&8+6D)
+ * - 082: Kinmen - 6 digits (2~5&7~9+5D)
+ * - 0826: Wuqiu - 5 digits (6+4D)
+ * - 0836: Matsu - 5 digits (2~9+4D)
+ * - 089: Taitung - 6 digits (2~9+5D)
+ *
+ * @example
+ * ```typescript
+ * validateTaiwanFax("0223456789") // true (Taipei area)
+ * validateTaiwanFax("0312345678") // true (Taoyuan area)
+ * validateTaiwanFax("037234567") // true (Miaoli area)
+ * validateTaiwanFax("02-2345-6789") // true (with separators)
+ * validateTaiwanFax("0812345678") // false (invalid for 08 area)
+ * ```
+ */
 const validateTaiwanFax = (value: string): boolean => {
   // Official Taiwan fax formats according to telecom numbering plan (same as landline):
   // 02: Taipei, New Taipei, Keelung - 8 digits (2&3&5~8+7D)
@@ -97,6 +167,67 @@ const validateTaiwanFax = (value: string): boolean => {
   return false
 }
 
+/**
+ * Creates a Zod schema for Taiwan fax number validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {FaxOptions<IsRequired>} [options] - Configuration options for fax validation
+ * @returns {FaxSchema<IsRequired>} Zod schema for fax number validation
+ *
+ * @description
+ * Creates a comprehensive Taiwan fax number validator with support for all Taiwan
+ * area codes. Fax numbers follow the same format as landline telephone numbers.
+ *
+ * Features:
+ * - Complete Taiwan area code support (same as landline)
+ * - Automatic separator handling (hyphens and spaces)
+ * - Area-specific number length and pattern validation
+ * - Whitelist functionality for specific allowed numbers
+ * - Automatic trimming and preprocessing
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ * - Optional field support
+ *
+ * @example
+ * ```typescript
+ * // Basic fax number validation
+ * const basicSchema = fax()
+ * basicSchema.parse("0223456789") // ✓ Valid (Taipei)
+ * basicSchema.parse("0312345678") // ✓ Valid (Taoyuan)
+ * basicSchema.parse("02-2345-6789") // ✓ Valid (with separators)
+ * basicSchema.parse("0812345678") // ✗ Invalid (wrong format for 08)
+ *
+ * // With whitelist (only specific numbers allowed)
+ * const whitelistSchema = fax({
+ *   whitelist: ["0223456789", "0312345678"]
+ * })
+ * whitelistSchema.parse("0223456789") // ✓ Valid (in whitelist)
+ * whitelistSchema.parse("0287654321") // ✗ Invalid (not in whitelist)
+ *
+ * // Optional fax number
+ * const optionalSchema = fax({ required: false })
+ * optionalSchema.parse("") // ✓ Valid (returns null)
+ * optionalSchema.parse("0223456789") // ✓ Valid
+ *
+ * // With custom transformation
+ * const transformSchema = fax({
+ *   transform: (value) => value.replace(/[^0-9]/g, '') // Keep only digits
+ * })
+ * transformSchema.parse("02-2345-6789") // ✓ Valid (separators removed)
+ *
+ * // With custom error messages
+ * const customSchema = fax({
+ *   i18n: {
+ *     en: { invalid: "Please enter a valid Taiwan fax number" },
+ *     'zh-TW': { invalid: "請輸入有效的台灣傳真號碼" }
+ *   }
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link FaxOptions} for all available configuration options
+ * @see {@link validateTaiwanFax} for validation logic details
+ */
 export function fax<IsRequired extends boolean = true>(options?: FaxOptions<IsRequired>): FaxSchema<IsRequired> {
   const { required = true, whitelist, transform, defaultValue, i18n } = options ?? {}
 
@@ -178,5 +309,19 @@ export function fax<IsRequired extends boolean = true>(options?: FaxOptions<IsRe
   return schema as unknown as FaxSchema<IsRequired>
 }
 
-// Export utility function for external use
+/**
+ * Utility function exported for external use
+ *
+ * @description
+ * The validation function can be used independently for fax number validation
+ * without creating a full Zod schema.
+ *
+ * @example
+ * ```typescript
+ * import { validateTaiwanFax } from './fax'
+ *
+ * // Direct validation
+ * const isValid = validateTaiwanFax("0223456789") // boolean
+ * ```
+ */
 export { validateTaiwanFax }

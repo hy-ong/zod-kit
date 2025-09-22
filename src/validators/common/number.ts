@@ -1,7 +1,35 @@
+/**
+ * @fileoverview Number validator for Zod Kit
+ *
+ * Provides comprehensive number validation with type constraints, range validation,
+ * precision control, and advanced parsing features including comma-separated numbers.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodNumber } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for number validation error messages
+ *
+ * @interface NumberMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when value is not a valid number
+ * @property {string} [integer] - Message when integer is required but float provided
+ * @property {string} [float] - Message when float is required but integer provided
+ * @property {string} [min] - Message when number is below minimum value
+ * @property {string} [max] - Message when number exceeds maximum value
+ * @property {string} [positive] - Message when positive number is required
+ * @property {string} [negative] - Message when negative number is required
+ * @property {string} [nonNegative] - Message when non-negative number is required
+ * @property {string} [nonPositive] - Message when non-positive number is required
+ * @property {string} [multipleOf] - Message when number is not a multiple of specified value
+ * @property {string} [finite] - Message when finite number is required
+ * @property {string} [precision] - Message when number has too many decimal places
+ */
 export type NumberMessages = {
   required?: string
   invalid?: string
@@ -18,6 +46,28 @@ export type NumberMessages = {
   precision?: string
 }
 
+/**
+ * Configuration options for number validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface NumberOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {number} [min] - Minimum allowed value
+ * @property {number} [max] - Maximum allowed value
+ * @property {number | null} [defaultValue] - Default value when input is empty
+ * @property {"integer" | "float" | "both"} [type="both"] - Type constraint for the number
+ * @property {boolean} [positive] - Whether number must be positive (> 0)
+ * @property {boolean} [negative] - Whether number must be negative (< 0)
+ * @property {boolean} [nonNegative] - Whether number must be non-negative (>= 0)
+ * @property {boolean} [nonPositive] - Whether number must be non-positive (<= 0)
+ * @property {number} [multipleOf] - Number must be a multiple of this value
+ * @property {number} [precision] - Maximum number of decimal places allowed
+ * @property {boolean} [finite=true] - Whether to reject Infinity and -Infinity
+ * @property {Function} [transform] - Custom transformation function for number values
+ * @property {boolean} [parseCommas=false] - Whether to parse comma-separated numbers (e.g., "1,234")
+ * @property {Record<Locale, NumberMessages>} [i18n] - Custom error messages for different locales
+ */
 export type NumberOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   min?: number
@@ -36,8 +86,83 @@ export type NumberOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, NumberMessages>
 }
 
+/**
+ * Type alias for number validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef NumberSchema
+ * @description Returns ZodNumber if required, ZodNullable<ZodNumber> if optional
+ */
 export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ? ZodNumber : ZodNullable<ZodNumber>
 
+/**
+ * Creates a Zod schema for number validation with comprehensive constraints
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {NumberOptions<IsRequired>} [options] - Configuration options for number validation
+ * @returns {NumberSchema<IsRequired>} Zod schema for number validation
+ *
+ * @description
+ * Creates a comprehensive number validator with type constraints, range validation,
+ * precision control, and advanced parsing features including comma-separated numbers.
+ *
+ * Features:
+ * - Type constraints (integer, float, or both)
+ * - Range validation (min/max)
+ * - Sign constraints (positive, negative, non-negative, non-positive)
+ * - Multiple-of validation
+ * - Precision control (decimal places)
+ * - Finite number validation
+ * - Comma-separated number parsing
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ *
+ * @example
+ * ```typescript
+ * // Basic number validation
+ * const basicSchema = number()
+ * basicSchema.parse(42) // ✓ Valid
+ * basicSchema.parse("42") // ✓ Valid (converted to number)
+ *
+ * // Integer only
+ * const integerSchema = number({ type: "integer" })
+ * integerSchema.parse(42) // ✓ Valid
+ * integerSchema.parse(42.5) // ✗ Invalid
+ *
+ * // Range validation
+ * const rangeSchema = number({ min: 0, max: 100 })
+ * rangeSchema.parse(50) // ✓ Valid
+ * rangeSchema.parse(150) // ✗ Invalid
+ *
+ * // Positive numbers only
+ * const positiveSchema = number({ positive: true })
+ * positiveSchema.parse(5) // ✓ Valid
+ * positiveSchema.parse(-5) // ✗ Invalid
+ *
+ * // Multiple of constraint
+ * const multipleSchema = number({ multipleOf: 5 })
+ * multipleSchema.parse(10) // ✓ Valid
+ * multipleSchema.parse(7) // ✗ Invalid
+ *
+ * // Precision control
+ * const precisionSchema = number({ precision: 2 })
+ * precisionSchema.parse(3.14) // ✓ Valid
+ * precisionSchema.parse(3.14159) // ✗ Invalid
+ *
+ * // Comma-separated parsing
+ * const commaSchema = number({ parseCommas: true })
+ * commaSchema.parse("1,234.56") // ✓ Valid (parsed as 1234.56)
+ *
+ * // Optional with default
+ * const optionalSchema = number({
+ *   required: false,
+ *   defaultValue: 0
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link NumberOptions} for all available configuration options
+ */
 export function number<IsRequired extends boolean = true>(options?: NumberOptions<IsRequired>): NumberSchema<IsRequired> {
   const {
     required = true,

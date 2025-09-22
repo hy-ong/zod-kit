@@ -1,7 +1,34 @@
+/**
+ * @fileoverview Time validator for Zod Kit
+ *
+ * Provides comprehensive time validation with support for multiple time formats,
+ * hour/minute constraints, and advanced time-based validation options.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for time validation error messages
+ *
+ * @interface TimeMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when time format is invalid
+ * @property {string} [format] - Message when time doesn't match expected format
+ * @property {string} [min] - Message when time is before minimum allowed
+ * @property {string} [max] - Message when time is after maximum allowed
+ * @property {string} [hour] - Message when hour is outside allowed range
+ * @property {string} [minute] - Message when minute doesn't match step requirement
+ * @property {string} [second] - Message when second doesn't match step requirement
+ * @property {string} [includes] - Message when time doesn't contain required string
+ * @property {string} [excludes] - Message when time contains forbidden string
+ * @property {string} [customRegex] - Message when custom regex validation fails
+ * @property {string} [notInWhitelist] - Message when value is not in whitelist
+ */
 export type TimeMessages = {
   required?: string
   invalid?: string
@@ -17,6 +44,19 @@ export type TimeMessages = {
   notInWhitelist?: string
 }
 
+/**
+ * Supported time formats for validation
+ *
+ * @typedef {string} TimeFormat
+ *
+ * Available formats:
+ * - HH:mm: 24-hour format with leading zeros (14:30, 09:30)
+ * - HH:mm:ss: 24-hour format with seconds (14:30:45, 09:30:15)
+ * - hh:mm A: 12-hour format with AM/PM (02:30 PM, 09:30 AM)
+ * - hh:mm:ss A: 12-hour format with seconds and AM/PM (02:30:45 PM)
+ * - H:mm: 24-hour format without leading zeros (14:30, 9:30)
+ * - h:mm A: 12-hour format without leading zeros (2:30 PM, 9:30 AM)
+ */
 export type TimeFormat =
   | "HH:mm"           // 24-hour format (14:30)
   | "HH:mm:ss"        // 24-hour with seconds (14:30:45)
@@ -25,6 +65,32 @@ export type TimeFormat =
   | "H:mm"            // 24-hour no leading zero (14:30, 9:30)
   | "h:mm A"          // 12-hour no leading zero (2:30 PM, 9:30 AM)
 
+/**
+ * Configuration options for time validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface TimeOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {TimeFormat} [format="HH:mm"] - Expected time format
+ * @property {string} [min] - Minimum allowed time (e.g., "09:00")
+ * @property {string} [max] - Maximum allowed time (e.g., "17:00")
+ * @property {number} [minHour] - Minimum allowed hour (0-23)
+ * @property {number} [maxHour] - Maximum allowed hour (0-23)
+ * @property {number[]} [allowedHours] - Specific hours that are allowed
+ * @property {number} [minuteStep] - Required minute intervals (e.g., 15 for :00, :15, :30, :45)
+ * @property {number} [secondStep] - Required second intervals
+ * @property {string} [includes] - String that must be included in the time
+ * @property {string | string[]} [excludes] - String(s) that must not be included
+ * @property {RegExp} [regex] - Custom regex for validation (overrides format validation)
+ * @property {"trim" | "trimStart" | "trimEnd" | "none"} [trimMode="trim"] - Whitespace handling
+ * @property {"upper" | "lower" | "none"} [casing="none"] - Case transformation
+ * @property {string[]} [whitelist] - Specific time strings that are always allowed
+ * @property {boolean} [whitelistOnly=false] - If true, only values in whitelist are allowed
+ * @property {Function} [transform] - Custom transformation function applied before validation
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, TimeMessages>} [i18n] - Custom error messages for different locales
+ */
 export type TimeOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   format?: TimeFormat
@@ -47,9 +113,21 @@ export type TimeOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, TimeMessages>
 }
 
+/**
+ * Type alias for time validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef TimeSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type TimeSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
-// Time format patterns
+/**
+ * Regular expression patterns for time format validation
+ *
+ * @constant {Record<TimeFormat, RegExp>} TIME_PATTERNS
+ * @description Maps each supported time format to its corresponding regex pattern
+ */
 const TIME_PATTERNS: Record<TimeFormat, RegExp> = {
   "HH:mm": /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/,
   "HH:mm:ss": /^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/,
@@ -59,7 +137,25 @@ const TIME_PATTERNS: Record<TimeFormat, RegExp> = {
   "h:mm A": /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i,
 }
 
-// Parse time string to minutes since midnight for comparison
+/**
+ * Parses a time string to minutes since midnight for comparison
+ *
+ * @param {string} timeStr - The time string to parse
+ * @param {TimeFormat} format - The expected time format
+ * @returns {number | null} Minutes since midnight (0-1439) or null if parsing fails
+ *
+ * @description
+ * Converts time strings to minutes since midnight for easy comparison and validation.
+ * Handles both 12-hour and 24-hour formats with proper AM/PM conversion.
+ *
+ * @example
+ * ```typescript
+ * parseTimeToMinutes("14:30", "HH:mm") // 870 (14*60 + 30)
+ * parseTimeToMinutes("2:30 PM", "h:mm A") // 870 (14*60 + 30)
+ * parseTimeToMinutes("12:00 AM", "hh:mm A") // 0 (midnight)
+ * parseTimeToMinutes("12:00 PM", "hh:mm A") // 720 (noon)
+ * ```
+ */
 const parseTimeToMinutes = (timeStr: string, format: TimeFormat): number | null => {
   const cleanTime = timeStr.trim()
 
@@ -106,13 +202,49 @@ const parseTimeToMinutes = (timeStr: string, format: TimeFormat): number | null 
   }
 }
 
-// Validate time format
+/**
+ * Validates if a time string matches the specified format pattern
+ *
+ * @param {string} value - The time string to validate
+ * @param {TimeFormat} format - The expected time format
+ * @returns {boolean} True if the time matches the format pattern
+ *
+ * @description
+ * Performs regex pattern matching to validate time format.
+ * Does not validate actual time values (e.g., 25:00 would pass pattern but fail logic).
+ *
+ * @example
+ * ```typescript
+ * validateTimeFormat("14:30", "HH:mm") // true
+ * validateTimeFormat("2:30 PM", "h:mm A") // true
+ * validateTimeFormat("25:00", "HH:mm") // true (pattern matches)
+ * validateTimeFormat("14:30", "h:mm A") // false (wrong format)
+ * ```
+ */
 const validateTimeFormat = (value: string, format: TimeFormat): boolean => {
   const pattern = TIME_PATTERNS[format]
   return pattern.test(value.trim())
 }
 
-// Normalize time to 24-hour format for internal processing
+/**
+ * Normalizes time to 24-hour format for internal processing
+ *
+ * @param {string} timeStr - The time string to normalize
+ * @param {TimeFormat} format - The current time format
+ * @returns {string | null} Normalized time string or null if parsing fails
+ *
+ * @description
+ * Converts time strings to a standardized 24-hour format for consistent processing.
+ * Handles AM/PM conversion and leading zero normalization.
+ *
+ * @example
+ * ```typescript
+ * normalizeTime("2:30 PM", "h:mm A") // "14:30"
+ * normalizeTime("12:00 AM", "hh:mm A") // "00:00"
+ * normalizeTime("9:30", "H:mm") // "09:30"
+ * normalizeTime("14:30:45", "HH:mm:ss") // "14:30:45"
+ * ```
+ */
 const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
   const cleanTime = timeStr.trim()
 
@@ -148,6 +280,85 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
   return cleanTime
 }
 
+/**
+ * Creates a Zod schema for time validation with comprehensive options
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {TimeOptions<IsRequired>} [options] - Configuration options for time validation
+ * @returns {TimeSchema<IsRequired>} Zod schema for time validation
+ *
+ * @description
+ * Creates a comprehensive time validator that supports multiple time formats,
+ * hour/minute constraints, step validation, and extensive customization options.
+ *
+ * Features:
+ * - Multiple time formats (24-hour, 12-hour, with/without seconds)
+ * - Time range validation (min/max)
+ * - Hour and minute constraints
+ * - Step validation (e.g., 15-minute intervals)
+ * - Whitelist/blacklist support
+ * - Custom regex patterns
+ * - String transformation and case handling
+ * - Comprehensive internationalization
+ *
+ * @example
+ * ```typescript
+ * // Basic time validation (24-hour format)
+ * const basicSchema = time()
+ * basicSchema.parse("14:30") // ✓ Valid
+ * basicSchema.parse("2:30 PM") // ✗ Invalid (wrong format)
+ *
+ * // 12-hour format with AM/PM
+ * const ampmSchema = time({ format: "hh:mm A" })
+ * ampmSchema.parse("02:30 PM") // ✓ Valid
+ * ampmSchema.parse("14:30") // ✗ Invalid (wrong format)
+ *
+ * // Business hours validation
+ * const businessHours = time({
+ *   format: "HH:mm",
+ *   minHour: 9,
+ *   maxHour: 17,
+ *   minuteStep: 15 // Only :00, :15, :30, :45
+ * })
+ * businessHours.parse("09:15") // ✓ Valid
+ * businessHours.parse("18:00") // ✗ Invalid (after maxHour)
+ * businessHours.parse("09:05") // ✗ Invalid (not 15-minute step)
+ *
+ * // Time range validation
+ * const timeRangeSchema = time({
+ *   min: "09:00",
+ *   max: "17:00"
+ * })
+ * timeRangeSchema.parse("12:30") // ✓ Valid
+ * timeRangeSchema.parse("08:00") // ✗ Invalid (before min)
+ *
+ * // Allowed hours only
+ * const specificHours = time({
+ *   allowedHours: [9, 12, 15, 18]
+ * })
+ * specificHours.parse("12:30") // ✓ Valid
+ * specificHours.parse("11:30") // ✗ Invalid (hour not allowed)
+ *
+ * // Whitelist specific times
+ * const whitelistSchema = time({
+ *   whitelist: ["09:00", "12:00", "17:00"],
+ *   whitelistOnly: true
+ * })
+ * whitelistSchema.parse("12:00") // ✓ Valid (in whitelist)
+ * whitelistSchema.parse("13:00") // ✗ Invalid (not in whitelist)
+ *
+ * // Optional with default
+ * const optionalSchema = time({
+ *   required: false,
+ *   defaultValue: "09:00"
+ * })
+ * optionalSchema.parse("") // ✓ Valid (returns "09:00")
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link TimeOptions} for all available configuration options
+ * @see {@link TimeFormat} for supported time formats
+ */
 export function time<IsRequired extends boolean = true>(options?: TimeOptions<IsRequired>): TimeSchema<IsRequired> {
   const {
     required = true,
@@ -362,5 +573,28 @@ export function time<IsRequired extends boolean = true>(options?: TimeOptions<Is
   return schema as unknown as TimeSchema<IsRequired>
 }
 
-// Export utility functions for external use
+/**
+ * Utility functions and constants exported for external use
+ *
+ * @description
+ * These utilities can be used independently for time parsing, validation, and normalization
+ * without creating a full Zod schema. Useful for custom validation logic or preprocessing.
+ *
+ * @example
+ * ```typescript
+ * import { validateTimeFormat, parseTimeToMinutes, normalizeTime, TIME_PATTERNS } from './time'
+ *
+ * // Check if a string matches a format
+ * const isValid = validateTimeFormat("14:30", "HH:mm")
+ *
+ * // Convert time to minutes for comparison
+ * const minutes = parseTimeToMinutes("2:30 PM", "h:mm A") // 870
+ *
+ * // Normalize to 24-hour format
+ * const normalized = normalizeTime("2:30 PM", "h:mm A") // "14:30"
+ *
+ * // Access regex patterns
+ * const pattern = TIME_PATTERNS["HH:mm"]
+ * ```
+ */
 export { validateTimeFormat, parseTimeToMinutes, normalizeTime, TIME_PATTERNS }

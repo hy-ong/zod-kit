@@ -1,7 +1,39 @@
+/**
+ * @fileoverview ID validator for Zod Kit
+ *
+ * Provides comprehensive ID validation with support for multiple ID formats,
+ * auto-detection, custom patterns, and flexible validation options.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for ID validation error messages
+ *
+ * @interface IdMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when ID format is invalid
+ * @property {string} [minLength] - Message when ID is too short
+ * @property {string} [maxLength] - Message when ID is too long
+ * @property {string} [numeric] - Message when numeric ID format is invalid
+ * @property {string} [uuid] - Message when UUID format is invalid
+ * @property {string} [objectId] - Message when MongoDB ObjectId format is invalid
+ * @property {string} [nanoid] - Message when Nano ID format is invalid
+ * @property {string} [snowflake] - Message when Snowflake ID format is invalid
+ * @property {string} [cuid] - Message when CUID format is invalid
+ * @property {string} [ulid] - Message when ULID format is invalid
+ * @property {string} [shortid] - Message when ShortId format is invalid
+ * @property {string} [customFormat] - Message when custom regex format is invalid
+ * @property {string} [includes] - Message when ID doesn't contain required string
+ * @property {string} [excludes] - Message when ID contains forbidden string
+ * @property {string} [startsWith] - Message when ID doesn't start with required string
+ * @property {string} [endsWith] - Message when ID doesn't end with required string
+ */
 export type IdMessages = {
   required?: string
   invalid?: string
@@ -22,17 +54,54 @@ export type IdMessages = {
   endsWith?: string
 }
 
+/**
+ * Supported ID types for validation
+ *
+ * @typedef {string} IdType
+ *
+ * Available types:
+ * - numeric: Pure numeric IDs (1, 123, 999999)
+ * - uuid: UUID v4 format (xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx)
+ * - objectId: MongoDB ObjectId (24-character hexadecimal)
+ * - nanoid: Nano ID format (21-character URL-safe)
+ * - snowflake: Twitter Snowflake (19-digit number)
+ * - cuid: CUID format (25-character starting with 'c')
+ * - ulid: ULID format (26-character case-insensitive)
+ * - shortid: ShortId format (7-14 character URL-safe)
+ * - auto: Auto-detect format from the value
+ */
 export type IdType =
-  | "numeric" // 純數字 ID (1, 123, 999999)
-  | "uuid" // UUID v4 格式
-  | "objectId" // MongoDB ObjectId (24位16進制)
+  | "numeric" // Pure numeric IDs (1, 123, 999999)
+  | "uuid" // UUID v4 format
+  | "objectId" // MongoDB ObjectId (24-character hexadecimal)
   | "nanoid" // Nano ID
-  | "snowflake" // Twitter Snowflake (19位數字)
-  | "cuid" // CUID 格式
-  | "ulid" // ULID 格式
-  | "shortid" // ShortId 格式
-  | "auto" // 自動檢測格式
+  | "snowflake" // Twitter Snowflake (19-digit number)
+  | "cuid" // CUID format
+  | "ulid" // ULID format
+  | "shortid" // ShortId format
+  | "auto" // Auto-detect format
 
+/**
+ * Configuration options for ID validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface IdOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {IdType} [type="auto"] - Expected ID type or auto-detection
+ * @property {number} [minLength] - Minimum length of ID
+ * @property {number} [maxLength] - Maximum length of ID
+ * @property {IdType[]} [allowedTypes] - Multiple allowed ID types (overrides type)
+ * @property {RegExp} [customRegex] - Custom regex pattern (overrides type validation)
+ * @property {string} [includes] - String that must be included in ID
+ * @property {string | string[]} [excludes] - String(s) that must not be included
+ * @property {string} [startsWith] - String that ID must start with
+ * @property {string} [endsWith] - String that ID must end with
+ * @property {boolean} [caseSensitive=true] - Whether validation is case-sensitive
+ * @property {Function} [transform] - Custom transformation function for ID
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, IdMessages>} [i18n] - Custom error messages for different locales
+ */
 export type IdOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   type?: IdType
@@ -50,9 +119,21 @@ export type IdOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, IdMessages>
 }
 
+/**
+ * Type alias for ID validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef IdSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type IdSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
-// ID 格式的正則表達式
+/**
+ * Regular expression patterns for different ID formats
+ *
+ * @constant {Record<string, RegExp>} ID_PATTERNS
+ * @description Maps each ID type to its corresponding regex pattern
+ */
 const ID_PATTERNS = {
   numeric: /^\d+$/,
   uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -64,7 +145,26 @@ const ID_PATTERNS = {
   shortid: /^[A-Za-z0-9_-]{7,14}$/,
 } as const
 
-// 檢測 ID 類型（按照特異性排序，避免誤判）
+/**
+ * Detects the ID type of a given value using pattern matching
+ *
+ * @param {string} value - The ID value to analyze
+ * @returns {IdType | null} The detected ID type or null if no pattern matches
+ *
+ * @description
+ * Attempts to identify the ID type by testing against known patterns.
+ * Patterns are ordered by specificity to avoid false positives.
+ * More specific patterns (UUID, ObjectId) are tested before generic ones (numeric, shortid).
+ *
+ * @example
+ * ```typescript
+ * detectIdType("550e8400-e29b-41d4-a716-446655440000") // "uuid"
+ * detectIdType("507f1f77bcf86cd799439011") // "objectId"
+ * detectIdType("V1StGXR8_Z5jdHi6B-myT") // "nanoid"
+ * detectIdType("123456789") // "numeric"
+ * detectIdType("invalid-id") // null
+ * ```
+ */
 const detectIdType = (value: string): IdType | null => {
   // 按優先順序檢查（從最具體到最通用）
   const orderedTypes: Array<[IdType, RegExp]> = [
@@ -86,7 +186,25 @@ const detectIdType = (value: string): IdType | null => {
   return null
 }
 
-// 驗證特定 ID 類型
+/**
+ * Validates if a value matches the specified ID type
+ *
+ * @param {string} value - The ID value to validate
+ * @param {IdType} type - The expected ID type
+ * @returns {boolean} True if the value matches the specified type
+ *
+ * @description
+ * Validates a specific ID type using regex patterns or auto-detection.
+ * For "auto" type, uses detectIdType to check if any known pattern matches.
+ *
+ * @example
+ * ```typescript
+ * validateIdType("123456", "numeric") // true
+ * validateIdType("abc123", "numeric") // false
+ * validateIdType("550e8400-e29b-41d4-a716-446655440000", "uuid") // true
+ * validateIdType("invalid-uuid", "uuid") // false
+ * ```
+ */
 const validateIdType = (value: string, type: IdType): boolean => {
   if (type === "auto") {
     return detectIdType(value) !== null
@@ -95,6 +213,80 @@ const validateIdType = (value: string, type: IdType): boolean => {
   return pattern ? pattern.test(value) : false
 }
 
+/**
+ * Creates a Zod schema for ID validation with comprehensive format support
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {IdOptions<IsRequired>} [options] - Configuration options for ID validation
+ * @returns {IdSchema<IsRequired>} Zod schema for ID validation
+ *
+ * @description
+ * Creates a comprehensive ID validator with support for multiple ID formats,
+ * auto-detection, custom patterns, and flexible validation options.
+ *
+ * Features:
+ * - Multiple ID format support (UUID, ObjectId, Snowflake, etc.)
+ * - Auto-detection of ID types
+ * - Custom regex pattern support
+ * - Length validation
+ * - Content validation (includes, excludes, startsWith, endsWith)
+ * - Case sensitivity control
+ * - Multiple allowed types
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ *
+ * @example
+ * ```typescript
+ * // Auto-detect ID format
+ * const autoSchema = id()
+ * autoSchema.parse("550e8400-e29b-41d4-a716-446655440000") // ✓ Valid (UUID)
+ * autoSchema.parse("507f1f77bcf86cd799439011") // ✓ Valid (ObjectId)
+ * autoSchema.parse("123456") // ✓ Valid (numeric)
+ *
+ * // Specific ID type
+ * const uuidSchema = id({ type: "uuid" })
+ * uuidSchema.parse("550e8400-e29b-41d4-a716-446655440000") // ✓ Valid
+ * uuidSchema.parse("invalid-uuid") // ✗ Invalid
+ *
+ * // Multiple allowed types
+ * const multiSchema = id({ allowedTypes: ["uuid", "objectId"] })
+ * multiSchema.parse("550e8400-e29b-41d4-a716-446655440000") // ✓ Valid (UUID)
+ * multiSchema.parse("507f1f77bcf86cd799439011") // ✓ Valid (ObjectId)
+ * multiSchema.parse("123456") // ✗ Invalid (numeric not allowed)
+ *
+ * // Custom regex pattern
+ * const customSchema = id({ customRegex: /^CUST_\d{6}$/ })
+ * customSchema.parse("CUST_123456") // ✓ Valid
+ * customSchema.parse("invalid") // ✗ Invalid
+ *
+ * // Content validation
+ * const prefixSchema = id({
+ *   type: "auto",
+ *   startsWith: "user_",
+ *   minLength: 10
+ * })
+ * prefixSchema.parse("user_123456") // ✓ Valid
+ *
+ * // Case insensitive
+ * const caseInsensitiveSchema = id({
+ *   type: "uuid",
+ *   caseSensitive: false
+ * })
+ * caseInsensitiveSchema.parse("550E8400-E29B-41D4-A716-446655440000") // ✓ Valid
+ *
+ * // Optional with default
+ * const optionalSchema = id({
+ *   required: false,
+ *   defaultValue: null
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link IdOptions} for all available configuration options
+ * @see {@link IdType} for supported ID types
+ * @see {@link detectIdType} for auto-detection logic
+ * @see {@link validateIdType} for type-specific validation
+ */
 export function id<IsRequired extends boolean = true>(options?: IdOptions<IsRequired>): IdSchema<IsRequired> {
   const {
     required = true,
@@ -255,5 +447,25 @@ export function id<IsRequired extends boolean = true>(options?: IdOptions<IsRequ
   return schema as unknown as IdSchema<IsRequired>
 }
 
-// Export utility functions for external use
+/**
+ * Utility functions and constants exported for external use
+ *
+ * @description
+ * These utilities can be used independently for ID validation, type detection,
+ * and pattern matching without creating a full Zod schema.
+ *
+ * @example
+ * ```typescript
+ * import { detectIdType, validateIdType, ID_PATTERNS } from './id'
+ *
+ * // Detect ID type
+ * const type = detectIdType("550e8400-e29b-41d4-a716-446655440000") // "uuid"
+ *
+ * // Validate specific type
+ * const isValid = validateIdType("123456", "numeric") // true
+ *
+ * // Access regex patterns
+ * const uuidPattern = ID_PATTERNS.uuid
+ * ```
+ */
 export { detectIdType, validateIdType, ID_PATTERNS }

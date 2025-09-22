@@ -1,7 +1,31 @@
+/**
+ * @fileoverview Email validator for Zod Kit
+ *
+ * Provides comprehensive email validation with domain filtering, business email
+ * validation, disposable email detection, and extensive customization options.
+ *
+ * @author Ong Hoe Yuan
+ * @version 0.0.5
+ */
+
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
+/**
+ * Type definition for email validation error messages
+ *
+ * @interface EmailMessages
+ * @property {string} [required] - Message when field is required but empty
+ * @property {string} [invalid] - Message when email format is invalid
+ * @property {string} [minLength] - Message when email is too short
+ * @property {string} [maxLength] - Message when email is too long
+ * @property {string} [includes] - Message when email doesn't contain required string
+ * @property {string} [domain] - Message when email domain is not allowed
+ * @property {string} [domainBlacklist] - Message when email domain is blacklisted
+ * @property {string} [businessOnly] - Message when free email providers are not allowed
+ * @property {string} [noDisposable] - Message when disposable email addresses are not allowed
+ */
 export type EmailMessages = {
   required?: string
   invalid?: string
@@ -14,6 +38,27 @@ export type EmailMessages = {
   noDisposable?: string
 }
 
+/**
+ * Configuration options for email validation
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ *
+ * @interface EmailOptions
+ * @property {IsRequired} [required=true] - Whether the field is required
+ * @property {string | string[]} [domain] - Allowed domain(s) for email addresses
+ * @property {string[]} [domainBlacklist] - Domains that are not allowed
+ * @property {number} [minLength] - Minimum length of email address
+ * @property {number} [maxLength] - Maximum length of email address
+ * @property {string} [includes] - String that must be included in the email
+ * @property {string | string[]} [excludes] - String(s) that must not be included
+ * @property {boolean} [allowSubdomains=true] - Whether to allow subdomains in domain validation
+ * @property {boolean} [businessOnly=false] - If true, reject common free email providers
+ * @property {boolean} [noDisposable=false] - If true, reject disposable email addresses
+ * @property {boolean} [lowercase=true] - Whether to convert email to lowercase
+ * @property {Function} [transform] - Custom transformation function for email strings
+ * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {Record<Locale, EmailMessages>} [i18n] - Custom error messages for different locales
+ */
 export type EmailOptions<IsRequired extends boolean = true> = {
   required?: IsRequired
   domain?: string | string[]
@@ -31,8 +76,76 @@ export type EmailOptions<IsRequired extends boolean = true> = {
   i18n?: Record<Locale, EmailMessages>
 }
 
+/**
+ * Type alias for email validation schema based on required flag
+ *
+ * @template IsRequired - Whether the field is required
+ * @typedef EmailSchema
+ * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ */
 export type EmailSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
+/**
+ * Creates a Zod schema for email validation with comprehensive filtering options
+ *
+ * @template IsRequired - Whether the field is required (affects return type)
+ * @param {EmailOptions<IsRequired>} [options] - Configuration options for email validation
+ * @returns {EmailSchema<IsRequired>} Zod schema for email validation
+ *
+ * @description
+ * Creates a comprehensive email validator with domain filtering, business email
+ * validation, disposable email detection, and extensive customization options.
+ *
+ * Features:
+ * - RFC-compliant email format validation
+ * - Domain whitelist/blacklist support
+ * - Business email validation (excludes free providers)
+ * - Disposable email detection
+ * - Subdomain support configuration
+ * - Length validation
+ * - Content inclusion/exclusion
+ * - Automatic lowercase conversion
+ * - Custom transformation functions
+ * - Comprehensive internationalization
+ *
+ * @example
+ * ```typescript
+ * // Basic email validation
+ * const basicSchema = email()
+ * basicSchema.parse("user@example.com") // ✓ Valid
+ *
+ * // Domain restriction
+ * const domainSchema = email({
+ *   domain: ["company.com", "organization.org"]
+ * })
+ * domainSchema.parse("user@company.com") // ✓ Valid
+ * domainSchema.parse("user@gmail.com") // ✗ Invalid
+ *
+ * // Business emails only (no free providers)
+ * const businessSchema = email({ businessOnly: true })
+ * businessSchema.parse("user@company.com") // ✓ Valid
+ * businessSchema.parse("user@gmail.com") // ✗ Invalid
+ *
+ * // No disposable emails
+ * const noDisposableSchema = email({ noDisposable: true })
+ * noDisposableSchema.parse("user@company.com") // ✓ Valid
+ * noDisposableSchema.parse("user@10minutemail.com") // ✗ Invalid
+ *
+ * // Domain blacklist
+ * const blacklistSchema = email({
+ *   domainBlacklist: ["spam.com", "blocked.org"]
+ * })
+ *
+ * // Optional with default
+ * const optionalSchema = email({
+ *   required: false,
+ *   defaultValue: null
+ * })
+ * ```
+ *
+ * @throws {z.ZodError} When validation fails with specific error messages
+ * @see {@link EmailOptions} for all available configuration options
+ */
 export function email<IsRequired extends boolean = true>(options?: EmailOptions<IsRequired>): EmailSchema<IsRequired> {
   const {
     required = true,
