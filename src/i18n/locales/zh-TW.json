@@ -187,6 +187,18 @@
       "required": "必填",
       "invalid": "無效的傳真號碼格式",
       "notInWhitelist": "不在允許的傳真號碼清單中"
+    },
+    "postalCode": {
+      "required": "必填",
+      "invalid": "無效的郵遞區號",
+      "invalidFormat": "郵遞區號格式錯誤",
+      "invalidRange": "郵遞區號超出有效範圍",
+      "legacy5DigitWarning": "5 碼郵遞區號為舊式格式，建議使用 6 碼格式",
+      "format3Only": "僅允許 3 碼郵遞區號",
+      "format5Only": "僅允許 5 碼郵遞區號",
+      "format6Only": "僅允許 6 碼郵遞區號",
+      "invalidSuffix": "無效的郵遞區號後碼 - 5 碼格式須為 01-99，6 碼格式須為 001-999",
+      "deprecated5Digit": "5 碼郵遞區號已棄用且不再支援"
     }
   }
 }

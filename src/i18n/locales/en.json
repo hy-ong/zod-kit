@@ -187,6 +187,18 @@
       "required": "Required",
       "invalid": "Invalid Taiwan fax format",
       "notInWhitelist": "Not in allowed fax list"
+    },
+    "postalCode": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan postal code",
+      "invalidFormat": "Invalid postal code format",
+      "invalidRange": "Postal code is outside valid range",
+      "legacy5DigitWarning": "5-digit postal codes are legacy format, consider using 6-digit format",
+      "format3Only": "Only 3-digit postal codes are allowed",
+      "format5Only": "Only 5-digit postal codes are allowed",
+      "format6Only": "Only 6-digit postal codes are allowed",
+      "invalidSuffix": "Invalid postal code suffix - must be 01-99 for 5-digit or 001-999 for 6-digit codes",
+      "deprecated5Digit": "5-digit postal codes are deprecated and no longer supported"
     }
   }
 }
