@@ -13,7 +13,9 @@ A comprehensive TypeScript library that provides pre-built validation schemas on
 - 📝 **TypeScript-first** - Full type safety and IntelliSense support
 - ⚡ **Zero dependencies** - Built on top of Zod (peer dependency)
 - 🎯 **Highly configurable** - Flexible options for every use case
-- 🇹🇼 **Taiwan-specific** - National ID, business ID, phone numbers, etc.
+- 🇹🇼 **Taiwan-specific** - National ID, business ID, phone numbers, postal codes, etc.
+- ⏰ **Date/Time support** - Comprehensive datetime, time, and date validation
+- 📎 **File validation** - MIME type filtering, size constraints, and file type checking
 - 🧪 **Battle-tested** - Comprehensive test suite with 500+ tests
 
 ## 📦 Installation
@@ -35,7 +37,7 @@ pnpm add @hy_ong/zod-kit zod
 ## 🚀 Quick Start
 
 ```typescript
-import { email, password, text, mobile } from '@hy_ong/zod-kit'
+import { email, password, text, mobile, datetime, time, postalCode } from '@hy_ong/zod-kit'
 
 // Simple email validation
 const emailSchema = email()
@@ -52,6 +54,18 @@ const passwordSchema = password({
 // Taiwan mobile phone validation
 const phoneSchema = mobile()
 phoneSchema.parse('0912345678') // ✅ "0912345678"
+
+// DateTime validation
+const datetimeSchema = datetime()
+datetimeSchema.parse('2024-03-15 14:30') // ✅ "2024-03-15 14:30"
+
+// Time validation
+const timeSchema = time()
+timeSchema.parse('14:30') // ✅ "14:30"
+
+// Taiwan postal code validation
+const postalSchema = postalCode()
+postalSchema.parse('100001') // ✅ "100001"
 ```
 
 ## 📚 API Reference
@@ -159,6 +173,68 @@ const consentSchema = boolean({
 })
 ```
 
+#### `datetime(options?)`
+
+Validates datetime with comprehensive format support and timezone handling.
+
+```typescript
+import { datetime } from '@hy_ong/zod-kit'
+
+// Basic datetime validation
+const basicSchema = datetime()
+basicSchema.parse('2024-03-15 14:30') // ✓ Valid
+
+// Business hours validation
+const businessHours = datetime({
+  format: 'YYYY-MM-DD HH:mm',
+  minHour: 9,
+  maxHour: 17,
+  weekdaysOnly: true
+})
+
+// Timezone-aware validation
+const timezoneSchema = datetime({
+  timezone: 'Asia/Taipei',
+  mustBeFuture: true
+})
+
+// Multiple format support
+const flexibleSchema = datetime({
+  format: 'DD/MM/YYYY HH:mm'
+})
+flexibleSchema.parse('15/03/2024 14:30') // ✓ Valid
+```
+
+#### `time(options?)`
+
+Time validation with multiple formats and constraints.
+
+```typescript
+import { time } from '@hy_ong/zod-kit'
+
+// Basic time validation (24-hour format)
+const basicSchema = time()
+basicSchema.parse('14:30') // ✓ Valid
+
+// 12-hour format with AM/PM
+const ampmSchema = time({ format: 'hh:mm A' })
+ampmSchema.parse('02:30 PM') // ✓ Valid
+
+// Business hours validation
+const businessHours = time({
+  format: 'HH:mm',
+  minHour: 9,
+  maxHour: 17,
+  minuteStep: 15 // Only :00, :15, :30, :45
+})
+
+// Time range validation
+const timeRangeSchema = time({
+  min: '09:00',
+  max: '17:00'
+})
+```
+
 #### `date(options?)`
 
 Date validation with range and format constraints.
@@ -172,6 +248,39 @@ const birthdateSchema = date({
   maxDate: new Date(),
   timezone: 'Asia/Taipei'
 })
+```
+
+#### `file(options?)`
+
+File validation with MIME type filtering and size constraints.
+
+```typescript
+import { file } from '@hy_ong/zod-kit'
+
+// Basic file validation
+const basicSchema = file()
+basicSchema.parse(new File(['content'], 'test.txt'))
+
+// Size restrictions
+const sizeSchema = file({
+  maxSize: 1024 * 1024, // 1MB
+  minSize: 1024 // 1KB
+})
+
+// Extension restrictions
+const imageSchema = file({
+  extension: ['.jpg', '.png', '.gif'],
+  maxSize: 5 * 1024 * 1024 // 5MB
+})
+
+// MIME type restrictions
+const documentSchema = file({
+  type: ['application/pdf', 'application/msword'],
+  maxSize: 10 * 1024 * 1024 // 10MB
+})
+
+// Image files only
+const imageOnlySchema = file({ imageOnly: true })
 ```
 
 #### `id(options?)`
@@ -253,6 +362,41 @@ import { fax } from '@hy_ong/zod-kit'
 
 const faxSchema = fax()
 faxSchema.parse('02-2345-6789') // ✅ Valid fax number
+```
+
+#### `postalCode(options?)`
+
+Validates Taiwan postal codes with support for 3-digit, 5-digit, and 6-digit formats.
+
+```typescript
+import { postalCode } from '@hy_ong/zod-kit'
+
+// Accept 3-digit or 6-digit formats (recommended)
+const modernSchema = postalCode()
+modernSchema.parse('100')     // ✅ Valid 3-digit
+modernSchema.parse('100001')  // ✅ Valid 6-digit
+
+// Accept all formats
+const flexibleSchema = postalCode({ format: 'all' })
+flexibleSchema.parse('100')     // ✅ Valid
+flexibleSchema.parse('10001')   // ✅ Valid (5-digit legacy)
+flexibleSchema.parse('100001')  // ✅ Valid
+
+// Only 6-digit format (current standard)
+const modernOnlySchema = postalCode({ format: '6' })
+modernOnlySchema.parse('100001') // ✅ Valid
+modernOnlySchema.parse('100')    // ❌ Invalid
+
+// With dashes allowed
+const dashSchema = postalCode({ allowDashes: true })
+dashSchema.parse('100-001')  // ✅ Valid (normalized to '100001')
+
+// Specific areas only
+const taipeiSchema = postalCode({
+  allowedPrefixes: ['100', '103', '104', '105', '106']
+})
+taipeiSchema.parse('100001') // ✅ Valid (Taipei area)
+taipeiSchema.parse('200001') // ❌ Invalid (not in allowlist)
 ```
 
 ## 🌐 Internationalization
