@@ -16,7 +16,7 @@ import { getLocale, type Locale } from "../../config"
 /**
  * Type definition for postal code validation error messages
  *
- * @interface PostalCodeMessages
+ * @interface TwPostalCodeMessages
  * @property {string} [required] - Message when field is required but empty
  * @property {string} [invalid] - Message when postal code format is invalid
  * @property {string} [invalidFormat] - Message when format doesn't match expected pattern
@@ -26,7 +26,7 @@ import { getLocale, type Locale } from "../../config"
  * @property {string} [format5Only] - Message when only 5-digit format is allowed
  * @property {string} [format6Only] - Message when only 6-digit format is allowed
  */
-export type PostalCodeMessages = {
+export type TwPostalCodeMessages = {
   required?: string
   invalid?: string
   invalidFormat?: string
@@ -42,7 +42,7 @@ export type PostalCodeMessages = {
 /**
  * Postal code format types supported in Taiwan
  *
- * @typedef {"3" | "5" | "6" | "3+5" | "3+6" | "5+6" | "all"} PostalCodeFormat
+ * @typedef {"3" | "5" | "6" | "3+5" | "3+6" | "5+6" | "all"} TwPostalCodeFormatType
  *
  * Available formats:
  * - "3": 3-digit basic postal codes (100-982)
@@ -53,7 +53,7 @@ export type PostalCodeMessages = {
  * - "5+6": Accept both 5-digit and 6-digit formats
  * - "all": Accept all formats (3, 5, and 6 digits)
  */
-export type PostalCodeFormat =
+export type TwPostalCodeFormatType =
   | "3" // 3-digit only
   | "5" // 5-digit only (legacy)
   | "6" // 6-digit only (current)
@@ -67,9 +67,9 @@ export type PostalCodeFormat =
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
- * @interface PostalCodeOptions
+ * @interface TwPostalCodeOptions
  * @property {IsRequired} [required=true] - Whether the field is required
- * @property {PostalCodeFormat} [format="3+6"] - Which postal code formats to accept
+ * @property {TwPostalCodeFormatType} [format="3+6"] - Which postal code formats to accept
  * @property {boolean} [strictValidation=true] - Enable strict validation against known postal code ranges
  * @property {boolean} [allowDashes=true] - Whether to allow dashes in postal codes (e.g., "100-01" or "100-001")
  * @property {boolean} [warn5Digit=true] - Whether to show warning for 5-digit legacy format
@@ -77,10 +77,10 @@ export type PostalCodeFormat =
  * @property {string[]} [blockedPrefixes] - Specific 3-digit prefixes to block
  * @property {Function} [transform] - Custom transformation function for postal codes
  * @property {string | null} [defaultValue] - Default value when input is empty
- * @property {Record<Locale, PostalCodeMessages>} [i18n] - Custom error messages for different locales
+ * @property {Record<Locale, TwPostalCodeMessages>} [i18n] - Custom error messages for different locales
  */
-export type PostalCodeOptions<IsRequired extends boolean = true> = {
-  format?: PostalCodeFormat
+export type TwPostalCodeOptions<IsRequired extends boolean = true> = {
+  format?: TwPostalCodeFormatType
   strictValidation?: boolean
   allowDashes?: boolean
   warn5Digit?: boolean
@@ -88,7 +88,7 @@ export type PostalCodeOptions<IsRequired extends boolean = true> = {
   blockedPrefixes?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, PostalCodeMessages>
+  i18n?: Record<Locale, TwPostalCodeMessages>
   strictSuffixValidation?: boolean
   deprecate5Digit?: boolean
 }
@@ -97,10 +97,10 @@ export type PostalCodeOptions<IsRequired extends boolean = true> = {
  * Type alias for postal code validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef PostalCodeSchema
+ * @typedef TwPostalCodeSchema
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
-export type PostalCodeSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TwPostalCodeSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 /**
  * Valid 3-digit postal code prefixes for Taiwan
@@ -728,7 +728,7 @@ const validate6DigitPostalCode = (value: string, strictValidation: boolean = tru
  * Main validation function for Taiwan postal codes
  *
  * @param {string} value - The postal code to validate
- * @param {PostalCodeFormat} format - Which formats to accept
+ * @param {TwPostalCodeFormatType} format - Which formats to accept
  * @param {boolean} strictValidation - Whether to validate against known postal codes
  * @param {boolean} strictSuffixValidation - Whether to validate suffix ranges
  * @param {boolean} allowDashes - Whether dashes/spaces are allowed and should be removed
@@ -738,7 +738,7 @@ const validate6DigitPostalCode = (value: string, strictValidation: boolean = tru
  */
 const validateTaiwanPostalCode = (
   value: string,
-  format: PostalCodeFormat = "3+6",
+  format: TwPostalCodeFormatType = "3+6",
   strictValidation: boolean = true,
   strictSuffixValidation: boolean = false,
   allowDashes: boolean = true,
@@ -801,8 +801,8 @@ const validateTaiwanPostalCode = (
  * Creates a Zod schema for Taiwan postal code validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {PostalCodeOptions<IsRequired>} [options] - Configuration options for postal code validation
- * @returns {PostalCodeSchema<IsRequired>} Zod schema for postal code validation
+ * @param {TwPostalCodeOptions<IsRequired>} [options] - Configuration options for postal code validation
+ * @returns {TwPostalCodeSchema<IsRequired>} Zod schema for postal code validation
  *
  * @description
  * Creates a comprehensive Taiwan postal code validator that supports multiple formats
@@ -822,53 +822,53 @@ const validateTaiwanPostalCode = (
  * @example
  * ```typescript
  * // Accept 3-digit or 6-digit formats (recommended)
- * const modernSchema = postalCode()
+ * const modernSchema = twPostalCode()
  * modernSchema.parse("100")     // ✓ Valid 3-digit
  * modernSchema.parse("100001")  // ✓ Valid 6-digit
  * modernSchema.parse("10001")   // ✗ Invalid (5-digit not allowed)
  *
  * // Accept all formats
- * const flexibleSchema = postalCode(false, { format: "all" })
+ * const flexibleSchema = twPostalCode(false, { format: "all" })
  * flexibleSchema.parse("100")     // ✓ Valid
  * flexibleSchema.parse("10001")   // ✓ Valid
  * flexibleSchema.parse("100001")  // ✓ Valid
  *
  * // Only 6-digit format (current standard)
- * const modernOnlySchema = postalCode(false, { format: "6" })
+ * const modernOnlySchema = twPostalCode(false, { format: "6" })
  * modernOnlySchema.parse("100001") // ✓ Valid
  * modernOnlySchema.parse("100")    // ✗ Invalid
  *
  * // With dashes allowed
- * const dashSchema = postalCode(false, { allowDashes: true })
+ * const dashSchema = twPostalCode(false, { allowDashes: true })
  * dashSchema.parse("100-001")  // ✓ Valid (normalized to "100001")
  * dashSchema.parse("100-01")   // ✓ Valid if 5-digit format allowed
  *
  * // Specific areas only
- * const taipeiSchema = postalCode(false, {
+ * const taipeiSchema = twPostalCode(false, {
  *   allowedPrefixes: ["100", "103", "104", "105", "106"]
  * })
  * taipeiSchema.parse("100001") // ✓ Valid (Taipei area)
  * taipeiSchema.parse("200001") // ✗ Invalid (not in allowlist)
  *
  * // Block specific areas
- * const blockedSchema = postalCode(false, {
+ * const blockedSchema = twPostalCode(false, {
  *   blockedPrefixes: ["999"] // Block test codes
  * })
  *
  * // With warning for legacy format
- * const warnSchema = postalCode(false, {
+ * const warnSchema = twPostalCode(false, {
  *   format: "all",
  *   warn5Digit: true
  * })
  * // Will validate but may show warning for 5-digit codes
  *
  * // Optional with custom transformation
- * const optionalSchema = postalCode(false, {
+ * const optionalSchema = twPostalCode(false, {
  *   transform: (value) => value.replace(/\D/g, '') // Remove non-digits
  * })
  *
  * // Strict suffix validation for real postal codes
- * const strictSchema = postalCode(false, {
+ * const strictSchema = twPostalCode(false, {
  *   format: "6",
  *   strictSuffixValidation: true // Validates suffix range 001-999
  * })
@@ -876,7 +876,7 @@ const validateTaiwanPostalCode = (
  * strictSchema.parse("100000") // ✗ Invalid (suffix 000 not allowed)
  *
  * // Deprecate 5-digit codes entirely
- * const modern2024Schema = postalCode(false, {
+ * const modern2024Schema = twPostalCode(false, {
  *   format: "all",
  *   deprecate5Digit: true // Throws error for any 5-digit code
  * })
@@ -885,11 +885,11 @@ const validateTaiwanPostalCode = (
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
- * @see {@link PostalCodeOptions} for all available configuration options
- * @see {@link PostalCodeFormat} for supported formats
+ * @see {@link TwPostalCodeOptions} for all available configuration options
+ * @see {@link TwPostalCodeFormatType} for supported formats
  * @see {@link validateTaiwanPostalCode} for validation logic details
  */
-export function postalCode<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<PostalCodeOptions<IsRequired>, 'required'>): PostalCodeSchema<IsRequired> {
+export function twPostalCode<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwPostalCodeOptions<IsRequired>, 'required'>): TwPostalCodeSchema<IsRequired> {
   const {
     format = "3+6",
     strictValidation = true,
@@ -910,7 +910,7 @@ export function postalCode<IsRequired extends boolean = false>(required?: IsRequ
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
-  const getMessage = (key: keyof PostalCodeMessages, params?: Record<string, any>) => {
+  const getMessage = (key: keyof TwPostalCodeMessages, params?: Record<string, any>) => {
     if (i18n) {
       const currentLocale = getLocale()
       const customMessages = i18n[currentLocale]
@@ -1019,7 +1019,7 @@ export function postalCode<IsRequired extends boolean = false>(required?: IsRequ
     }
   })
 
-  return schema as unknown as PostalCodeSchema<IsRequired>
+  return schema as unknown as TwPostalCodeSchema<IsRequired>
 }
 
 /**

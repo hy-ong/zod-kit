@@ -15,12 +15,12 @@ import { getLocale, type Locale } from "../../config"
 /**
  * Type definition for mobile phone validation error messages
  *
- * @interface MobileMessages
+ * @interface TwMobileMessages
  * @property {string} [required] - Message when field is required but empty
  * @property {string} [invalid] - Message when mobile number format is invalid
  * @property {string} [notInWhitelist] - Message when mobile number is not in whitelist
  */
-export type MobileMessages = {
+export type TwMobileMessages = {
   required?: string
   invalid?: string
   notInWhitelist?: string
@@ -31,28 +31,28 @@ export type MobileMessages = {
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
- * @interface MobileOptions
+ * @interface TwMobileOptions
  * @property {IsRequired} [required=true] - Whether the field is required
  * @property {string[]} [whitelist] - Array of specific mobile numbers that are always allowed
  * @property {Function} [transform] - Custom transformation function for mobile number
  * @property {string | null} [defaultValue] - Default value when input is empty
- * @property {Record<Locale, MobileMessages>} [i18n] - Custom error messages for different locales
+ * @property {Record<Locale, TwMobileMessages>} [i18n] - Custom error messages for different locales
  */
-export type MobileOptions<IsRequired extends boolean = true> = {
+export type TwMobileOptions<IsRequired extends boolean = true> = {
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, MobileMessages>
+  i18n?: Record<Locale, TwMobileMessages>
 }
 
 /**
  * Type alias for mobile phone validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef MobileSchema
+ * @typedef TwMobileSchema
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
-export type MobileSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TwMobileSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 /**
  * Validates Taiwan mobile phone number format
@@ -88,7 +88,7 @@ const validateTaiwanMobile = (value: string): boolean => {
  * @template IsRequired - Whether the field is required (affects return type)
  * @param {IsRequired} [required=false] - Whether the field is required
  * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
- * @returns {MobileSchema<IsRequired>} Zod schema for mobile phone validation
+ * @returns {TwMobileSchema<IsRequired>} Zod schema for mobile phone validation
  *
  * @description
  * Creates a comprehensive Taiwan mobile phone number validator with support for
@@ -106,7 +106,7 @@ const validateTaiwanMobile = (value: string): boolean => {
  * @example
  * ```typescript
  * // Basic mobile number validation
- * const basicSchema = mobile() // optional by default
+ * const basicSchema = twMobile() // optional by default
  * basicSchema.parse("0912345678") // ✓ Valid
  * basicSchema.parse(null) // ✓ Valid (optional)
  *
@@ -119,26 +119,26 @@ const validateTaiwanMobile = (value: string): boolean => {
  * basicSchema.parse("0812345678") // ✗ Invalid (wrong prefix)
  *
  * // With whitelist (only specific numbers allowed)
- * const whitelistSchema = mobile(false, {
+ * const whitelistSchema = twMobile(false, {
  *   whitelist: ["0912345678", "0987654321"]
  * })
  * whitelistSchema.parse("0912345678") // ✓ Valid (in whitelist)
  * whitelistSchema.parse("0911111111") // ✗ Invalid (not in whitelist)
  *
  * // Optional mobile number
- * const optionalSchema = mobile(false)
+ * const optionalSchema = twMobile(false)
  * optionalSchema.parse("") // ✓ Valid (returns null)
  * optionalSchema.parse("0912345678") // ✓ Valid
  *
  * // With custom transformation
- * const transformSchema = mobile(false, {
+ * const transformSchema = twMobile(false, {
  *   transform: (value) => value.replace(/[^0-9]/g, '') // Remove non-digits
  * })
  * transformSchema.parse("091-234-5678") // ✓ Valid (formatted input)
  * transformSchema.parse("091 234 5678") // ✓ Valid (spaced input)
  *
  * // With custom error messages
- * const customSchema = mobile(false, {
+ * const customSchema = twMobile(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan mobile number" },
  *     'zh-TW': { invalid: "請輸入有效的台灣手機號碼" }
@@ -147,10 +147,10 @@ const validateTaiwanMobile = (value: string): boolean => {
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
- * @see {@link MobileOptions} for all available configuration options
+ * @see {@link TwMobileOptions} for all available configuration options
  * @see {@link validateTaiwanMobile} for validation logic details
  */
-export function mobile<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<MobileOptions<IsRequired>, 'required'>): MobileSchema<IsRequired> {
+export function twMobile<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwMobileOptions<IsRequired>, 'required'>): TwMobileSchema<IsRequired> {
   const { whitelist, transform, defaultValue, i18n } = options ?? {}
 
   const isRequired = required ?? false as IsRequired
@@ -159,7 +159,7 @@ export function mobile<IsRequired extends boolean = false>(required?: IsRequired
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
-  const getMessage = (key: keyof MobileMessages, params?: Record<string, any>) => {
+  const getMessage = (key: keyof TwMobileMessages, params?: Record<string, any>) => {
     if (i18n) {
       const currentLocale = getLocale()
       const customMessages = i18n[currentLocale]
@@ -231,7 +231,7 @@ export function mobile<IsRequired extends boolean = false>(required?: IsRequired
     }
   })
 
-  return schema as unknown as MobileSchema<IsRequired>
+  return schema as unknown as TwMobileSchema<IsRequired>
 }
 
 /**

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { fax, setLocale, validateTaiwanFax } from "../../src"
+import { twFax, setLocale, validateTaiwanFax } from "../../src"
 
-describe("Taiwan fax(true) validator", () => {
+describe("Taiwan twFax(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan fax numbers", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Valid Taiwan fax numbers (same format as landline numbers)
       // Taipei (02) - requires 10 digits total, the first digit after 02 must be 2,3,5-8
@@ -41,7 +41,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should validate numbers with separators", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Numbers with dashes
       expect(schema.parse("02-2345-6789")).toBe("02-2345-6789")
@@ -59,7 +59,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should reject invalid Taiwan fax numbers", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Invalid formats
       expect(() => schema.parse("123456789")).toThrow("Invalid Taiwan fax format") // Missing leading 0
@@ -84,7 +84,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should handle whitespace trimming", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       expect(schema.parse("  0223456789  ")).toBe("0223456789")
       expect(schema.parse("\t072345678\n")).toBe("072345678")
@@ -93,7 +93,7 @@ describe("Taiwan fax(true) validator", () => {
 
   describe("whitelist functionality", () => {
     it("should accept any string in whitelist regardless of format", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         whitelist: ["custom-fax", "emergency-fax", "0912345678"],
       })
 
@@ -108,7 +108,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should reject values not in whitelist when whitelist is provided", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         whitelist: ["allowed-value", "0223456789"],
       })
 
@@ -117,7 +117,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should work with empty whitelist", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         whitelist: [],
       })
 
@@ -127,7 +127,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should prioritize whitelist over format validation", () => {
-      const schema = fax(false, { whitelist: ["not-a-fax", "123", ""] })
+      const schema = twFax(false, { whitelist: ["not-a-fax", "123", ""] })
 
       // These should be accepted despite being invalid fax formats
       expect(schema.parse("not-a-fax")).toBe("not-a-fax")
@@ -138,7 +138,7 @@ describe("Taiwan fax(true) validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow()
@@ -146,7 +146,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = fax(false)
+      const schema = twFax(false)
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -155,15 +155,15 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = fax(true, { defaultValue: "0223456789" })
-      const optionalSchema = fax(false, { defaultValue: "0223456789" })
+      const requiredSchema = twFax(true, { defaultValue: "0223456789" })
+      const optionalSchema = twFax(false, { defaultValue: "0223456789" })
 
       expect(requiredSchema.parse("")).toBe("0223456789")
       expect(optionalSchema.parse("")).toBe("0223456789")
     })
 
     it("should handle whitelist with optional fields", () => {
-      const schema = fax(false, { whitelist: ["custom-value", "0223456789"] })
+      const schema = twFax(false, { whitelist: ["custom-value", "0223456789"] })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("custom-value")).toBe("custom-value")
@@ -174,7 +174,7 @@ describe("Taiwan fax(true) validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
       })
 
@@ -183,7 +183,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should apply transform before validation", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         transform: (val) => val.replace(/\s+/g, ""),
       })
 
@@ -192,7 +192,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should work with whitelist after transform", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
         whitelist: ["0223456789", "customvalue"],
       })
@@ -204,14 +204,14 @@ describe("Taiwan fax(true) validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Test string conversion of numbers
       expect(() => schema.parse(212345678)).toThrow("Invalid Taiwan fax format") // Invalid because missing leading 0
     })
 
     it("should trim whitespace", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       expect(schema.parse("  0223456789  ")).toBe("0223456789")
       expect(schema.parse("\t072345678\n")).toBe("072345678")
@@ -254,7 +254,7 @@ describe("Taiwan fax(true) validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      const schema = fax(true)
+      const schema = twFax(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("0912345678")).toThrow("Invalid Taiwan fax format")
@@ -262,7 +262,7 @@ describe("Taiwan fax(true) validator", () => {
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = fax(true)
+      const schema = twFax(true)
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("0912345678")).toThrow("無效的傳真號碼格式")
@@ -270,7 +270,7 @@ describe("Taiwan fax(true) validator", () => {
 
     it("should support whitelist error messages", () => {
       setLocale("en")
-      const schema = fax(true, {
+      const schema = twFax(true, {
         whitelist: ["0223456789"],
       })
 
@@ -281,7 +281,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should support custom i18n messages", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         i18n: {
           en: {
             required: "Fax number is required",
@@ -306,7 +306,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should support custom whitelist messages", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         whitelist: ["0223456789"],
         i18n: {
           en: {
@@ -328,7 +328,7 @@ describe("Taiwan fax(true) validator", () => {
 
   describe("real world Taiwan fax numbers", () => {
     it("should validate all major area codes", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Test Taiwan fax area codes using exact working numbers from tel utility test
       const validAreaCodes = [
@@ -352,7 +352,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should reject mobile phone prefixes", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Test invalid mobile prefixes (090-099)
       const mobilePrefixes = ["090", "091", "092", "093", "094", "095", "096", "097", "098", "099"]
@@ -364,7 +364,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should validate realistic fax number patterns", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       const realFaxNumbers = [
         "0223456789", // Taipei 10-digit (valid first digit 2) - from utility test ✓
@@ -387,15 +387,15 @@ describe("Taiwan fax(true) validator", () => {
 
   describe("edge cases", () => {
     it("should handle various input types", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Test different input types that should be converted to string
       expect(schema.parse("0223456789")).toBe("0223456789")
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const schema = fax(true)
-      const optionalSchema = fax(false)
+      const schema = twFax(true)
+      const optionalSchema = twFax(false)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("   ")).toThrow("Required")
@@ -407,7 +407,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should preserve valid format after transformation", () => {
-      const schema = fax(true, {
+      const schema = twFax(true, {
         transform: (val) => val.replace(/[^0-9]/g, ""),
       })
 
@@ -418,7 +418,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should work with complex whitelist scenarios", () => {
-      const schema = fax(false, { whitelist: ["0223456789", "emergency", "custom-fax-123", ""] })
+      const schema = twFax(false, { whitelist: ["0223456789", "emergency", "custom-fax-123", ""] })
 
       // Allowlist scenarios
       expect(schema.parse("0223456789")).toBe("0223456789")
@@ -432,7 +432,7 @@ describe("Taiwan fax(true) validator", () => {
     })
 
     it("should handle boundary cases for area codes", () => {
-      const schema = fax(true)
+      const schema = twFax(true)
 
       // Test minimum and maximum valid lengths for different area codes
       // 2-digit area codes: 9-10 digits total

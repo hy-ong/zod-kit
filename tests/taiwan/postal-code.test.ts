@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest"
-import { postalCode, setLocale } from "../../src"
+import { twPostalCode, setLocale } from "../../src"
 
-describe("postalCode() features", () => {
+describe("twPostalCode() features", () => {
   beforeEach(() => setLocale("en"))
 
   describe("3-digit postal code validation", () => {
     it("should accept valid 3-digit postal codes", () => {
-      const schema = postalCode(true, { format: "3" })
+      const schema = twPostalCode(true, { format: "3" })
       expect(schema.parse("100")).toBe("100") // Taipei
       expect(schema.parse("200")).toBe("200") // Keelung
       expect(schema.parse("300")).toBe("300") // Taoyuan/Hsinchu
@@ -19,20 +19,20 @@ describe("postalCode() features", () => {
     })
 
     it("should reject invalid 3-digit postal codes", () => {
-      const schema = postalCode(true, { format: "3" })
+      const schema = twPostalCode(true, { format: "3" })
       expect(() => schema.parse("000")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("099")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("999")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should reject non-3-digit formats when format is '3'", () => {
-      const schema = postalCode(true, { format: "3" })
+      const schema = twPostalCode(true, { format: "3" })
       expect(() => schema.parse("10001")).toThrow("Only 3-digit postal codes are allowed")
       expect(() => schema.parse("100001")).toThrow("Only 3-digit postal codes are allowed")
     })
 
     it("should validate specific Taipei area postal codes", () => {
-      const schema = postalCode(true, { format: "3" })
+      const schema = twPostalCode(true, { format: "3" })
       expect(schema.parse("100")).toBe("100") // Zhongzheng
       expect(schema.parse("103")).toBe("103") // Datong
       expect(schema.parse("104")).toBe("104") // Zhongshan
@@ -50,7 +50,7 @@ describe("postalCode() features", () => {
 
   describe("5-digit postal code validation", () => {
     it("should accept valid 5-digit postal codes", () => {
-      const schema = postalCode(true, { format: "5" })
+      const schema = twPostalCode(true, { format: "5" })
       expect(schema.parse("10001")).toBe("10001")
       expect(schema.parse("20001")).toBe("20001")
       expect(schema.parse("30001")).toBe("30001")
@@ -59,20 +59,20 @@ describe("postalCode() features", () => {
     })
 
     it("should reject invalid 5-digit postal codes", () => {
-      const schema = postalCode(true, { format: "5" })
+      const schema = twPostalCode(true, { format: "5" })
       expect(() => schema.parse("00001")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("09901")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("99901")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should reject non-5-digit formats when format is '5'", () => {
-      const schema = postalCode(true, { format: "5" })
+      const schema = twPostalCode(true, { format: "5" })
       expect(() => schema.parse("100")).toThrow("Only 5-digit postal codes are allowed")
       expect(() => schema.parse("100001")).toThrow("Only 5-digit postal codes are allowed")
     })
 
     it("should validate 5-digit postal codes with valid prefixes", () => {
-      const schema = postalCode(true, { format: "5" })
+      const schema = twPostalCode(true, { format: "5" })
       expect(schema.parse("10099")).toBe("10099") // Valid Taipei prefix
       expect(schema.parse("20099")).toBe("20099") // Valid Keelung prefix
       expect(schema.parse("88099")).toBe("88099") // Valid Penghu prefix
@@ -81,7 +81,7 @@ describe("postalCode() features", () => {
 
   describe("6-digit postal code validation", () => {
     it("should accept valid 6-digit postal codes", () => {
-      const schema = postalCode(true, { format: "6" })
+      const schema = twPostalCode(true, { format: "6" })
       expect(schema.parse("100001")).toBe("100001")
       expect(schema.parse("200001")).toBe("200001")
       expect(schema.parse("300001")).toBe("300001")
@@ -90,20 +90,20 @@ describe("postalCode() features", () => {
     })
 
     it("should reject invalid 6-digit postal codes", () => {
-      const schema = postalCode(true, { format: "6" })
+      const schema = twPostalCode(true, { format: "6" })
       expect(() => schema.parse("000001")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("099001")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("999001")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should reject non-6-digit formats when format is '6'", () => {
-      const schema = postalCode(true, { format: "6" })
+      const schema = twPostalCode(true, { format: "6" })
       expect(() => schema.parse("100")).toThrow("Only 6-digit postal codes are allowed")
       expect(() => schema.parse("10001")).toThrow("Only 6-digit postal codes are allowed")
     })
 
     it("should validate 6-digit postal codes with all valid prefixes", () => {
-      const schema = postalCode(true, { format: "6" })
+      const schema = twPostalCode(true, { format: "6" })
       expect(schema.parse("100999")).toBe("100999") // Taipei
       expect(schema.parse("880999")).toBe("880999") // Penghu
       expect(schema.parse("890999")).toBe("890999") // Kinmen
@@ -113,28 +113,28 @@ describe("postalCode() features", () => {
 
   describe("combined format validation", () => {
     it("should accept both 3 and 5 digit formats with '3+5'", () => {
-      const schema = postalCode(true, { format: "3+5" })
+      const schema = twPostalCode(true, { format: "3+5" })
       expect(schema.parse("100")).toBe("100")
       expect(schema.parse("10001")).toBe("10001")
       expect(() => schema.parse("100001")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should accept both 3 and 6 digit formats with '3+6' (default)", () => {
-      const schema = postalCode() // Default format is "3+6"
+      const schema = twPostalCode() // Default format is "3+6"
       expect(schema.parse("100")).toBe("100")
       expect(schema.parse("100001")).toBe("100001")
       expect(() => schema.parse("10001")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should accept both 5 and 6 digit formats with '5+6'", () => {
-      const schema = postalCode(true, { format: "5+6" })
+      const schema = twPostalCode(true, { format: "5+6" })
       expect(schema.parse("10001")).toBe("10001")
       expect(schema.parse("100001")).toBe("100001")
       expect(() => schema.parse("100")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should accept all formats with 'all'", () => {
-      const schema = postalCode(true, { format: "all" })
+      const schema = twPostalCode(true, { format: "all" })
       expect(schema.parse("100")).toBe("100")
       expect(schema.parse("10001")).toBe("10001")
       expect(schema.parse("100001")).toBe("100001")
@@ -143,7 +143,7 @@ describe("postalCode() features", () => {
 
   describe("dash and space handling", () => {
     it("should handle dashes in postal codes when allowDashes is true", () => {
-      const schema = postalCode(true, { format: "all", allowDashes: true })
+      const schema = twPostalCode(true, { format: "all", allowDashes: true })
       expect(schema.parse("100")).toBe("100")
       expect(schema.parse("100-01")).toBe("10001")
       expect(schema.parse("100-001")).toBe("100001")
@@ -151,14 +151,14 @@ describe("postalCode() features", () => {
     })
 
     it("should reject dashes when allowDashes is false", () => {
-      const schema = postalCode(true, { format: "all", allowDashes: false })
+      const schema = twPostalCode(true, { format: "all", allowDashes: false })
       expect(schema.parse("100")).toBe("100")
       expect(() => schema.parse("100-01")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("100-001")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should normalize various dash and space formats", () => {
-      const schema = postalCode(true, { format: "6", allowDashes: true })
+      const schema = twPostalCode(true, { format: "6", allowDashes: true })
       expect(schema.parse("100-001")).toBe("100001")
       expect(schema.parse("100 001")).toBe("100001")
       expect(schema.parse("100   001")).toBe("100001")
@@ -168,7 +168,7 @@ describe("postalCode() features", () => {
 
   describe("prefix filtering", () => {
     it("should only allow specified prefixes", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "all",
         allowedPrefixes: ["100", "200", "300"],
       })
@@ -181,7 +181,7 @@ describe("postalCode() features", () => {
     })
 
     it("should block specified prefixes", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "all",
         blockedPrefixes: ["999", "000"],
       })
@@ -192,7 +192,7 @@ describe("postalCode() features", () => {
     })
 
     it("should prioritize allowedPrefixes over strict validation", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "3",
         allowedPrefixes: ["999"], // Not in official list
         strictValidation: true,
@@ -201,7 +201,7 @@ describe("postalCode() features", () => {
     })
 
     it("should respect blockedPrefixes even with allowedPrefixes", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "3",
         allowedPrefixes: ["100", "200", "999"],
         blockedPrefixes: ["999"],
@@ -214,20 +214,20 @@ describe("postalCode() features", () => {
 
   describe("strict validation", () => {
     it("should validate against official postal code list when strict", () => {
-      const schema = postalCode(true, { format: "3", strictValidation: true })
+      const schema = twPostalCode(true, { format: "3", strictValidation: true })
       expect(schema.parse("100")).toBe("100") // Valid official code
       expect(() => schema.parse("199")).toThrow("Invalid Taiwan postal code") // Not in official list
     })
 
     it("should allow broader range when not strict", () => {
-      const schema = postalCode(true, { format: "3", strictValidation: false })
+      const schema = twPostalCode(true, { format: "3", strictValidation: false })
       expect(schema.parse("100")).toBe("100") // Valid official code
       expect(schema.parse("199")).toBe("199") // Not in official list but in range 100-999
       expect(() => schema.parse("099")).toThrow("Invalid Taiwan postal code") // Still below 100
     })
 
     it("should validate all Taiwan regions with strict validation", () => {
-      const schema = postalCode(true, { format: "3", strictValidation: true })
+      const schema = twPostalCode(true, { format: "3", strictValidation: true })
 
       // Major cities
       expect(schema.parse("100")).toBe("100") // Taipei City
@@ -254,28 +254,28 @@ describe("postalCode() features", () => {
 
   describe("required and optional validation", () => {
     it("should handle required validation", () => {
-      const schema = postalCode(true)
+      const schema = twPostalCode(true)
       expect(() => schema.parse(null)).toThrow("Required")
       expect(() => schema.parse(undefined)).toThrow("Required")
       expect(() => schema.parse("")).toThrow("Required")
     })
 
     it("should allow null when not required", () => {
-      const schema = postalCode(false)
+      const schema = twPostalCode(false)
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse(undefined)).toBe(null)
       expect(schema.parse("")).toBe(null)
     })
 
     it("should use default value when provided", () => {
-      const schema = postalCode(true, { defaultValue: "100001" })
+      const schema = twPostalCode(true, { defaultValue: "100001" })
       expect(schema.parse("")).toBe("100001")
       expect(schema.parse(null)).toBe("100001")
       expect(schema.parse(undefined)).toBe("100001")
     })
 
     it("should use default value for optional fields", () => {
-      const schema = postalCode(false, { defaultValue: "100001" })
+      const schema = twPostalCode(false, { defaultValue: "100001" })
       expect(schema.parse("")).toBe("100001")
       expect(schema.parse(null)).toBe("100001")
       expect(schema.parse(undefined)).toBe("100001")
@@ -284,7 +284,7 @@ describe("postalCode() features", () => {
 
   describe("transform functionality", () => {
     it("should apply transform function", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "6",
         transform: (val) => val.replace(/\D/g, ""), // Remove non-digits
       })
@@ -294,7 +294,7 @@ describe("postalCode() features", () => {
     })
 
     it("should apply transform after dash removal", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "3",
         allowDashes: true,
         transform: (val) => val.padEnd(3, "0"), // Pad to 3 digits
@@ -307,7 +307,7 @@ describe("postalCode() features", () => {
   describe("legacy 5-digit warning", () => {
     it("should emit warning for 5-digit codes when warn5Digit is true", () => {
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-      const schema = postalCode(true, { format: "all", warn5Digit: true })
+      const schema = twPostalCode(true, { format: "all", warn5Digit: true })
 
       schema.parse("10001") // Should emit warning
       expect(consoleSpy).toHaveBeenCalledWith("5-digit postal codes are legacy format, consider using 6-digit format")
@@ -320,7 +320,7 @@ describe("postalCode() features", () => {
 
     it("should not emit warning when warn5Digit is false", () => {
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-      const schema = postalCode(true, { format: "all", warn5Digit: false })
+      const schema = twPostalCode(true, { format: "all", warn5Digit: false })
 
       schema.parse("10001") // Should not emit warning
       expect(consoleSpy).not.toHaveBeenCalled()
@@ -330,7 +330,7 @@ describe("postalCode() features", () => {
 
     it("should not emit warning for 5-digit only format", () => {
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-      const schema = postalCode(true, { format: "5", warn5Digit: true })
+      const schema = twPostalCode(true, { format: "5", warn5Digit: true })
 
       schema.parse("10001") // Should not emit warning for 5-digit only format
       expect(consoleSpy).not.toHaveBeenCalled()
@@ -341,7 +341,7 @@ describe("postalCode() features", () => {
 
   describe("custom i18n messages", () => {
     it("should use custom messages when provided", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "3",
         i18n: {
           en: {
@@ -363,7 +363,7 @@ describe("postalCode() features", () => {
     })
 
     it("should fallback to default messages when custom not provided", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "6",
         i18n: {
           en: {
@@ -381,7 +381,7 @@ describe("postalCode() features", () => {
 
     it("should use correct locale for custom messages", () => {
       setLocale("en")
-      const schemaEn = postalCode(true, {
+      const schemaEn = twPostalCode(true, {
         format: "3",
         i18n: {
           en: {
@@ -395,7 +395,7 @@ describe("postalCode() features", () => {
       expect(() => schemaEn.parse("999")).toThrow("English invalid message")
 
       setLocale("zh-TW")
-      const schemaZh = postalCode(true, {
+      const schemaZh = twPostalCode(true, {
         format: "3",
         i18n: {
           en: {
@@ -412,7 +412,7 @@ describe("postalCode() features", () => {
 
   describe("complex scenarios", () => {
     it("should work with multiple validations", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "6",
         allowDashes: true,
         strictValidation: true,
@@ -429,7 +429,7 @@ describe("postalCode() features", () => {
     })
 
     it("should handle edge cases with transforms and dashes", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "all",
         allowDashes: true,
         transform: (val) => val.toUpperCase().replace(/[^0-9-]/g, ""),
@@ -441,7 +441,7 @@ describe("postalCode() features", () => {
     })
 
     it("should validate comprehensive Taiwan postal code coverage", () => {
-      const schema = postalCode(true, { format: "all", strictValidation: true })
+      const schema = twPostalCode(true, { format: "all", strictValidation: true })
 
       // Test various regions
       const validCodes = [
@@ -516,7 +516,7 @@ describe("postalCode() features", () => {
     })
 
     it("should work with real-world postal codes", () => {
-      const schema = postalCode(true, { format: "all", allowDashes: true })
+      const schema = twPostalCode(true, { format: "all", allowDashes: true })
 
       // Real Taiwan postal codes
       expect(schema.parse("100")).toBe("100") // Taipei Main Post Office
@@ -537,7 +537,7 @@ describe("postalCode() features", () => {
 
   describe("strict suffix validation with regional ranges", () => {
     it("should validate 5-digit suffix ranges for major cities", () => {
-      const schema = postalCode(true, { format: "5", strictSuffixValidation: true })
+      const schema = twPostalCode(true, { format: "5", strictSuffixValidation: true })
       // Taipei areas (full range 01-99)
       expect(schema.parse("10001")).toBe("10001") // Valid suffix 01
       expect(schema.parse("10099")).toBe("10099") // Valid suffix 99
@@ -546,7 +546,7 @@ describe("postalCode() features", () => {
     })
 
     it("should validate 6-digit suffix ranges for major cities", () => {
-      const schema = postalCode(true, { format: "6", strictSuffixValidation: true })
+      const schema = twPostalCode(true, { format: "6", strictSuffixValidation: true })
       // Taipei areas (full range 001-999)
       expect(schema.parse("100001")).toBe("100001") // Valid suffix 001
       expect(schema.parse("100999")).toBe("100999") // Valid suffix 999
@@ -555,7 +555,7 @@ describe("postalCode() features", () => {
     })
 
     it("should validate restricted ranges for smaller areas", () => {
-      const schema = postalCode(true, { format: "all", strictSuffixValidation: true })
+      const schema = twPostalCode(true, { format: "all", strictSuffixValidation: true })
 
       // Penghu (limited range)
       expect(schema.parse("88001")).toBe("88001") // Valid for Penghu
@@ -577,7 +577,7 @@ describe("postalCode() features", () => {
     })
 
     it("should allow any suffix when strictSuffixValidation is disabled", () => {
-      const schema = postalCode(true, { format: "all", strictSuffixValidation: false })
+      const schema = twPostalCode(true, { format: "all", strictSuffixValidation: false })
       expect(schema.parse("10000")).toBe("10000") // Suffix 00 allowed
       expect(schema.parse("100000")).toBe("100000") // Suffix 000 allowed
       expect(schema.parse("10099")).toBe("10099") // Normal suffix
@@ -586,21 +586,21 @@ describe("postalCode() features", () => {
 
   describe("5-digit deprecation", () => {
     it("should reject 5-digit codes when deprecate5Digit is enabled", () => {
-      const schema = postalCode(true, { format: "all", deprecate5Digit: true })
+      const schema = twPostalCode(true, { format: "all", deprecate5Digit: true })
       expect(schema.parse("100")).toBe("100") // 3-digit still allowed
       expect(schema.parse("100001")).toBe("100001") // 6-digit still allowed
       expect(() => schema.parse("10001")).toThrow("5-digit postal codes are deprecated") // 5-digit rejected
     })
 
     it("should allow 5-digit codes when deprecate5Digit is disabled", () => {
-      const schema = postalCode(true, { format: "all", deprecate5Digit: false })
+      const schema = twPostalCode(true, { format: "all", deprecate5Digit: false })
       expect(schema.parse("10001")).toBe("10001") // 5-digit allowed
     })
   })
 
   describe("combined strict validation scenarios", () => {
     it("should work with both strictSuffixValidation and deprecate5Digit", () => {
-      const schema = postalCode(true, {
+      const schema = twPostalCode(true, {
         format: "6",
         strictSuffixValidation: true,
         deprecate5Digit: true,
@@ -611,7 +611,7 @@ describe("postalCode() features", () => {
     })
 
     it("should provide specific error for real-world validation scenarios", () => {
-      const realWorldSchema = postalCode(true, {
+      const realWorldSchema = twPostalCode(true, {
         format: "6",
         strictSuffixValidation: true,
         strictValidation: true,
@@ -644,7 +644,7 @@ describe("postalCode() features", () => {
 
   describe("regional-specific validation", () => {
     it("should validate major cities with full ranges", () => {
-      const schema = postalCode(true, { format: "all", strictSuffixValidation: true })
+      const schema = twPostalCode(true, { format: "all", strictSuffixValidation: true })
 
       // Taipei City areas - should have full 01-99 and 001-999 ranges
       const taipeiAreas = ["100", "103", "104", "105", "106", "108", "110", "111", "112", "114", "115", "116"]
@@ -663,7 +663,7 @@ describe("postalCode() features", () => {
     })
 
     it("should enforce restricted ranges for offshore islands", () => {
-      const schema = postalCode(true, { format: "all", strictSuffixValidation: true })
+      const schema = twPostalCode(true, { format: "all", strictSuffixValidation: true })
 
       // Penghu County (880) - limited to 01-50 and 001-500
       expect(schema.parse("88001")).toBe("88001")
@@ -691,7 +691,7 @@ describe("postalCode() features", () => {
     })
 
     it("should use default ranges for areas not in specific mapping", () => {
-      const schema = postalCode(true, { format: "all", strictSuffixValidation: true })
+      const schema = twPostalCode(true, { format: "all", strictSuffixValidation: true })
 
       // Areas not specifically mapped should use default ranges (01-99, 001-999)
       expect(schema.parse("26001")).toBe("26001") // Yilan - uses default
@@ -705,7 +705,7 @@ describe("postalCode() features", () => {
 
   describe("edge cases", () => {
     it("should handle empty and whitespace inputs", () => {
-      const schema = postalCode(false)
+      const schema = twPostalCode(false)
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("   ")).toBe(null)
       expect(schema.parse("\t")).toBe(null)
@@ -713,20 +713,20 @@ describe("postalCode() features", () => {
     })
 
     it("should handle numeric inputs", () => {
-      const schema = postalCode(true, { format: "3" })
+      const schema = twPostalCode(true, { format: "3" })
       expect(schema.parse(100)).toBe("100")
       expect(schema.parse(200)).toBe("200")
     })
 
     it("should reject codes with letters when not using transform", () => {
-      const schema = postalCode(true, { format: "3", allowDashes: false })
+      const schema = twPostalCode(true, { format: "3", allowDashes: false })
       expect(() => schema.parse("10A")).toThrow("Invalid Taiwan postal code")
       expect(() => schema.parse("ABC")).toThrow("Invalid Taiwan postal code")
     })
 
     it("should handle very specific area restrictions", () => {
       // Only allow Taipei city areas
-      const taipeiOnlySchema = postalCode(true, {
+      const taipeiOnlySchema = twPostalCode(true, {
         format: "all",
         allowedPrefixes: ["100", "103", "104", "105", "106", "108", "110", "111", "112", "114", "115", "116"],
       })
@@ -737,12 +737,12 @@ describe("postalCode() features", () => {
     })
 
     it("should handle format combinations correctly", () => {
-      const schema35 = postalCode(true, { format: "3+5" })
+      const schema35 = twPostalCode(true, { format: "3+5" })
       expect(schema35.parse("100")).toBe("100")
       expect(schema35.parse("10001")).toBe("10001")
       expect(() => schema35.parse("100001")).toThrow("Invalid Taiwan postal code")
 
-      const schema56 = postalCode(true, { format: "5+6" })
+      const schema56 = twPostalCode(true, { format: "5+6" })
       expect(schema56.parse("10001")).toBe("10001")
       expect(schema56.parse("100001")).toBe("100001")
       expect(() => schema56.parse("100")).toThrow("Invalid Taiwan postal code")

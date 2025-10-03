@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { businessId, setLocale, validateTaiwanBusinessId } from "../../src"
+import { twBusinessId, setLocale, validateTaiwanBusinessId } from "../../src"
 
-describe("Taiwan businessId(true) validator", () => {
+describe("Taiwan twBusinessId(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan business IDs", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       // Valid Taiwan business IDs (統一編號) - using calculation based on new/old rules
       expect(schema.parse("22550077")).toBe("22550077") // Sum = 50, 50 % 5 = 0 (new rule)
@@ -15,7 +15,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should reject invalid Taiwan business IDs", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       // Invalid checksums
       expect(() => schema.parse("12345672")).toThrow("Invalid Taiwan Business ID")
@@ -24,7 +24,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should reject non-numeric inputs", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(() => schema.parse("1234567A")).toThrow("Invalid Taiwan Business ID")
       expect(() => schema.parse("abcdefgh")).toThrow("Invalid Taiwan Business ID")
@@ -32,7 +32,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should reject wrong length inputs", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(() => schema.parse("1234567")).toThrow("Invalid Taiwan Business ID")
       expect(() => schema.parse("123456789")).toThrow("Invalid Taiwan Business ID")
@@ -43,7 +43,7 @@ describe("Taiwan businessId(true) validator", () => {
 
   describe("special case validation (7th digit = 7)", () => {
     it("should handle special case where 7th digit is 7", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       // Valid number with 7th digit = 7 for testing special case
       expect(schema.parse("12345670")).toBe("12345670") // Should be valid with special case
@@ -75,7 +75,7 @@ describe("Taiwan businessId(true) validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow()
@@ -83,7 +83,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = businessId(false)
+      const schema = twBusinessId(false)
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -92,8 +92,8 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = businessId(true, { defaultValue: "12345675" })
-      const optionalSchema = businessId(false, { defaultValue: "12345675" })
+      const requiredSchema = twBusinessId(true, { defaultValue: "12345675" })
+      const optionalSchema = twBusinessId(false, { defaultValue: "12345675" })
 
       expect(requiredSchema.parse("")).toBe("12345675")
       expect(optionalSchema.parse("")).toBe("12345675")
@@ -102,7 +102,7 @@ describe("Taiwan businessId(true) validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = businessId(true, {
+      const schema = twBusinessId(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
       })
 
@@ -112,7 +112,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should apply transform before validation", () => {
-      const schema = businessId(true, {
+      const schema = twBusinessId(true, {
         transform: (val) => val.replace(/\s+/g, ""),
       })
 
@@ -123,14 +123,14 @@ describe("Taiwan businessId(true) validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(schema.parse(12345675)).toBe("12345675")
       expect(() => schema.parse(12345672)).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should trim whitespace", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(schema.parse("  12345675  ")).toBe("12345675")
       expect(schema.parse("\t12345675\n")).toBe("12345675")
@@ -140,7 +140,7 @@ describe("Taiwan businessId(true) validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("1234567")).toThrow("Invalid Taiwan Business ID")
@@ -149,7 +149,7 @@ describe("Taiwan businessId(true) validator", () => {
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("1234567")).toThrow("無效的統一編號")
@@ -157,7 +157,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should support custom i18n messages", () => {
-      const schema = businessId(true, {
+      const schema = twBusinessId(true, {
         i18n: {
           en: {
             required: "Business ID is required",
@@ -182,7 +182,7 @@ describe("Taiwan businessId(true) validator", () => {
 
   describe("real world Taiwan business IDs", () => {
     it("should validate known real business IDs", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       // These are example valid Taiwan business IDs for testing
       const validIds = [
@@ -198,7 +198,7 @@ describe("Taiwan businessId(true) validator", () => {
     })
 
     it("should reject common invalid patterns", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       const invalidIds = [
         "00000001", // All zeros with bad checksum
@@ -218,15 +218,15 @@ describe("Taiwan businessId(true) validator", () => {
 
   describe("edge cases", () => {
     it("should handle leading zeros", () => {
-      const schema = businessId(true)
+      const schema = twBusinessId(true)
 
       expect(schema.parse("04595257")).toBe("04595257")
       expect(() => schema.parse("00123456")).toThrow("Invalid Taiwan Business ID")
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const schema = businessId(true)
-      const optionalSchema = businessId(false)
+      const schema = twBusinessId(true)
+      const optionalSchema = twBusinessId(false)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("   ")).toThrow("Required")

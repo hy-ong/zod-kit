@@ -15,11 +15,11 @@ import { getLocale, type Locale } from "../../config"
 /**
  * Type definition for business ID validation error messages
  *
- * @interface BusinessIdMessages
+ * @interface TwBusinessIdMessages
  * @property {string} [required] - Message when field is required but empty
  * @property {string} [invalid] - Message when business ID format or checksum is invalid
  */
-export type BusinessIdMessages = {
+export type TwBusinessIdMessages = {
   required?: string
   invalid?: string
 }
@@ -29,26 +29,26 @@ export type BusinessIdMessages = {
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
- * @interface BusinessIdOptions
+ * @interface TwBusinessIdOptions
  * @property {IsRequired} [required=true] - Whether the field is required
  * @property {Function} [transform] - Custom transformation function for business ID
  * @property {string | null} [defaultValue] - Default value when input is empty
- * @property {Record<Locale, BusinessIdMessages>} [i18n] - Custom error messages for different locales
+ * @property {Record<Locale, TwBusinessIdMessages>} [i18n] - Custom error messages for different locales
  */
-export type BusinessIdOptions<IsRequired extends boolean = true> = {
+export type TwBusinessIdOptions<IsRequired extends boolean = true> = {
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, BusinessIdMessages>
+  i18n?: Record<Locale, TwBusinessIdMessages>
 }
 
 /**
  * Type alias for business ID validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef BusinessIdSchema
+ * @typedef TwBusinessIdSchema
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
-export type BusinessIdSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TwBusinessIdSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 /**
  * Validates Taiwan Business Identification Number (統一編號)
@@ -179,10 +179,10 @@ const validateTaiwanBusinessId = (value: string): boolean => {
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
- * @see {@link BusinessIdOptions} for all available configuration options
+ * @see {@link TwBusinessIdOptions} for all available configuration options
  * @see {@link validateTaiwanBusinessId} for validation logic details
  */
-export function businessId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<BusinessIdOptions<IsRequired>, 'required'>): BusinessIdSchema<IsRequired> {
+export function twBusinessId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwBusinessIdOptions<IsRequired>, 'required'>): TwBusinessIdSchema<IsRequired> {
   const {
     transform,
     defaultValue,
@@ -195,7 +195,7 @@ export function businessId<IsRequired extends boolean = false>(required?: IsRequ
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
-  const getMessage = (key: keyof BusinessIdMessages, params?: Record<string, any>) => {
+  const getMessage = (key: keyof TwBusinessIdMessages, params?: Record<string, any>) => {
     if (i18n) {
       const currentLocale = getLocale()
       const customMessages = i18n[currentLocale]

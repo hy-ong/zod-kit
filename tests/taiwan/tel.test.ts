@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { tel, setLocale, validateTaiwanTel } from "../../src"
+import { twTel, setLocale, validateTaiwanTel } from "../../src"
 
-describe("Taiwan tel(true) validator", () => {
+describe("Taiwan twTel(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan landline telephone numbers", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Valid Taiwan landline numbers (various formats)
       // Taipei (02) - requires 10 digits total, first digit after 02 must be 2,3,5-8
@@ -41,7 +41,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should validate numbers with separators", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Numbers with dashes
       expect(schema.parse("02-2345-6789")).toBe("02-2345-6789")
@@ -59,7 +59,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should reject invalid Taiwan telephone numbers", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Invalid formats
       expect(() => schema.parse("123456789")).toThrow("Invalid Taiwan telephone format") // Missing leading 0
@@ -84,7 +84,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should handle whitespace trimming", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       expect(schema.parse("  0223456789  ")).toBe("0223456789")
       expect(schema.parse("\t072345678\n")).toBe("072345678")
@@ -93,7 +93,7 @@ describe("Taiwan tel(true) validator", () => {
 
   describe("whitelist functionality", () => {
     it("should accept any string in whitelist regardless of format", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         whitelist: ["custom-tel", "emergency-line", "0912345678"],
       })
 
@@ -108,7 +108,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should reject values not in whitelist when whitelist is provided", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         whitelist: ["allowed-value", "0223456789"],
       })
 
@@ -117,7 +117,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should work with empty whitelist", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         whitelist: [],
       })
 
@@ -127,7 +127,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should prioritize whitelist over format validation", () => {
-      const schema = tel(false, { whitelist: ["not-a-phone", "123", ""] })
+      const schema = twTel(false, { whitelist: ["not-a-phone", "123", ""] })
 
       // These should be accepted despite being invalid telephone formats
       expect(schema.parse("not-a-phone")).toBe("not-a-phone")
@@ -138,7 +138,7 @@ describe("Taiwan tel(true) validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow()
@@ -146,7 +146,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = tel(false)
+      const schema = twTel(false)
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -155,15 +155,15 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = tel(true, { defaultValue: "0223456789" })
-      const optionalSchema = tel(false, { defaultValue: "0223456789" })
+      const requiredSchema = twTel(true, { defaultValue: "0223456789" })
+      const optionalSchema = twTel(false, { defaultValue: "0223456789" })
 
       expect(requiredSchema.parse("")).toBe("0223456789")
       expect(optionalSchema.parse("")).toBe("0223456789")
     })
 
     it("should handle whitelist with optional fields", () => {
-      const schema = tel(false, { whitelist: ["custom-value", "0223456789"] })
+      const schema = twTel(false, { whitelist: ["custom-value", "0223456789"] })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("custom-value")).toBe("custom-value")
@@ -174,7 +174,7 @@ describe("Taiwan tel(true) validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
       })
 
@@ -183,7 +183,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should apply transform before validation", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         transform: (val) => val.replace(/\s+/g, ""),
       })
 
@@ -192,7 +192,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should work with whitelist after transform", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
         whitelist: ["0223456789", "customvalue"],
       })
@@ -204,14 +204,14 @@ describe("Taiwan tel(true) validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Test string conversion of numbers
       expect(() => schema.parse(212345678)).toThrow("Invalid Taiwan telephone format") // Invalid because missing leading 0
     })
 
     it("should trim whitespace", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       expect(schema.parse("  0223456789  ")).toBe("0223456789")
       expect(schema.parse("\t072345678\n")).toBe("072345678")
@@ -258,7 +258,7 @@ describe("Taiwan tel(true) validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      const schema = tel(true)
+      const schema = twTel(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("0912345678")).toThrow("Invalid Taiwan telephone format")
@@ -266,7 +266,7 @@ describe("Taiwan tel(true) validator", () => {
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = tel(true)
+      const schema = twTel(true)
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("0912345678")).toThrow("無效的市話號碼格式")
@@ -274,7 +274,7 @@ describe("Taiwan tel(true) validator", () => {
 
     it("should support whitelist error messages", () => {
       setLocale("en")
-      const schema = tel(true, {
+      const schema = twTel(true, {
         whitelist: ["0212345678"],
       })
 
@@ -285,7 +285,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should support custom i18n messages", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         i18n: {
           en: {
             required: "Telephone number is required",
@@ -310,7 +310,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should support custom whitelist messages", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         whitelist: ["0212345678"],
         i18n: {
           en: {
@@ -332,7 +332,7 @@ describe("Taiwan tel(true) validator", () => {
 
   describe("real world Taiwan telephone numbers", () => {
     it("should validate all major area codes", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Test Taiwan landline area codes using exact working numbers from a utility test
       const validAreaCodes = [
@@ -356,7 +356,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should reject mobile phone prefixes", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Test invalid mobile prefixes (090-099)
       const mobilePrefixes = ["090", "091", "092", "093", "094", "095", "096", "097", "098", "099"]
@@ -368,7 +368,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should validate realistic landline number patterns", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       const realLandlineNumbers = [
         "0223456789", // Taipei 10-digit (valid first digit 2) - from utility test ✓
@@ -391,15 +391,15 @@ describe("Taiwan tel(true) validator", () => {
 
   describe("edge cases", () => {
     it("should handle various input types", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Test different input types that should be converted to string
       expect(schema.parse("0223456789")).toBe("0223456789")
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const schema = tel(true)
-      const optionalSchema = tel(false)
+      const schema = twTel(true)
+      const optionalSchema = twTel(false)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("   ")).toThrow("Required")
@@ -411,7 +411,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should preserve valid format after transformation", () => {
-      const schema = tel(true, {
+      const schema = twTel(true, {
         transform: (val) => val.replace(/[^0-9]/g, ""),
       })
 
@@ -422,7 +422,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should work with complex whitelist scenarios", () => {
-      const schema = tel(false, { whitelist: ["0223456789", "emergency", "custom-contact-123", ""] })
+      const schema = twTel(false, { whitelist: ["0223456789", "emergency", "custom-contact-123", ""] })
 
       // Allowlist scenarios
       expect(schema.parse("0223456789")).toBe("0223456789")
@@ -436,7 +436,7 @@ describe("Taiwan tel(true) validator", () => {
     })
 
     it("should handle boundary cases for area codes", () => {
-      const schema = tel(true)
+      const schema = twTel(true)
 
       // Test minimum and maximum valid lengths for different area codes
       // 2-digit area codes: 9-10 digits total

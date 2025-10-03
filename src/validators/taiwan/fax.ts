@@ -15,12 +15,12 @@ import { getLocale, type Locale } from "../../config"
 /**
  * Type definition for fax number validation error messages
  *
- * @interface FaxMessages
+ * @interface TwFaxMessages
  * @property {string} [required] - Message when field is required but empty
  * @property {string} [invalid] - Message when fax number format is invalid
  * @property {string} [notInWhitelist] - Message when fax number is not in whitelist
  */
-export type FaxMessages = {
+export type TwFaxMessages = {
   required?: string
   invalid?: string
   notInWhitelist?: string
@@ -31,28 +31,28 @@ export type FaxMessages = {
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
- * @interface FaxOptions
+ * @interface TwFaxOptions
  * @property {IsRequired} [required=true] - Whether the field is required
  * @property {string[]} [whitelist] - Array of specific fax numbers that are always allowed
  * @property {Function} [transform] - Custom transformation function for fax number
  * @property {string | null} [defaultValue] - Default value when input is empty
- * @property {Record<Locale, FaxMessages>} [i18n] - Custom error messages for different locales
+ * @property {Record<Locale, TwFaxMessages>} [i18n] - Custom error messages for different locales
  */
-export type FaxOptions<IsRequired extends boolean = true> = {
+export type TwFaxOptions<IsRequired extends boolean = true> = {
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, FaxMessages>
+  i18n?: Record<Locale, TwFaxMessages>
 }
 
 /**
  * Type alias for fax number validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef FaxSchema
+ * @typedef TwFaxSchema
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
-export type FaxSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TwFaxSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 /**
  * Validates Taiwan fax number format (Official 2024 rules - same as landline)
@@ -172,7 +172,7 @@ const validateTaiwanFax = (value: string): boolean => {
  * @template IsRequired - Whether the field is required (affects return type)
  * @param {IsRequired} [required=false] - Whether the field is required
  * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
- * @returns {FaxSchema<IsRequired>} Zod schema for fax number validation
+ * @returns {TwFaxSchema<IsRequired>} Zod schema for fax number validation
  *
  * @description
  * Creates a comprehensive Taiwan fax number validator with support for all Taiwan
@@ -191,7 +191,7 @@ const validateTaiwanFax = (value: string): boolean => {
  * @example
  * ```typescript
  * // Basic fax number validation
- * const basicSchema = fax() // optional by default
+ * const basicSchema = twFax() // optional by default
  * basicSchema.parse("0223456789") // ✓ Valid (Taipei)
  * basicSchema.parse(null) // ✓ Valid (optional)
  *
@@ -205,25 +205,25 @@ const validateTaiwanFax = (value: string): boolean => {
  * basicSchema.parse("0812345678") // ✗ Invalid (wrong format for 08)
  *
  * // With whitelist (only specific numbers allowed)
- * const whitelistSchema = fax(false, {
+ * const whitelistSchema = twFax(false, {
  *   whitelist: ["0223456789", "0312345678"]
  * })
  * whitelistSchema.parse("0223456789") // ✓ Valid (in whitelist)
  * whitelistSchema.parse("0287654321") // ✗ Invalid (not in whitelist)
  *
  * // Optional fax number
- * const optionalSchema = fax(false)
+ * const optionalSchema = twFax(false)
  * optionalSchema.parse("") // ✓ Valid (returns null)
  * optionalSchema.parse("0223456789") // ✓ Valid
  *
  * // With custom transformation
- * const transformSchema = fax(false, {
+ * const transformSchema = twFax(false, {
  *   transform: (value) => value.replace(/[^0-9]/g, '') // Keep only digits
  * })
  * transformSchema.parse("02-2345-6789") // ✓ Valid (separators removed)
  *
  * // With custom error messages
- * const customSchema = fax(false, {
+ * const customSchema = twFax(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan fax number" },
  *     'zh-TW': { invalid: "請輸入有效的台灣傳真號碼" }
@@ -232,10 +232,10 @@ const validateTaiwanFax = (value: string): boolean => {
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
- * @see {@link FaxOptions} for all available configuration options
+ * @see {@link TwFaxOptions} for all available configuration options
  * @see {@link validateTaiwanFax} for validation logic details
  */
-export function fax<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<FaxOptions<IsRequired>, 'required'>): FaxSchema<IsRequired> {
+export function twFax<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwFaxOptions<IsRequired>, 'required'>): TwFaxSchema<IsRequired> {
   const { whitelist, transform, defaultValue, i18n } = options ?? {}
 
   const isRequired = required ?? false as IsRequired
@@ -244,7 +244,7 @@ export function fax<IsRequired extends boolean = false>(required?: IsRequired, o
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
-  const getMessage = (key: keyof FaxMessages, params?: Record<string, any>) => {
+  const getMessage = (key: keyof TwFaxMessages, params?: Record<string, any>) => {
     if (i18n) {
       const currentLocale = getLocale()
       const customMessages = i18n[currentLocale]
@@ -316,7 +316,7 @@ export function fax<IsRequired extends boolean = false>(required?: IsRequired, o
     }
   })
 
-  return schema as unknown as FaxSchema<IsRequired>
+  return schema as unknown as TwFaxSchema<IsRequired>
 }
 
 /**

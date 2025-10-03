@@ -15,11 +15,11 @@ import { getLocale, type Locale } from "../../config"
 /**
  * Type definition for national ID validation error messages
  *
- * @interface NationalIdMessages
+ * @interface TwNationalIdMessages
  * @property {string} [required] - Message when field is required but empty
  * @property {string} [invalid] - Message when national ID format or checksum is invalid
  */
-export type NationalIdMessages = {
+export type TwNationalIdMessages = {
   required?: string
   invalid?: string
 }
@@ -44,30 +44,30 @@ export type NationalIdType =
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
- * @interface NationalIdOptions
+ * @interface TwNationalIdOptions
  * @property {IsRequired} [required=true] - Whether the field is required
  * @property {NationalIdType} [type="both"] - Type of ID to accept
  * @property {boolean} [allowOldResident=true] - Whether to accept old-style resident certificates
  * @property {Function} [transform] - Custom transformation function for ID
  * @property {string | null} [defaultValue] - Default value when input is empty
- * @property {Record<Locale, NationalIdMessages>} [i18n] - Custom error messages for different locales
+ * @property {Record<Locale, TwNationalIdMessages>} [i18n] - Custom error messages for different locales
  */
-export type NationalIdOptions<IsRequired extends boolean = true> = {
+export type TwNationalIdOptions<IsRequired extends boolean = true> = {
   type?: NationalIdType
   allowOldResident?: boolean
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, NationalIdMessages>
+  i18n?: Record<Locale, TwNationalIdMessages>
 }
 
 /**
  * Type alias for national ID validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef NationalIdSchema
+ * @typedef TwNationalIdSchema
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
-export type NationalIdSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TwNationalIdSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 /**
  * Mapping of Taiwan city/county codes to their numeric values
@@ -268,8 +268,8 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * Creates a Zod schema for Taiwan National ID validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {NationalIdOptions<IsRequired>} [options] - Configuration options for national ID validation
- * @returns {NationalIdSchema<IsRequired>} Zod schema for national ID validation
+ * @param {TwNationalIdOptions<IsRequired>} [options] - Configuration options for national ID validation
+ * @returns {TwNationalIdSchema<IsRequired>} Zod schema for national ID validation
  *
  * @description
  * Creates a comprehensive Taiwan National ID validator that supports both
@@ -288,18 +288,18 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * @example
  * ```typescript
  * // Accept any valid Taiwan ID
- * const anyIdSchema = nationalId()
+ * const anyIdSchema = twNationalId()
  * anyIdSchema.parse("A123456789") // ✓ Valid citizen ID
  * anyIdSchema.parse("A812345678") // ✓ Valid new resident ID
  * anyIdSchema.parse("AA12345678") // ✓ Valid old resident ID
  *
  * // Citizen IDs only
- * const citizenSchema = nationalId(false, { type: "citizen" })
+ * const citizenSchema = twNationalId(false, { type: "citizen" })
  * citizenSchema.parse("A123456789") // ✓ Valid
  * citizenSchema.parse("A812345678") // ✗ Invalid (resident ID)
  *
  * // Resident IDs only (new format only)
- * const residentSchema = nationalId(false, {
+ * const residentSchema = twNationalId(false, {
  *   type: "resident",
  *   allowOldResident: false
  * })
@@ -307,12 +307,12 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * residentSchema.parse("AA12345678") // ✗ Invalid (old format)
  *
  * // Optional with custom transformation
- * const optionalSchema = nationalId(false, {
+ * const optionalSchema = twNationalId(false, {
  *   transform: (value) => value.replace(/[^A-Z0-9]/g, '') // Remove special chars
  * })
  *
  * // With custom error messages
- * const customSchema = nationalId(false, {
+ * const customSchema = twNationalId(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan National ID" },
  *     'zh-TW': { invalid: "請輸入有效的身分證或居留證號碼" }
@@ -321,11 +321,11 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
- * @see {@link NationalIdOptions} for all available configuration options
+ * @see {@link TwNationalIdOptions} for all available configuration options
  * @see {@link NationalIdType} for supported ID types
  * @see {@link validateTaiwanNationalId} for validation logic details
  */
-export function nationalId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<NationalIdOptions<IsRequired>, 'required'>): NationalIdSchema<IsRequired> {
+export function twNationalId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwNationalIdOptions<IsRequired>, 'required'>): TwNationalIdSchema<IsRequired> {
   const {
     type = "both",
     allowOldResident = true,
@@ -340,7 +340,7 @@ export function nationalId<IsRequired extends boolean = false>(required?: IsRequ
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
-  const getMessage = (key: keyof NationalIdMessages, params?: Record<string, any>) => {
+  const getMessage = (key: keyof TwNationalIdMessages, params?: Record<string, any>) => {
     if (i18n) {
       const currentLocale = getLocale()
       const customMessages = i18n[currentLocale]
@@ -393,7 +393,7 @@ export function nationalId<IsRequired extends boolean = false>(required?: IsRequ
     }
   })
 
-  return schema as unknown as NationalIdSchema<IsRequired>
+  return schema as unknown as TwNationalIdSchema<IsRequired>
 }
 
 /**

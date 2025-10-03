@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { mobile, setLocale, validateTaiwanMobile } from "../../src"
+import { twMobile, setLocale, validateTaiwanMobile } from "../../src"
 
-describe("Taiwan mobile(true) validator", () => {
+describe("Taiwan twMobile(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan mobile phone numbers", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       // Valid Taiwan mobile phone numbers
       expect(schema.parse("0901234567")).toBe("0901234567")
@@ -22,7 +22,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should reject invalid Taiwan mobile phone numbers", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       // Invalid formats
       expect(() => schema.parse("123456789")).toThrow("Invalid Taiwan mobile phone format") // Missing leading 09
@@ -36,7 +36,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should handle whitespace trimming", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       expect(schema.parse("  0901234567  ")).toBe("0901234567")
       expect(schema.parse("\t0911234567\n")).toBe("0911234567")
@@ -45,7 +45,7 @@ describe("Taiwan mobile(true) validator", () => {
 
   describe("whitelist functionality", () => {
     it("should accept any string in whitelist regardless of format", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         whitelist: ["custom-phone", "emergency-contact", "0801234567"],
       })
 
@@ -60,7 +60,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should reject values not in whitelist when whitelist is provided", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         whitelist: ["allowed-value", "0901234567"],
       })
 
@@ -69,7 +69,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should work with empty whitelist", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         whitelist: [],
       })
 
@@ -79,7 +79,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should prioritize whitelist over format validation", () => {
-      const schema = mobile(false, { whitelist: ["not-a-phone", "123", ""] })
+      const schema = twMobile(false, { whitelist: ["not-a-phone", "123", ""] })
 
       // These should be accepted despite being invalid mobile phone formats
       expect(schema.parse("not-a-phone")).toBe("not-a-phone")
@@ -90,7 +90,7 @@ describe("Taiwan mobile(true) validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow()
@@ -98,7 +98,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = mobile(false)
+      const schema = twMobile(false)
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -107,15 +107,15 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = mobile(true, { defaultValue: "0901234567" })
-      const optionalSchema = mobile(false, { defaultValue: "0901234567" })
+      const requiredSchema = twMobile(true, { defaultValue: "0901234567" })
+      const optionalSchema = twMobile(false, { defaultValue: "0901234567" })
 
       expect(requiredSchema.parse("")).toBe("0901234567")
       expect(optionalSchema.parse("")).toBe("0901234567")
     })
 
     it("should handle whitelist with optional fields", () => {
-      const schema = mobile(false, { whitelist: ["custom-value", "0901234567"] })
+      const schema = twMobile(false, { whitelist: ["custom-value", "0901234567"] })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("custom-value")).toBe("custom-value")
@@ -126,7 +126,7 @@ describe("Taiwan mobile(true) validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
       })
 
@@ -135,7 +135,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should apply transform before validation", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         transform: (val) => val.replace(/\s+/g, ""),
       })
 
@@ -145,13 +145,13 @@ describe("Taiwan mobile(true) validator", () => {
 
     it("should work with whitelist after transform", () => {
       // First test basic transform without allowlist
-      const basicSchema = mobile(true, {
+      const basicSchema = twMobile(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
       })
       expect(basicSchema.parse("090-123-4567")).toBe("0901234567")
 
       // Then test with whitelist - use simple value that transforms won't affect
-      const whitelistSchema = mobile(true, {
+      const whitelistSchema = twMobile(true, {
         transform: (val) => val.replace(/[-\s]/g, ""),
         whitelist: ["0901234567", "customvalue"],
       })
@@ -163,14 +163,14 @@ describe("Taiwan mobile(true) validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       // Test string conversion of numbers
       expect(() => schema.parse(901234567)).toThrow("Invalid Taiwan mobile phone format") // Invalid because missing leading 0
     })
 
     it("should trim whitespace", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       expect(schema.parse("  0901234567  ")).toBe("0901234567")
       expect(schema.parse("\t0911234567\n")).toBe("0911234567")
@@ -207,7 +207,7 @@ describe("Taiwan mobile(true) validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("0801234567")).toThrow("Invalid Taiwan mobile phone format")
@@ -215,7 +215,7 @@ describe("Taiwan mobile(true) validator", () => {
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("0801234567")).toThrow("無效的手機號碼格式")
@@ -223,7 +223,7 @@ describe("Taiwan mobile(true) validator", () => {
 
     it("should support whitelist error messages", () => {
       setLocale("en")
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         whitelist: ["0901234567"],
       })
 
@@ -234,7 +234,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should support custom i18n messages", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         i18n: {
           en: {
             required: "Mobile phone is required",
@@ -259,7 +259,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should support custom whitelist messages", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         whitelist: ["0901234567"],
         i18n: {
           en: {
@@ -281,7 +281,7 @@ describe("Taiwan mobile(true) validator", () => {
 
   describe("real world Taiwan mobile phone numbers", () => {
     it("should validate all carrier prefixes", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       // Test all valid Taiwan mobile prefixes (090-099)
       const validPrefixes = ["090", "091", "092", "093", "094", "095", "096", "097", "098", "099"]
@@ -293,7 +293,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should reject non-mobile phone prefixes", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       // Test invalid prefixes
       const invalidPrefixes = ["080", "081", "082", "083", "084", "085", "086", "087", "088", "089"]
@@ -305,7 +305,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should validate realistic phone number patterns", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       const realPhoneNumbers = ["0901234567", "0912345678", "0923456789", "0934567890", "0945678901", "0956789012", "0967890123", "0978901234", "0989012345", "0990123456"]
 
@@ -317,15 +317,15 @@ describe("Taiwan mobile(true) validator", () => {
 
   describe("edge cases", () => {
     it("should handle various input types", () => {
-      const schema = mobile(true)
+      const schema = twMobile(true)
 
       // Test different input types that should be converted to string
       expect(schema.parse("0901234567")).toBe("0901234567")
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const schema = mobile(true)
-      const optionalSchema = mobile(false)
+      const schema = twMobile(true)
+      const optionalSchema = twMobile(false)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("   ")).toThrow("Required")
@@ -337,7 +337,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should preserve valid format after transformation", () => {
-      const schema = mobile(true, {
+      const schema = twMobile(true, {
         transform: (val) => val.replace(/[^0-9]/g, ""),
       })
 
@@ -348,7 +348,7 @@ describe("Taiwan mobile(true) validator", () => {
     })
 
     it("should work with complex whitelist scenarios", () => {
-      const schema = mobile(false, { whitelist: ["0901234567", "emergency", "custom-contact-123", ""] })
+      const schema = twMobile(false, { whitelist: ["0901234567", "emergency", "custom-contact-123", ""] })
 
       // Allowlist scenarios
       expect(schema.parse("0901234567")).toBe("0901234567")

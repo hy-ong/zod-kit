@@ -15,12 +15,12 @@ import { getLocale, type Locale } from "../../config"
 /**
  * Type definition for telephone validation error messages
  *
- * @interface TelMessages
+ * @interface TwTelMessages
  * @property {string} [required] - Message when field is required but empty
  * @property {string} [invalid] - Message when telephone number format is invalid
  * @property {string} [notInWhitelist] - Message when telephone number is not in whitelist
  */
-export type TelMessages = {
+export type TwTelMessages = {
   required?: string
   invalid?: string
   notInWhitelist?: string
@@ -31,28 +31,28 @@ export type TelMessages = {
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
- * @interface TelOptions
+ * @interface TwTelOptions
  * @property {IsRequired} [required=true] - Whether the field is required
  * @property {string[]} [whitelist] - Array of specific telephone numbers that are always allowed
  * @property {Function} [transform] - Custom transformation function for telephone number
  * @property {string | null} [defaultValue] - Default value when input is empty
- * @property {Record<Locale, TelMessages>} [i18n] - Custom error messages for different locales
+ * @property {Record<Locale, TwTelMessages>} [i18n] - Custom error messages for different locales
  */
-export type TelOptions<IsRequired extends boolean = true> = {
+export type TwTelOptions<IsRequired extends boolean = true> = {
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TelMessages>
+  i18n?: Record<Locale, TwTelMessages>
 }
 
 /**
  * Type alias for telephone validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef TelSchema
+ * @typedef TwTelSchema
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
-export type TelSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
 /**
  * Validates Taiwan landline telephone number format (Official 2024 rules)
@@ -174,7 +174,7 @@ const validateTaiwanTel = (value: string): boolean => {
  * @template IsRequired - Whether the field is required (affects return type)
  * @param {IsRequired} [required=false] - Whether the field is required
  * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
- * @returns {TelSchema<IsRequired>} Zod schema for telephone number validation
+ * @returns {TwTelSchema<IsRequired>} Zod schema for telephone number validation
  *
  * @description
  * Creates a comprehensive Taiwan landline telephone number validator with support for
@@ -193,7 +193,7 @@ const validateTaiwanTel = (value: string): boolean => {
  * @example
  * ```typescript
  * // Basic telephone number validation
- * const basicSchema = tel() // optional by default
+ * const basicSchema = twTel() // optional by default
  * basicSchema.parse("0223456789") // ✓ Valid (Taipei)
  * basicSchema.parse(null) // ✓ Valid (optional)
  *
@@ -207,26 +207,26 @@ const validateTaiwanTel = (value: string): boolean => {
  * basicSchema.parse("0812345678") // ✗ Invalid (wrong format for 08)
  *
  * // With whitelist (only specific numbers allowed)
- * const whitelistSchema = tel(false, {
+ * const whitelistSchema = twTel(false, {
  *   whitelist: ["0223456789", "0312345678"]
  * })
  * whitelistSchema.parse("0223456789") // ✓ Valid (in whitelist)
  * whitelistSchema.parse("0287654321") // ✗ Invalid (not in whitelist)
  *
  * // Optional telephone number
- * const optionalSchema = tel(false)
+ * const optionalSchema = twTel(false)
  * optionalSchema.parse("") // ✓ Valid (returns null)
  * optionalSchema.parse("0223456789") // ✓ Valid
  *
  * // With custom transformation (remove separators)
- * const transformSchema = tel(false, {
+ * const transformSchema = twTel(false, {
  *   transform: (value) => value.replace(/[^0-9]/g, '') // Keep only digits
  * })
  * transformSchema.parse("02-2345-6789") // ✓ Valid (separators removed)
  * transformSchema.parse("02 2345 6789") // ✓ Valid (spaces removed)
  *
  * // With custom error messages
- * const customSchema = tel(false, {
+ * const customSchema = twTel(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan landline number" },
  *     'zh-TW': { invalid: "請輸入有效的台灣市話號碼" }
@@ -235,10 +235,10 @@ const validateTaiwanTel = (value: string): boolean => {
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
- * @see {@link TelOptions} for all available configuration options
+ * @see {@link TwTelOptions} for all available configuration options
  * @see {@link validateTaiwanTel} for validation logic details
  */
-export function tel<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TelOptions<IsRequired>, 'required'>): TelSchema<IsRequired> {
+export function twTel<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwTelOptions<IsRequired>, 'required'>): TwTelSchema<IsRequired> {
   const { whitelist, transform, defaultValue, i18n } = options ?? {}
 
   const isRequired = required ?? false as IsRequired
@@ -247,7 +247,7 @@ export function tel<IsRequired extends boolean = false>(required?: IsRequired, o
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
-  const getMessage = (key: keyof TelMessages, params?: Record<string, any>) => {
+  const getMessage = (key: keyof TwTelMessages, params?: Record<string, any>) => {
     if (i18n) {
       const currentLocale = getLocale()
       const customMessages = i18n[currentLocale]
@@ -319,7 +319,7 @@ export function tel<IsRequired extends boolean = false>(required?: IsRequired, o
     }
   })
 
-  return schema as unknown as TelSchema<IsRequired>
+  return schema as unknown as TwTelSchema<IsRequired>
 }
 
 /**
