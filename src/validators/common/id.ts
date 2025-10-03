@@ -369,34 +369,37 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
   // Create base schema based on type
   if (isNumericType) {
     // Use z.any() to avoid Zod's built-in type checking, then validate manually
-    const numericSchema = z.preprocess(preprocessNumericFn, z.any()).refine((val) => {
+    const numericSchema = z.preprocess(preprocessNumericFn, z.any()).superRefine((val, ctx) => {
       // Allow null for optional fields
-      if (!isRequired && val === null) return true
+      if (!isRequired && val === null) return
 
       // Required check for undefined/null/empty (empty string when required)
       if (val === undefined || (isRequired && val === null)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("required") })
+        return
       }
 
       // Numeric validation - check if it's an actual number (not NaN)
       if (typeof val !== "number" || isNaN(val)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("numeric"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("numeric") })
+        return
       }
 
       // Length checks on string representation
       const strVal = String(val)
       if (!ID_PATTERNS.numeric.test(strVal)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("numeric"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("numeric") })
+        return
       }
 
       if (minLength !== undefined && strVal.length < minLength) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("minLength", { minLength }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("minLength", { minLength }) })
+        return
       }
       if (maxLength !== undefined && strVal.length > maxLength) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("maxLength", { maxLength }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("maxLength", { maxLength }) })
+        return
       }
-
-      return true
     })
 
     return numericSchema as unknown as IdSchema<IsRequired, Type>
@@ -406,12 +409,13 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
   const baseSchema = isRequired ? z.preprocess(preprocessStringFn, z.string()) : z.preprocess(preprocessStringFn, z.string().nullable())
 
   const schema = baseSchema
-    .refine((val) => {
-      if (val === null) return true
+    .superRefine((val, ctx) => {
+      if (val === null) return
 
       // Required check
       if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("required") })
+        return
       }
 
       // Create comparison value for case-insensitive checks
@@ -419,10 +423,12 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
 
       // Length checks
       if (val !== null && minLength !== undefined && val.length < minLength) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("minLength", { minLength }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("minLength", { minLength }) })
+        return
       }
       if (val !== null && maxLength !== undefined && val.length > maxLength) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("maxLength", { maxLength }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("maxLength", { maxLength }) })
+        return
       }
 
       // Check if we have content-based validations that override format checking
@@ -431,7 +437,8 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
       // Custom regex validation (overrides ID format validation)
       if (val !== null && customRegex !== undefined) {
         if (!customRegex.test(val)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("customFormat"), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("customFormat") })
+          return
         }
       } else if (val !== null && !hasContentValidations) {
         // ID type validation (only if no custom regex or content validations)
@@ -442,19 +449,22 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
           isValidId = allowedTypes.some((allowedType: IdType) => validateIdType(val, allowedType))
           if (!isValidId) {
             const typeNames = allowedTypes.join(", ")
-            throw new z.ZodError([{ code: "custom", message: getMessage("invalid") + ` (allowed types: ${typeNames})`, path: [] }])
+            ctx.addIssue({ code: "custom", message: getMessage("invalid") + ` (allowed types: ${typeNames})` })
+            return
           }
         } else if (type && type !== "auto") {
           // Validate specific type
           isValidId = validateIdType(val, type)
           if (!isValidId) {
-            throw new z.ZodError([{ code: "custom", message: getMessage(type as keyof IdMessages) || getMessage("invalid"), path: [] }])
+            ctx.addIssue({ code: "custom", message: getMessage(type as keyof IdMessages) || getMessage("invalid") })
+            return
           }
         } else {
           // Auto-detection - must match at least one known pattern
           isValidId = detectIdType(val) !== null
           if (!isValidId) {
-            throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+            ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+            return
           }
         }
       } else if (val !== null && hasContentValidations && type && type !== "auto" && !customRegex) {
@@ -463,11 +473,13 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
           const isValidType = allowedTypes.some((allowedType: IdType) => validateIdType(val, allowedType))
           if (!isValidType) {
             const typeNames = allowedTypes.join(", ")
-            throw new z.ZodError([{ code: "custom", message: getMessage("invalid") + ` (allowed types: ${typeNames})`, path: [] }])
+            ctx.addIssue({ code: "custom", message: getMessage("invalid") + ` (allowed types: ${typeNames})` })
+            return
           }
         } else {
           if (!validateIdType(val, type)) {
-            throw new z.ZodError([{ code: "custom", message: getMessage(type as keyof IdMessages) || getMessage("invalid"), path: [] }])
+            ctx.addIssue({ code: "custom", message: getMessage(type as keyof IdMessages) || getMessage("invalid") })
+            return
           }
         }
       }
@@ -478,25 +490,27 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
       const searchIncludes = !caseSensitive && includes ? includes.toLowerCase() : includes
 
       if (val !== null && startsWith !== undefined && !comparisonVal.startsWith(searchStartsWith!)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("startsWith", { startsWith }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("startsWith", { startsWith }) })
+        return
       }
       if (val !== null && endsWith !== undefined && !comparisonVal.endsWith(searchEndsWith!)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("endsWith", { endsWith }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("endsWith", { endsWith }) })
+        return
       }
       if (val !== null && includes !== undefined && !comparisonVal.includes(searchIncludes!)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("includes", { includes }) })
+        return
       }
       if (val !== null && excludes !== undefined) {
         const excludeList = Array.isArray(excludes) ? excludes : [excludes]
         for (const exclude of excludeList) {
           const searchExclude = !caseSensitive ? exclude.toLowerCase() : exclude
           if (comparisonVal.includes(searchExclude)) {
-            throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+            ctx.addIssue({ code: "custom", message: getMessage("excludes", { excludes: exclude }) })
+            return
           }
         }
       }
-
-      return true
     })
     .transform((val) => {
       if (val === null) return val

@@ -320,45 +320,55 @@ export function password<IsRequired extends boolean = false>(required?: IsRequir
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
     // Length checks
     if (val !== null && min !== undefined && val.length < min) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("min", { min }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("min", { min }) })
+      return
     }
     if (val !== null && max !== undefined && val.length > max) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("max", { max }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("max", { max }) })
+      return
     }
 
     // Character requirements
     if (val !== null && uppercase && !/[A-Z]/.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("uppercase"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("uppercase") })
+      return
     }
     if (val !== null && lowercase && !/[a-z]/.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("lowercase"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("lowercase") })
+      return
     }
     if (val !== null && digits && !/[0-9]/.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("digits"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("digits") })
+      return
     }
     if (val !== null && special && !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("special"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("special") })
+      return
     }
 
     // Advanced security checks
     if (val !== null && noRepeating && /(.)\1{2,}/.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("noRepeating"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("noRepeating") })
+      return
     }
     if (val !== null && noSequential && /(?:abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz|012|123|234|345|456|567|678|789)/i.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("noSequential"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("noSequential") })
+      return
     }
     if (val !== null && noCommonWords && COMMON_PASSWORDS.some((common) => val.toLowerCase().includes(common.toLowerCase()))) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("noCommonWords"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("noCommonWords") })
+      return
     }
     if (val !== null && minStrength) {
       const strength = calculatePasswordStrength(val)
@@ -366,27 +376,29 @@ export function password<IsRequired extends boolean = false>(required?: IsRequir
       const currentLevel = strengthLevels.indexOf(strength)
       const requiredLevel = strengthLevels.indexOf(minStrength)
       if (currentLevel < requiredLevel) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("minStrength", { minStrength }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("minStrength", { minStrength }) })
+        return
       }
     }
 
     // Content checks
     if (val !== null && includes !== undefined && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("includes", { includes }) })
+      return
     }
     if (val !== null && excludes !== undefined) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("excludes", { excludes: exclude }) })
+          return
         }
       }
     }
     if (val !== null && regex !== undefined && !regex.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid", { regex }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("invalid", { regex }) })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as PasswordSchema<IsRequired>

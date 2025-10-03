@@ -290,32 +290,33 @@ export function tel<IsRequired extends boolean = false>(required?: IsRequired, o
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
-    if (val === null) return true
-    if (!isRequired && val === "") return true
+    if (val === null) return
+    if (!isRequired && val === "") return
 
     // Allowlist check (if an allowlist is provided, only allow values in the allowlist)
     if (whitelist && whitelist.length > 0) {
       if (whitelist.includes(val)) {
-        return true
+        return
       }
       // If not in the allowlist, reject regardless of format
-      throw new z.ZodError([{ code: "custom", message: getMessage("notInWhitelist"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("notInWhitelist") })
+      return
     }
 
     // Taiwan telephone format validation (only if no allowlist or allowlist is empty)
     if (!validateTaiwanTel(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as TelSchema<IsRequired>

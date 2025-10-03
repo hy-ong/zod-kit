@@ -949,34 +949,39 @@ export function postalCode<IsRequired extends boolean = false>(required?: IsRequ
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
-    if (val === null) return true
-    if (!isRequired && val === "") return true
+    if (val === null) return
+    if (!isRequired && val === "") return
 
     // Format-specific validation
     const cleanValue = val.replace(/[-\s]/g, "")
 
     // Check if format matches expected pattern
     if (format === "3" && cleanValue.length !== 3) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("format3Only"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("format3Only") })
+      return
     }
     if (format === "5" && cleanValue.length !== 5) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("format5Only"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("format5Only") })
+      return
     }
     if (format === "6" && cleanValue.length !== 6) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("format6Only"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("format6Only") })
+      return
     }
 
     // Check for deprecated 5-digit format
     if (deprecate5Digit && cleanValue.length === 5) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("deprecated5Digit"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("deprecated5Digit") })
+      return
     }
 
     // Pre-validate suffix for better error messages before main validation
@@ -987,7 +992,8 @@ export function postalCode<IsRequired extends boolean = false>(required?: IsRequ
         const suffixNum = parseInt(suffix, 10)
         const ranges = getPostalCodeRanges(prefix)
         if (suffixNum < ranges.range5[0] || suffixNum > ranges.range5[1]) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("invalidSuffix"), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("invalidSuffix") })
+          return
         }
       } else if (cleanValue.length === 6) {
         const prefix = cleanValue.substring(0, 3)
@@ -995,22 +1001,22 @@ export function postalCode<IsRequired extends boolean = false>(required?: IsRequ
         const suffixNum = parseInt(suffix, 10)
         const ranges = getPostalCodeRanges(prefix)
         if (suffixNum < ranges.range6[0] || suffixNum > ranges.range6[1]) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("invalidSuffix"), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("invalidSuffix") })
+          return
         }
       }
     }
 
     // Main postal code validation (only validates prefix if strictSuffixValidation already passed)
     if (!validateTaiwanPostalCode(val, format, strictValidation, strictSuffixValidation, allowDashes, allowedPrefixes, blockedPrefixes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+      return
     }
 
     // Warning for 5-digit legacy format (doesn't fail validation)
     if (warn5Digit && cleanValue.length === 5 && format !== "5" && !deprecate5Digit) {
       console.warn(getMessage("legacy5DigitWarning"))
     }
-
-    return true
   })
 
   return schema as unknown as PostalCodeSchema<IsRequired>

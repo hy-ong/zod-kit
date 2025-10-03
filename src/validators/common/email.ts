@@ -209,37 +209,61 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     z.union([z.string().email(), z.null()])
   )
 
-  const schema = baseSchema.refine((val) => {
+  const schema = baseSchema.superRefine((val, ctx) => {
     // Required check first
     if (isRequired && val === null) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("required")
+      })
+      return
     }
 
-    if (val === null) return true
+    if (val === null) return
 
     // Invalid email check
     if (typeof val !== "string") {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("invalid")
+      })
+      return
     }
 
     // Length checks
     if (minLength !== undefined && val.length < minLength) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("minLength", { minLength }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("minLength", { minLength })
+      })
+      return
     }
     if (maxLength !== undefined && val.length > maxLength) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("maxLength", { maxLength }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("maxLength", { maxLength })
+      })
+      return
     }
 
     // Content checks
     if (includes !== undefined && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("includes", { includes })
+      })
+      return
     }
 
     if (excludes !== undefined) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes: exclude }), path: [] }])
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("includes", { includes: exclude })
+          })
+          return
         }
       }
     }
@@ -247,7 +271,11 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     // Extract domain from email
     const emailDomain = val.split("@")[1]?.toLowerCase()
     if (!emailDomain) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("invalid")
+      })
+      return
     }
 
     // Business email check (should come before domain validation)
@@ -260,7 +288,11 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       })
 
       if (isFreeProvider) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("businessOnly"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("businessOnly")
+        })
+        return
       }
     }
 
@@ -275,7 +307,11 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       })
 
       if (isBlacklisted) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("domainBlacklist", { domain: emailDomain }), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("domainBlacklist", { domain: emailDomain })
+        })
+        return
       }
     }
 
@@ -291,7 +327,11 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       })
 
       if (!isAllowed) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("domain", { domain: Array.isArray(domain) ? domain.join(", ") : domain }), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("domain", { domain: Array.isArray(domain) ? domain.join(", ") : domain })
+        })
+        return
       }
     }
 
@@ -305,11 +345,13 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       })
 
       if (isDisposable) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("noDisposable"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("noDisposable")
+        })
+        return
       }
     }
-
-    return true
   })
 
   return schema as unknown as EmailSchema<IsRequired>

@@ -253,12 +253,13 @@ export function url<IsRequired extends boolean = false>(required?: IsRequired, o
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
     // URL format validation
@@ -266,88 +267,104 @@ export function url<IsRequired extends boolean = false>(required?: IsRequired, o
     try {
       urlObj = new URL(val)
     } catch {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+      return
     }
 
     // Length checks
     if (val !== null && min !== undefined && val.length < min) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("min", { min }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("min", { min }) })
+      return
     }
     if (val !== null && max !== undefined && val.length > max) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("max", { max }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("max", { max }) })
+      return
     }
 
     // String content checks
     if (val !== null && includes !== undefined && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("includes", { includes }) })
+      return
     }
     if (val !== null && excludes !== undefined) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("excludes", { excludes: exclude }) })
+          return
         }
       }
     }
 
     // Protocol validation
     if (protocols && !protocols.includes(urlObj.protocol.slice(0, -1))) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("protocol", { protocols: protocols.join(", ") }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("protocol", { protocols: protocols.join(", ") }) })
+      return
     }
 
     // Domain validation
     const hostname = urlObj.hostname.toLowerCase()
     if (allowedDomains && !allowedDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("domain", { domains: allowedDomains.join(", ") }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("domain", { domains: allowedDomains.join(", ") }) })
+      return
     }
     if (blockedDomains && blockedDomains.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`))) {
       const blockedDomain = blockedDomains.find((domain) => hostname === domain || hostname.endsWith(`.${domain}`))
-      throw new z.ZodError([{ code: "custom", message: getMessage("domainBlacklist", { domain: blockedDomain }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("domainBlacklist", { domain: blockedDomain }) })
+      return
     }
 
     // Port validation
     const port = urlObj.port ? parseInt(urlObj.port) : urlObj.protocol === "https:" ? 443 : 80
     if (allowedPorts && !allowedPorts.includes(port)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("port", { ports: allowedPorts.join(", ") }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("port", { ports: allowedPorts.join(", ") }) })
+      return
     }
     if (blockedPorts && blockedPorts.includes(port)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("port", { port }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("port", { port }) })
+      return
     }
 
     // Path validation
     if (pathStartsWith && !urlObj.pathname.startsWith(pathStartsWith)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("pathStartsWith", { path: pathStartsWith }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("pathStartsWith", { path: pathStartsWith }) })
+      return
     }
     if (pathEndsWith && !urlObj.pathname.endsWith(pathEndsWith)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("pathEndsWith", { path: pathEndsWith }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("pathEndsWith", { path: pathEndsWith }) })
+      return
     }
 
     // Query validation
     if (mustHaveQuery && !urlObj.search) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("hasQuery"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("hasQuery") })
+      return
     }
     if (mustNotHaveQuery && urlObj.search) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("noQuery"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("noQuery") })
+      return
     }
 
     // Fragment validation
     if (mustHaveFragment && !urlObj.hash) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("hasFragment"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("hasFragment") })
+      return
     }
     if (mustNotHaveFragment && urlObj.hash) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("noFragment"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("noFragment") })
+      return
     }
 
     // Localhost validation
     const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)
     if (blockLocalhost && isLocalhost) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("noLocalhost"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("noLocalhost") })
+      return
     }
     if (!allowLocalhost && isLocalhost) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("localhost"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("localhost") })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as UrlSchema<IsRequired>

@@ -465,25 +465,27 @@ export function time<IsRequired extends boolean = false>(required?: IsRequired, 
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
-    if (val === null) return true
-    if (!isRequired && val === "") return true
+    if (val === null) return
+    if (!isRequired && val === "") return
 
     // Whitelist check
     if (whitelist && whitelist.length > 0) {
       if (whitelist.includes(val)) {
-        return true
+        return
       }
       // If whitelistOnly is true, reject values not in whitelist
       if (whitelistOnly) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("notInWhitelist"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("notInWhitelist") })
+        return
       }
       // Otherwise, continue with normal validation
     }
@@ -491,60 +493,69 @@ export function time<IsRequired extends boolean = false>(required?: IsRequired, 
     // Custom regex validation (overrides format validation)
     if (regex) {
       if (!regex.test(val)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("customRegex"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("customRegex") })
+        return
       }
     } else {
       // Time format validation (only if no regex is provided)
       if (!validateTimeFormat(val, format)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("format", { format }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("format", { format }) })
+        return
       }
     }
 
     // String content checks
     if (includes && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("includes", { includes }) })
+      return
     }
 
     if (excludes) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("excludes", { excludes: exclude }) })
+          return
         }
       }
     }
 
     // Skip time parsing and range validation if using custom regex
     if (regex) {
-      return true
+      return
     }
 
     // Parse time for range validation
     const timeMinutes = parseTimeToMinutes(val, format)
     if (timeMinutes === null) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+      return
     }
 
     // Hour validation
     const hour = Math.floor(timeMinutes / 60)
     if (minHour !== undefined && hour < minHour) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("hour", { minHour, maxHour: maxHour ?? 23 }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("hour", { minHour, maxHour: maxHour ?? 23 }) })
+      return
     }
     if (maxHour !== undefined && hour > maxHour) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("hour", { minHour: minHour ?? 0, maxHour }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("hour", { minHour: minHour ?? 0, maxHour }) })
+      return
     }
 
     // Allowed hours check
     if (allowedHours && allowedHours.length > 0) {
       if (!allowedHours.includes(hour)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("hour", { allowedHours: allowedHours.join(", ") }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("hour", { allowedHours: allowedHours.join(", ") }) })
+        return
       }
     }
 
     // Minute step validation
     const minute = timeMinutes % 60
     if (minuteStep !== undefined && minute % minuteStep !== 0) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("minute", { minuteStep }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("minute", { minuteStep }) })
+      return
     }
 
     // Second step validation (only for formats with seconds)
@@ -554,7 +565,8 @@ export function time<IsRequired extends boolean = false>(required?: IsRequired, 
       if (secondMatch) {
         const seconds = parseInt(secondMatch[1], 10)
         if (seconds % secondStep !== 0) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("second", { secondStep }), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("second", { secondStep }) })
+          return
         }
       }
     }
@@ -563,18 +575,18 @@ export function time<IsRequired extends boolean = false>(required?: IsRequired, 
     if (min) {
       const minMinutes = parseTimeToMinutes(min, format)
       if (minMinutes !== null && timeMinutes < minMinutes) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("min", { min }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("min", { min }) })
+        return
       }
     }
 
     if (max) {
       const maxMinutes = parseTimeToMinutes(max, format)
       if (maxMinutes !== null && timeMinutes > maxMinutes) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("max", { max }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("max", { max }) })
+        return
       }
     }
-
-    return true
   })
 
   return schema as unknown as TimeSchema<IsRequired>

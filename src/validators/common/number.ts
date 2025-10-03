@@ -98,6 +98,7 @@ export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ?
  * Creates a Zod schema for number validation with comprehensive constraints
  *
  * @template IsRequired - Whether the field is required (affects return type)
+ * @param required
  * @param {NumberOptions<IsRequired>} [options] - Configuration options for number validation
  * @returns {NumberSchema<IsRequired>} Zod schema for number validation
  *
@@ -165,25 +166,10 @@ export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ?
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link NumberOptions} for all available configuration options
  */
-export function number<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<NumberOptions<IsRequired>, 'required'>): NumberSchema<IsRequired> {
-  const {
-    min,
-    max,
-    defaultValue,
-    type = "both",
-    positive,
-    negative,
-    nonNegative,
-    nonPositive,
-    multipleOf,
-    precision,
-    finite = true,
-    transform,
-    parseCommas = false,
-    i18n,
-  } = options ?? {}
+export function number<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<NumberOptions<IsRequired>, "required">): NumberSchema<IsRequired> {
+  const { min, max, defaultValue, type = "both", positive, negative, nonNegative, nonPositive, multipleOf, precision, finite = true, transform, parseCommas = false, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof NumberMessages, params?: Record<string, any>) => {
@@ -243,79 +229,130 @@ export function number<IsRequired extends boolean = false>(required?: IsRequired
       },
       z.union([z.number(), z.null(), z.nan(), z.custom<number>((val) => val === Infinity || val === -Infinity)])
     )
-    .refine((val) => {
+    .superRefine((val, ctx) => {
       // Required check first
       if (isRequired && val === null) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("required"),
+        })
+        return
       }
 
-      if (val === null) return true
+      if (val === null) return
 
       // Type validation for invalid inputs (NaN)
-      if (typeof val === "number" && isNaN(val)) {
+      if (isNaN(val)) {
         if (type === "integer") {
-          throw new z.ZodError([{ code: "custom", message: getMessage("integer"), path: [] }])
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("integer"),
+          })
         } else if (type === "float") {
-          throw new z.ZodError([{ code: "custom", message: getMessage("float"), path: [] }])
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("float"),
+          })
         } else {
-          throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("invalid"),
+          })
         }
-      }
-
-      // Invalid number check for non-numbers
-      if (typeof val !== "number") {
-        throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+        return
       }
 
       // Finite check
       if (finite && !Number.isFinite(val)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("finite"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("finite"),
+        })
+        return
       }
 
       // Type validation for valid numbers
       if (type === "integer" && !Number.isInteger(val)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("integer"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("integer"),
+        })
+        return
       }
       if (type === "float" && Number.isInteger(val)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("float"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("float"),
+        })
+        return
       }
 
       // Sign checks (more specific, should come first)
       if (positive && val <= 0) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("positive"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("positive"),
+        })
+        return
       }
       if (negative && val >= 0) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("negative"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("negative"),
+        })
+        return
       }
       if (nonNegative && val < 0) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("nonNegative"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("nonNegative"),
+        })
+        return
       }
       if (nonPositive && val > 0) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("nonPositive"), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("nonPositive"),
+        })
+        return
       }
 
       // Range checks
       if (min !== undefined && val < min) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("min", { min }), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("min", { min }),
+        })
+        return
       }
       if (max !== undefined && val > max) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("max", { max }), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("max", { max }),
+        })
+        return
       }
 
       // Multiple of check
       if (multipleOf !== undefined && val % multipleOf !== 0) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("multipleOf", { multipleOf }), path: [] }])
+        ctx.addIssue({
+          code: "custom",
+          message: getMessage("multipleOf", { multipleOf }),
+        })
+        return
       }
 
       // Precision check
       if (precision !== undefined) {
         const decimalPlaces = (val.toString().split(".")[1] || "").length
         if (decimalPlaces > precision) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("precision", { precision }), path: [] }])
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("precision", { precision }),
+          })
+          return
         }
       }
-
-      return true
     })
 
   return schema as unknown as NumberSchema<IsRequired>

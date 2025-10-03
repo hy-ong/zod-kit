@@ -374,23 +374,23 @@ export function nationalId<IsRequired extends boolean = false>(required?: IsRequ
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
-    if (val === null) return true
-    if (!isRequired && val === "") return true
+    if (val === null) return
+    if (!isRequired && val === "") return
 
     // Taiwan National ID validation
     if (!validateTaiwanNationalId(val, type, allowOldResident)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as NationalIdSchema<IsRequired>

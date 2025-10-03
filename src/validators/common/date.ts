@@ -238,38 +238,44 @@ export function date<IsRequired extends boolean = false>(required?: IsRequired, 
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
     // Format validation
     if (val !== null && !dayjs(val, format, true).isValid()) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("format", { format }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("format", { format }) })
+      return
     }
 
     const dateObj = dayjs(val, format)
 
     // Range checks
     if (val !== null && min !== undefined && !dateObj.isSameOrAfter(dayjs(min, format))) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("min", { min }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("min", { min }) })
+      return
     }
     if (val !== null && max !== undefined && !dateObj.isSameOrBefore(dayjs(max, format))) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("max", { max }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("max", { max }) })
+      return
     }
 
     // String content checks
     if (val !== null && includes !== undefined && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("includes", { includes }) })
+      return
     }
     if (val !== null && excludes !== undefined) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("excludes", { excludes: exclude }) })
+          return
         }
       }
     }
@@ -279,27 +285,31 @@ export function date<IsRequired extends boolean = false>(required?: IsRequired, 
     const targetDate = dateObj.startOf('day')
 
     if (val !== null && mustBePast && !targetDate.isBefore(today)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("past"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("past") })
+      return
     }
     if (val !== null && mustBeFuture && !targetDate.isAfter(today)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("future"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("future") })
+      return
     }
     if (val !== null && mustBeToday && !targetDate.isSame(today)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("today"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("today") })
+      return
     }
     if (val !== null && mustNotBeToday && targetDate.isSame(today)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("notToday"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("notToday") })
+      return
     }
 
     // Weekday/weekend validations
     if (val !== null && weekdaysOnly && (dateObj.day() === 0 || dateObj.day() === 6)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("weekday"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("weekday") })
+      return
     }
     if (val !== null && weekendsOnly && dateObj.day() !== 0 && dateObj.day() !== 6) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("weekend"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("weekend") })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as DateSchema<IsRequired>

@@ -515,25 +515,27 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("required") })
+      return
     }
 
-    if (val === null) return true
-    if (!isRequired && val === "") return true
+    if (val === null) return
+    if (!isRequired && val === "") return
 
     // Whitelist check
     if (whitelist && whitelist.length > 0) {
       if (whitelist.includes(val)) {
-        return true
+        return
       }
       // If whitelistOnly is true, reject values not in whitelist
       if (whitelistOnly) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("notInWhitelist"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("notInWhitelist") })
+        return
       }
       // Otherwise, continue with normal validation
     }
@@ -541,32 +543,36 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
     // Custom regex validation (overrides format validation)
     if (regex) {
       if (!regex.test(val)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("customRegex"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("customRegex") })
+        return
       }
     } else {
       // DateTime format validation (only if no regex is provided)
       if (!validateDateTimeFormat(val, format)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("format", { format }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("format", { format }) })
+        return
       }
     }
 
     // String content checks
     if (includes && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("includes", { includes }) })
+      return
     }
 
     if (excludes) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+          ctx.addIssue({ code: "custom", message: getMessage("excludes", { excludes: exclude }) })
+          return
         }
       }
     }
 
     // Skip datetime parsing and range validation if using custom regex
     if (regex) {
-      return true
+      return
     }
 
     // Parse datetime for validation
@@ -575,32 +581,38 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
       // Check if it's a format issue or parsing issue
       const pattern = DATETIME_PATTERNS[format]
       if (!pattern.test(val.trim())) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("format", { format }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("format", { format }) })
+        return
       } else {
-        throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("invalid") })
+        return
       }
     }
 
     // Hour validation
     const hour = parsed.hour()
     if (minHour !== undefined && hour < minHour) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("hour", { minHour, maxHour: maxHour ?? 23 }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("hour", { minHour, maxHour: maxHour ?? 23 }) })
+      return
     }
     if (maxHour !== undefined && hour > maxHour) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("hour", { minHour: minHour ?? 0, maxHour }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("hour", { minHour: minHour ?? 0, maxHour }) })
+      return
     }
 
     // Allowed hours check
     if (allowedHours && allowedHours.length > 0) {
       if (!allowedHours.includes(hour)) {
-        throw new z.ZodError([{ code: "custom", message: getMessage("hour", { allowedHours: allowedHours.join(", ") }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("hour", { allowedHours: allowedHours.join(", ") }) })
+        return
       }
     }
 
     // Minute step validation
     const minute = parsed.minute()
     if (minuteStep !== undefined && minute % minuteStep !== 0) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("minute", { minuteStep }), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("minute", { minuteStep }) })
+      return
     }
 
     // DateTime range validation (min/max)
@@ -608,7 +620,8 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
       const minParsed = typeof min === "string" ? parseDateTimeValue(min, format, timezone) : dayjs(min)
       if (minParsed && parsed.isBefore(minParsed)) {
         const minFormatted = typeof min === "string" ? min : minParsed.format(format)
-        throw new z.ZodError([{ code: "custom", message: getMessage("min", { min: minFormatted }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("min", { min: minFormatted }) })
+        return
       }
     }
 
@@ -616,7 +629,8 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
       const maxParsed = typeof max === "string" ? parseDateTimeValue(max, format, timezone) : dayjs(max)
       if (maxParsed && parsed.isAfter(maxParsed)) {
         const maxFormatted = typeof max === "string" ? max : maxParsed.format(format)
-        throw new z.ZodError([{ code: "custom", message: getMessage("max", { max: maxFormatted }), path: [] }])
+        ctx.addIssue({ code: "custom", message: getMessage("max", { max: maxFormatted }) })
+        return
       }
     }
 
@@ -624,33 +638,37 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
     const now = timezone ? dayjs().tz(timezone) : dayjs()
 
     if (mustBePast && !parsed.isBefore(now)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("past"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("past") })
+      return
     }
 
     if (mustBeFuture && !parsed.isAfter(now)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("future"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("future") })
+      return
     }
 
     if (mustBeToday && !parsed.isSame(now, "day")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("today"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("today") })
+      return
     }
 
     if (mustNotBeToday && parsed.isSame(now, "day")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("notToday"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("notToday") })
+      return
     }
 
     // Weekday validations
     const dayOfWeek = parsed.day() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
     if (weekdaysOnly && (dayOfWeek === 0 || dayOfWeek === 6)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("weekday"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("weekday") })
+      return
     }
 
     if (weekendsOnly && dayOfWeek !== 0 && dayOfWeek !== 6) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("weekend"), path: [] }])
+      ctx.addIssue({ code: "custom", message: getMessage("weekend") })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as DateTimeSchema<IsRequired>

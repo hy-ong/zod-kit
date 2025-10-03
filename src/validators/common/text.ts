@@ -223,52 +223,86 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
 
   const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
-  // Single refine with all validations for better performance
-  const schema = baseSchema.refine((val) => {
-    if (val === null) return true
+  // Single superRefine with all validations for better performance
+  const schema = baseSchema.superRefine((val, ctx) => {
+    if (val === null) return
 
     // Required check
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("required")
+      })
+      return
     }
 
     // Not empty check (different from required - checks whitespace)
     // For notEmpty, we need to check if the original string (before processing) was only whitespace
     if (notEmpty && val !== null && val.trim() === "") {
-      throw new z.ZodError([{ code: "custom", message: getMessage("notEmpty"), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("notEmpty")
+      })
+      return
     }
 
     // Length checks
     if (val !== null && minLength !== undefined && val.length < minLength) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("minLength", { minLength }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("minLength", { minLength })
+      })
+      return
     }
     if (val !== null && maxLength !== undefined && val.length > maxLength) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("maxLength", { maxLength }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("maxLength", { maxLength })
+      })
+      return
     }
 
     // String content checks
     if (val !== null && startsWith !== undefined && !val.startsWith(startsWith)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("startsWith", { startsWith }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("startsWith", { startsWith })
+      })
+      return
     }
     if (val !== null && endsWith !== undefined && !val.endsWith(endsWith)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("endsWith", { endsWith }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("endsWith", { endsWith })
+      })
+      return
     }
     if (val !== null && includes !== undefined && !val.includes(includes)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("includes", { includes }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("includes", { includes })
+      })
+      return
     }
     if (val !== null && excludes !== undefined) {
       const excludeList = Array.isArray(excludes) ? excludes : [excludes]
       for (const exclude of excludeList) {
         if (val.includes(exclude)) {
-          throw new z.ZodError([{ code: "custom", message: getMessage("excludes", { excludes: exclude }), path: [] }])
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("excludes", { excludes: exclude })
+          })
+          return
         }
       }
     }
     if (val !== null && regex !== undefined && !regex.test(val)) {
-      throw new z.ZodError([{ code: "custom", message: getMessage("invalid", { regex }), path: [] }])
+      ctx.addIssue({
+        code: "custom",
+        message: getMessage("invalid", { regex })
+      })
+      return
     }
-
-    return true
   })
 
   return schema as unknown as TextSchema<IsRequired>
