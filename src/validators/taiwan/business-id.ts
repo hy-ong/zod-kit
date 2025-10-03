@@ -80,7 +80,7 @@ const validateTaiwanBusinessId = (value: string): boolean => {
     return false
   }
 
-  const digits = value.split('').map(Number)
+  const digits = value.split("").map(Number)
 
   // Coefficients for the first 7 digits
   const coefficients = [1, 2, 1, 2, 1, 2, 4]
@@ -182,14 +182,10 @@ const validateTaiwanBusinessId = (value: string): boolean => {
  * @see {@link TwBusinessIdOptions} for all available configuration options
  * @see {@link validateTaiwanBusinessId} for validation logic details
  */
-export function twBusinessId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwBusinessIdOptions<IsRequired>, 'required'>): TwBusinessIdSchema<IsRequired> {
-  const {
-    transform,
-    defaultValue,
-    i18n
-  } = options ?? {}
+export function twBusinessId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwBusinessIdOptions<IsRequired>, "required">): TwBusinessIdSchema<IsRequired> {
+  const { transform, defaultValue, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
@@ -248,7 +244,7 @@ export function twBusinessId<IsRequired extends boolean = false>(required?: IsRe
     }
   })
 
-  return schema as unknown as BusinessIdSchema<IsRequired>
+  return schema as unknown as TwBusinessIdSchema<IsRequired>
 }
 
 /**
