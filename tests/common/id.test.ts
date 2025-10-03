@@ -135,8 +135,8 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
     })
 
     it("should apply transform function", () => {
-      const schema = id(true, { type: "numeric", transform: (val) => val.toUpperCase() })
-      expect(schema.parse("123")).toBe("123")
+      const schema = id(true, { type: "uuid", transform: (val) => val.toUpperCase() })
+      expect(schema.parse("550e8400-e29b-41d4-a716-446655440000")).toBe("550E8400-E29B-41D4-A716-446655440000")
     })
   })
 
@@ -162,7 +162,9 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
       it("should accept valid numeric IDs", () => {
         const schema = id(true, { type: "numeric" })
         validIds.numeric.forEach((validId) => {
-          expect(schema.parse(validId)).toBe(validId)
+          const result = schema.parse(validId)
+          expect(typeof result).toBe("number")
+          expect(result).toBe(Number(validId))
         })
       })
 
@@ -461,7 +463,8 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
       expect(schema.parse("")).toBe(null)
       expect(() => schema.parse("ab")).toThrow() // not numeric
       expect(() => schema.parse("12")).toThrow() // too short
-      expect(schema.parse("12345")).toBe("12345")
+      expect(schema.parse("12345")).toBe(12345) // Returns number for numeric type
+      expect(typeof schema.parse("12345")).toBe("number")
     })
 
     it("should handle multiple allowed types with constraints", () => {
@@ -497,6 +500,61 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
       expect(ID_PATTERNS.numeric.test("123")).toBe(true)
       expect(ID_PATTERNS.uuid.test("550e8400-e29b-41d4-a716-446655440000")).toBe(true)
       expect(ID_PATTERNS.objectId.test("507f1f77bcf86cd799439011")).toBe(true)
+    })
+  })
+
+  describe("numeric type returns number", () => {
+    it("should return number type when type is numeric and required is true", () => {
+      const schema = id(true, { type: "numeric" })
+      const result = schema.parse("123")
+      expect(result).toBe(123)
+      expect(typeof result).toBe("number")
+    })
+
+    it("should return number | null when type is numeric and required is false", () => {
+      const schema = id(false, { type: "numeric" })
+      const result = schema.parse("456")
+      expect(result).toBe(456)
+      expect(typeof result).toBe("number")
+
+      const nullResult = schema.parse(null)
+      expect(nullResult).toBe(null)
+
+      const emptyResult = schema.parse("")
+      expect(emptyResult).toBe(null)
+    })
+
+    it("should use numeric default value for numeric type", () => {
+      const schema = id(true, { type: "numeric", defaultValue: 999 })
+      const result = schema.parse("")
+      expect(result).toBe(999)
+      expect(typeof result).toBe("number")
+    })
+
+    it("should validate numeric ID constraints", () => {
+      const schema = id(true, { type: "numeric", minLength: 3, maxLength: 5 })
+
+      expect(schema.parse("123")).toBe(123)
+      expect(schema.parse("12345")).toBe(12345)
+
+      // Too short
+      expect(() => schema.parse("12")).toThrow()
+
+      // Too long
+      expect(() => schema.parse("123456")).toThrow()
+
+      // Not numeric
+      expect(() => schema.parse("abc")).toThrow()
+    })
+
+    it("should convert string numbers to number type", () => {
+      const schema = id(true, { type: "numeric" })
+
+      expect(schema.parse("0")).toBe(0)
+      expect(schema.parse("999999")).toBe(999999)
+      expect(schema.parse(123)).toBe(123)
+
+      expect(typeof schema.parse("123")).toBe("number")
     })
   })
 })

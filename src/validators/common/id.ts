@@ -8,7 +8,7 @@
  * @version 0.0.5
  */
 
-import { z, ZodNullable, ZodString } from "zod"
+import { z, ZodNullable, ZodString, ZodNumber } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
@@ -85,10 +85,11 @@ export type IdType =
  * Configuration options for ID validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
+ * @template Type - The ID type being validated
  *
  * @interface IdOptions
  * @property {IsRequired} [required=true] - Whether the field is required
- * @property {IdType} [type="auto"] - Expected ID type or auto-detection
+ * @property {Type} [type="auto"] - Expected ID type or auto-detection
  * @property {number} [minLength] - Minimum length of ID
  * @property {number} [maxLength] - Maximum length of ID
  * @property {IdType[]} [allowedTypes] - Multiple allowed ID types (overrides type)
@@ -99,11 +100,11 @@ export type IdType =
  * @property {string} [endsWith] - String that ID must end with
  * @property {boolean} [caseSensitive=true] - Whether validation is case-sensitive
  * @property {Function} [transform] - Custom transformation function for ID
- * @property {string | null} [defaultValue] - Default value when input is empty
+ * @property {any} [defaultValue] - Default value when input is empty (string for string types, number for numeric)
  * @property {Record<Locale, IdMessages>} [i18n] - Custom error messages for different locales
  */
-export type IdOptions<IsRequired extends boolean = true> = {
-  type?: IdType
+export type IdOptions<Type extends IdType | undefined = undefined> = {
+  type?: Type
   minLength?: number
   maxLength?: number
   allowedTypes?: IdType[]
@@ -114,18 +115,27 @@ export type IdOptions<IsRequired extends boolean = true> = {
   endsWith?: string
   caseSensitive?: boolean
   transform?: (value: string) => string
-  defaultValue?: IsRequired extends true ? string : string | null
+  defaultValue?: any // Simplified to avoid complex conditional types
   i18n?: Record<Locale, IdMessages>
 }
 
 /**
- * Type alias for ID validation schema based on required flag
+ * Type alias for ID validation schema based on required flag and ID type
  *
  * @template IsRequired - Whether the field is required
+ * @template IdType - The ID type being validated
  * @typedef IdSchema
- * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ * @description Returns appropriate Zod type based on required flag and ID type:
+ * - numeric type: ZodNumber or ZodNullable<ZodNumber>
+ * - other types: ZodString or ZodNullable<ZodString>
  */
-export type IdSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type IdSchema<IsRequired extends boolean, Type extends IdType | undefined = undefined> = Type extends "numeric"
+  ? IsRequired extends true
+    ? ZodNumber
+    : ZodNullable<ZodNumber>
+  : IsRequired extends true
+    ? ZodString
+    : ZodNullable<ZodString>
 
 /**
  * Regular expression patterns for different ID formats
@@ -216,9 +226,9 @@ const validateIdType = (value: string, type: IdType): boolean => {
  * Creates a Zod schema for ID validation with comprehensive format support
  *
  * @template IsRequired - Whether the field is required (affects return type)
+ * @template Type - The ID type being validated (affects return type for numeric)
  * @param {IsRequired} [required=false] - Whether the field is required
- * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
- * @returns {IdSchema<IsRequired>} Zod schema for ID validation
+ * @returns {IdSchema<IsRequired, Type>} Zod schema for ID validation
  *
  * @description
  * Creates a comprehensive ID validator with support for multiple ID formats,
@@ -286,27 +296,31 @@ const validateIdType = (value: string, type: IdType): boolean => {
  * @see {@link detectIdType} for auto-detection logic
  * @see {@link validateIdType} for type-specific validation
  */
-export function id<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<IdOptions<IsRequired>, 'required'>): IdSchema<IsRequired> {
-  const {
-    type = "auto",
-    minLength,
-    maxLength,
-    allowedTypes,
-    customRegex,
-    includes,
-    excludes,
-    startsWith,
-    endsWith,
-    caseSensitive = true,
-    transform,
-    defaultValue,
-    i18n,
-  } = options ?? {}
+// Overload: no options provided
+export function id<IsRequired extends boolean = false>(required?: IsRequired): IdSchema<IsRequired, undefined>
 
-  const isRequired = required ?? false as IsRequired
+// Overload: options with numeric type
+export function id<IsRequired extends boolean = false>(required: IsRequired, options: Omit<IdOptions<"numeric">, "required"> & { type: "numeric" }): IdSchema<IsRequired, "numeric">
 
-  // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
+// Overload: options with other specific type
+export function id<IsRequired extends boolean = false, Type extends Exclude<IdType, "numeric"> = Exclude<IdType, "numeric">>(
+  required: IsRequired,
+  options: Omit<IdOptions<Type>, "required"> & { type: Type }
+): IdSchema<IsRequired, Type>
+
+// Overload: options without type specified
+export function id<IsRequired extends boolean = false>(required: IsRequired, options: Omit<IdOptions, "required"> & { type?: never }): IdSchema<IsRequired, undefined>
+
+// Implementation
+export function id<IsRequired extends boolean = false, Type extends IdType | undefined = undefined>(required?: IsRequired, options?: any): any {
+  const { type = "auto" as Type, minLength, maxLength, allowedTypes, customRegex, includes, excludes, startsWith, endsWith, caseSensitive = true, transform, defaultValue, i18n } = options ?? {}
+
+  const isRequired = (required ?? false) as IsRequired
+  const isNumericType = type === "numeric"
+
+  // Set appropriate default value based on required flag and type
+  // For required fields, we don't set a default unless explicitly provided
+  const actualDefaultValue = defaultValue !== undefined ? defaultValue : isRequired ? (isNumericType ? NaN : "") : null
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof IdMessages, params?: Record<string, any>) => {
@@ -315,14 +329,30 @@ export function id<IsRequired extends boolean = false>(required?: IsRequired, op
       const customMessages = i18n[currentLocale]
       if (customMessages && customMessages[key]) {
         const template = customMessages[key]!
-        return template.replace(/\$\{(\w+)}/g, (_, k) => params?.[k] ?? "")
+        return template.replace(/\$\{(\w+)}/g, (_match: string, k: string) => params?.[k] ?? "")
       }
     }
     return t(`common.id.${key}`, params)
   }
 
-  // Preprocessing function
-  const preprocessFn = (val: unknown) => {
+  // Preprocessing function for numeric type
+  const preprocessNumericFn = (val: unknown) => {
+    // Handle empty/null values
+    if (val === "" || val === null || val === undefined) {
+      // If required and no default, return a special marker that will fail validation
+      if (isRequired && defaultValue === undefined) {
+        // Return undefined to trigger required error in refine
+        return undefined as any
+      }
+      return actualDefaultValue
+    }
+
+    // Try to convert to number and return (even if NaN) so it can be validated by the schema
+    return Number(val)
+  }
+
+  // Preprocessing function for string type
+  const preprocessStringFn = (val: unknown) => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
@@ -336,7 +366,44 @@ export function id<IsRequired extends boolean = false>(required?: IsRequired, op
     return processed
   }
 
-  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  // Create base schema based on type
+  if (isNumericType) {
+    // Use z.any() to avoid Zod's built-in type checking, then validate manually
+    const numericSchema = z.preprocess(preprocessNumericFn, z.any()).refine((val) => {
+      // Allow null for optional fields
+      if (!isRequired && val === null) return true
+
+      // Required check for undefined/null/empty (empty string when required)
+      if (val === undefined || (isRequired && val === null)) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
+      }
+
+      // Numeric validation - check if it's an actual number (not NaN)
+      if (typeof val !== "number" || isNaN(val)) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("numeric"), path: [] }])
+      }
+
+      // Length checks on string representation
+      const strVal = String(val)
+      if (!ID_PATTERNS.numeric.test(strVal)) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("numeric"), path: [] }])
+      }
+
+      if (minLength !== undefined && strVal.length < minLength) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("minLength", { minLength }), path: [] }])
+      }
+      if (maxLength !== undefined && strVal.length > maxLength) {
+        throw new z.ZodError([{ code: "custom", message: getMessage("maxLength", { maxLength }), path: [] }])
+      }
+
+      return true
+    })
+
+    return numericSchema as unknown as IdSchema<IsRequired, Type>
+  }
+
+  // String-based ID validation
+  const baseSchema = isRequired ? z.preprocess(preprocessStringFn, z.string()) : z.preprocess(preprocessStringFn, z.string().nullable())
 
   const schema = baseSchema
     .refine((val) => {
@@ -372,12 +439,12 @@ export function id<IsRequired extends boolean = false>(required?: IsRequired, op
 
         if (allowedTypes && allowedTypes.length > 0) {
           // Check if ID matches any of the allowed types
-          isValidId = allowedTypes.some((allowedType) => validateIdType(val, allowedType))
+          isValidId = allowedTypes.some((allowedType: IdType) => validateIdType(val, allowedType))
           if (!isValidId) {
             const typeNames = allowedTypes.join(", ")
             throw new z.ZodError([{ code: "custom", message: getMessage("invalid") + ` (allowed types: ${typeNames})`, path: [] }])
           }
-        } else if (type !== "auto") {
+        } else if (type && type !== "auto") {
           // Validate specific type
           isValidId = validateIdType(val, type)
           if (!isValidId) {
@@ -390,10 +457,10 @@ export function id<IsRequired extends boolean = false>(required?: IsRequired, op
             throw new z.ZodError([{ code: "custom", message: getMessage("invalid"), path: [] }])
           }
         }
-      } else if (val !== null && hasContentValidations && type !== "auto" && !customRegex) {
+      } else if (val !== null && hasContentValidations && type && type !== "auto" && !customRegex) {
         // Still validate specific types even with content validations (but not auto)
         if (allowedTypes && allowedTypes.length > 0) {
-          const isValidType = allowedTypes.some((allowedType) => validateIdType(val, allowedType))
+          const isValidType = allowedTypes.some((allowedType: IdType) => validateIdType(val, allowedType))
           if (!isValidType) {
             const typeNames = allowedTypes.join(", ")
             throw new z.ZodError([{ code: "custom", message: getMessage("invalid") + ` (allowed types: ${typeNames})`, path: [] }])
@@ -444,7 +511,7 @@ export function id<IsRequired extends boolean = false>(required?: IsRequired, op
       return val // preserve the original case for UUID/ObjectId or when case-sensitive
     })
 
-  return schema as unknown as IdSchema<IsRequired>
+  return schema as unknown as IdSchema<IsRequired, Type>
 }
 
 /**
