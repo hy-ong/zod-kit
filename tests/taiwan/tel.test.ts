@@ -20,6 +20,7 @@ describe("Taiwan twTel(true) validator", () => {
       // Taichung (04) - requires 9 digits total
       expect(schema.parse("041234567")).toBe("041234567") // 04-123-4567 (9 digits)
       expect(schema.parse("043456789")).toBe("043456789") // 04-345-6789 (9 digits)
+      expect(schema.parse("0423288882")).toBe("0423288882") // 04-232-88882 (10 digits)
 
       // Tainan (06) - requires 9 digits total
       expect(schema.parse("061234567")).toBe("061234567") // 06-123-4567 (9 digits)

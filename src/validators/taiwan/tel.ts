@@ -122,7 +122,12 @@ const validateTaiwanTel = (value: string): boolean => {
   const areaCode3 = cleanValue.substring(0, 3)
   if (areaCode3 === "037") {
     // Miaoli: 037 + 6-7 digits, total 9-10 digits
-    return (cleanValue.length === 9 || cleanValue.length === 10) && /^037\d{6,7}$/.test(cleanValue)
+    // User number must start with 2-9 (not 0 or 1)
+    const firstDigit = cleanValue[3]
+    if (firstDigit === "0" || firstDigit === "1") {
+      return false
+    }
+    return (cleanValue.length === 9 || cleanValue.length === 10) && /^037[2-9]\d{5,6}$/.test(cleanValue)
   }
   if (areaCode3 === "049") {
     // Nantou: 049 + 7 digits, total 10 digits
@@ -142,7 +147,12 @@ const validateTaiwanTel = (value: string): boolean => {
 
   if (areaCode2 === "02") {
     // Taipei, New Taipei, Keelung: 02 + 8 digits, total 10 digits
-    return cleanValue.length === 10 && /^02\d{8}$/.test(cleanValue)
+    // User number must start with 2-9 (not 0 or 1)
+    const firstDigit = cleanValue[2]
+    if (firstDigit === "0" || firstDigit === "1") {
+      return false
+    }
+    return cleanValue.length === 10 && /^02[2-9]\d{7}$/.test(cleanValue)
   }
   if (areaCode2 === "03") {
     // Taoyuan, Hsinchu, Yilan, Hualien: 03 + 7-8 digits, total 9-10 digits
@@ -162,11 +172,21 @@ const validateTaiwanTel = (value: string): boolean => {
   }
   if (areaCode2 === "07") {
     // Kaohsiung: 07 + 7 digits, total 9 digits
-    return cleanValue.length === 9 && /^07\d{7}$/.test(cleanValue)
+    // User number must start with 2-9 (not 0 or 1)
+    const firstDigit = cleanValue[2]
+    if (firstDigit === "0" || firstDigit === "1") {
+      return false
+    }
+    return cleanValue.length === 9 && /^07[2-9]\d{6}$/.test(cleanValue)
   }
   if (areaCode2 === "08") {
     // Pingtung: 08 + 7 digits, total 9 digits
-    return cleanValue.length === 9 && /^08\d{7}$/.test(cleanValue)
+    // User number must start with 4, 7, or 8 (format: 4&7&8+6D)
+    const firstDigit = cleanValue[2]
+    if (firstDigit !== "4" && firstDigit !== "7" && firstDigit !== "8") {
+      return false // Invalid first digit for 08 area code
+    }
+    return cleanValue.length === 9 && /^08[478]\d{6}$/.test(cleanValue)
   }
 
   return false
