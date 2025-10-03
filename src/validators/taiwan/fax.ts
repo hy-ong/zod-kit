@@ -323,17 +323,12 @@ export function twFax<IsRequired extends boolean = false>(required?: IsRequired,
     if (val === null) return
     if (!isRequired && val === "") return
 
-    // Allowlist check (if an allowlist is provided, only allow values in the allowlist)
-    if (whitelist && whitelist.length > 0) {
-      if (whitelist.includes(val)) {
-        return
-      }
-      // If not in the allowlist, reject regardless of format
-      ctx.addIssue({ code: "custom", message: getMessage("notInWhitelist") })
+    // Allowlist check (if in allowlist, accept regardless of format)
+    if (whitelist && whitelist.length > 0 && whitelist.includes(val)) {
       return
     }
 
-    // Taiwan fax format validation (only if no allowlist or allowlist is empty)
+    // Taiwan fax format validation
     if (!validateTaiwanFax(val)) {
       ctx.addIssue({ code: "custom", message: getMessage("invalid") })
       return

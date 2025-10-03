@@ -102,18 +102,29 @@ describe("Taiwan twFax(true) validator", () => {
       expect(schema.parse("emergency-fax")).toBe("emergency-fax")
       expect(schema.parse("0912345678")).toBe("0912345678") // Mobile number but in allowlist
 
-      // Valid fax numbers not in the allowlist should be rejected
-      expect(() => schema.parse("0223456789")).toThrow("Not in allowed fax list")
-      expect(() => schema.parse("0711111111")).toThrow("Not in allowed fax list")
+      // Valid fax numbers not in the allowlist should still be accepted
+      expect(schema.parse("0223456789")).toBe("0223456789") // Valid format, not in whitelist
+      expect(schema.parse("072345678")).toBe("072345678") // Valid format, not in whitelist
+
+      // Invalid fax numbers not in the allowlist should be rejected
+      expect(() => schema.parse("invalid-fax")).toThrow("Invalid Taiwan fax format")
     })
 
-    it("should reject values not in whitelist when whitelist is provided", () => {
+    it("should accept both whitelist values and valid fax numbers", () => {
       const schema = twFax(true, {
         whitelist: ["allowed-value", "0223456789"],
       })
 
-      expect(() => schema.parse("0312345678")).toThrow("Not in allowed fax list")
-      expect(() => schema.parse("invalid-value")).toThrow("Not in allowed fax list")
+      // In whitelist
+      expect(schema.parse("allowed-value")).toBe("allowed-value")
+      expect(schema.parse("0223456789")).toBe("0223456789")
+
+      // Not in whitelist but valid format
+      expect(schema.parse("0312345678")).toBe("0312345678")
+      expect(schema.parse("072345678")).toBe("072345678")
+
+      // Not in whitelist and invalid format
+      expect(() => schema.parse("invalid-value")).toThrow("Invalid Taiwan fax format")
     })
 
     it("should work with empty whitelist", () => {
@@ -168,7 +179,7 @@ describe("Taiwan twFax(true) validator", () => {
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("custom-value")).toBe("custom-value")
       expect(schema.parse("0223456789")).toBe("0223456789")
-      expect(() => schema.parse("0312345678")).toThrow("Not in allowed fax list")
+      expect(schema.parse("0312345678")).toBe("0312345678") // Valid format, not in whitelist
     })
   })
 
@@ -198,7 +209,8 @@ describe("Taiwan twFax(true) validator", () => {
       })
 
       expect(schema.parse("customvalue")).toBe("customvalue")
-      expect(() => schema.parse("03-123-4567")).toThrow("Not in allowed fax list")
+      expect(schema.parse("03-123-4567")).toBe("031234567") // Valid format after transform
+      expect(schema.parse("02-2345-6789")).toBe("0223456789") // In whitelist after transform
     })
   })
 
@@ -268,16 +280,20 @@ describe("Taiwan twFax(true) validator", () => {
       expect(() => schema.parse("0912345678")).toThrow("無效的傳真號碼格式")
     })
 
-    it("should support whitelist error messages", () => {
+    it("should support whitelist with valid format fallback", () => {
       setLocale("en")
       const schema = twFax(true, {
-        whitelist: ["0223456789"],
+        whitelist: ["special-fax"],
       })
 
-      expect(() => schema.parse("0312345678")).toThrow("Not in allowed fax list")
+      // In whitelist
+      expect(schema.parse("special-fax")).toBe("special-fax")
 
-      setLocale("zh-TW")
-      expect(() => schema.parse("0312345678")).toThrow("不在允許的傳真號碼清單中")
+      // Not in whitelist but valid format - should pass
+      expect(schema.parse("0223456789")).toBe("0223456789")
+
+      // Not in whitelist and invalid format - should fail
+      expect(() => schema.parse("invalid")).toThrow("Invalid Taiwan fax format")
     })
 
     it("should support custom i18n messages", () => {
@@ -305,24 +321,24 @@ describe("Taiwan twFax(true) validator", () => {
       expect(() => schema.parse("0912345678")).toThrow("傳真號碼格式錯誤")
     })
 
-    it("should support custom whitelist messages", () => {
+    it("should support custom i18n messages for invalid format", () => {
       const schema = twFax(true, {
-        whitelist: ["0223456789"],
+        whitelist: ["special-value"],
         i18n: {
           en: {
-            notInWhitelist: "This fax number is not allowed",
+            invalid: "This fax format is not valid",
           },
           "zh-TW": {
-            notInWhitelist: "此傳真號碼不被允許",
+            invalid: "此傳真格式無效",
           },
         },
       })
 
       setLocale("en")
-      expect(() => schema.parse("0312345678")).toThrow("This fax number is not allowed")
+      expect(() => schema.parse("invalid-format")).toThrow("This fax format is not valid")
 
       setLocale("zh-TW")
-      expect(() => schema.parse("0312345678")).toThrow("此傳真號碼不被允許")
+      expect(() => schema.parse("invalid-format")).toThrow("此傳真格式無效")
     })
   })
 
@@ -420,15 +436,18 @@ describe("Taiwan twFax(true) validator", () => {
     it("should work with complex whitelist scenarios", () => {
       const schema = twFax(false, { whitelist: ["0223456789", "emergency", "custom-fax-123", ""] })
 
-      // Allowlist scenarios
+      // In whitelist
       expect(schema.parse("0223456789")).toBe("0223456789")
       expect(schema.parse("emergency")).toBe("emergency")
       expect(schema.parse("custom-fax-123")).toBe("custom-fax-123")
       expect(schema.parse("")).toBe("")
 
-      // Not in the allowlist
-      expect(() => schema.parse("0312345678")).toThrow("Not in allowed fax list")
-      expect(() => schema.parse("other-value")).toThrow("Not in allowed fax list")
+      // Not in whitelist but valid format
+      expect(schema.parse("0312345678")).toBe("0312345678")
+      expect(schema.parse("072345678")).toBe("072345678")
+
+      // Not in whitelist and invalid format
+      expect(() => schema.parse("other-value")).toThrow("Invalid Taiwan fax format")
     })
 
     it("should handle boundary cases for area codes", () => {
