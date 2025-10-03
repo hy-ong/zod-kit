@@ -44,7 +44,6 @@ export type EmailMessages = {
  * @template IsRequired - Whether the field is required (affects return type)
  *
  * @interface EmailOptions
- * @property {IsRequired} [required=true] - Whether the field is required
  * @property {string | string[]} [domain] - Allowed domain(s) for email addresses
  * @property {string[]} [domainBlacklist] - Domains that are not allowed
  * @property {number} [minLength] - Minimum length of email address
@@ -60,7 +59,6 @@ export type EmailMessages = {
  * @property {Record<Locale, EmailMessages>} [i18n] - Custom error messages for different locales
  */
 export type EmailOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   domain?: string | string[]
   domainBlacklist?: string[]
   minLength?: number
@@ -89,7 +87,8 @@ export type EmailSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * Creates a Zod schema for email validation with comprehensive filtering options
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {EmailOptions<IsRequired>} [options] - Configuration options for email validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<EmailOptions<IsRequired>, 'required'>} [options] - Configuration options for email validation
  * @returns {EmailSchema<IsRequired>} Zod schema for email validation
  *
  * @description
@@ -110,45 +109,47 @@ export type EmailSchema<IsRequired extends boolean> = IsRequired extends true ? 
  *
  * @example
  * ```typescript
- * // Basic email validation
+ * // Basic email validation (optional by default)
  * const basicSchema = email()
  * basicSchema.parse("user@example.com") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required email
+ * const requiredSchema = email(true)
+ * requiredSchema.parse("user@example.com") // ✓ Valid
+ * requiredSchema.parse(null) // ✗ Invalid (required)
  *
  * // Domain restriction
- * const domainSchema = email({
+ * const domainSchema = email(false, {
  *   domain: ["company.com", "organization.org"]
  * })
  * domainSchema.parse("user@company.com") // ✓ Valid
  * domainSchema.parse("user@gmail.com") // ✗ Invalid
  *
  * // Business emails only (no free providers)
- * const businessSchema = email({ businessOnly: true })
+ * const businessSchema = email(true, { businessOnly: true })
  * businessSchema.parse("user@company.com") // ✓ Valid
  * businessSchema.parse("user@gmail.com") // ✗ Invalid
  *
  * // No disposable emails
- * const noDisposableSchema = email({ noDisposable: true })
+ * const noDisposableSchema = email(true, { noDisposable: true })
  * noDisposableSchema.parse("user@company.com") // ✓ Valid
  * noDisposableSchema.parse("user@10minutemail.com") // ✗ Invalid
  *
  * // Domain blacklist
- * const blacklistSchema = email({
+ * const blacklistSchema = email(false, {
  *   domainBlacklist: ["spam.com", "blocked.org"]
  * })
  *
  * // Optional with default
- * const optionalSchema = email({
- *   required: false,
- *   defaultValue: null
- * })
+ * const optionalSchema = email(false, { defaultValue: null })
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link EmailOptions} for all available configuration options
  */
-export function email<IsRequired extends boolean = true>(options?: EmailOptions<IsRequired>): EmailSchema<IsRequired> {
+export function email<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<EmailOptions<IsRequired>, 'required'>): EmailSchema<IsRequired> {
   const {
-    required = true,
     domain,
     domainBlacklist,
     minLength,
@@ -163,6 +164,8 @@ export function email<IsRequired extends boolean = true>(options?: EmailOptions<
     defaultValue,
     i18n,
   } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof EmailMessages, params?: Record<string, any>) => {
@@ -208,7 +211,7 @@ export function email<IsRequired extends boolean = true>(options?: EmailOptions<
 
   const schema = baseSchema.refine((val) => {
     // Required check first
-    if (required && val === null) {
+    if (isRequired && val === null) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 

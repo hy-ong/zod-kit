@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { nationalId, setLocale, validateTaiwanNationalId, validateCitizenId, validateOldResidentId, validateNewResidentId } from "../../src"
 
-describe("Taiwan nationalId() validator", () => {
+describe("Taiwan nationalId(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan national IDs (both types)", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       // Valid citizen IDs (身分證字號)
       expect(schema.parse("A123456789")).toBe("A123456789")
@@ -25,7 +25,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should reject invalid Taiwan national IDs", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       // Invalid formats
       expect(() => schema.parse("A12345678")).toThrow("Invalid Taiwan National ID") // Too short
@@ -39,7 +39,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should handle case conversion", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       expect(schema.parse("a123456789")).toBe("A123456789")
       expect(schema.parse("b123456780")).toBe("B123456780")
@@ -48,7 +48,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("type-specific validation", () => {
     it("should validate only citizen IDs when type is 'citizen'", () => {
-      const schema = nationalId({ type: "citizen" })
+      const schema = nationalId(true, { type: "citizen" })
 
       // Should accept citizen IDs
       expect(schema.parse("A123456789")).toBe("A123456789")
@@ -60,7 +60,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should validate only resident IDs when type is 'resident'", () => {
-      const schema = nationalId({ type: "resident" })
+      const schema = nationalId(true, { type: "resident" })
 
       // Should accept old resident IDs
       expect(schema.parse("AA00000001")).toBe("AA00000001")
@@ -76,7 +76,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should validate both types when type is 'both' (default)", () => {
-      const schema = nationalId({ type: "both" })
+      const schema = nationalId(true, { type: "both" })
 
       // Should accept all valid formats
       expect(schema.parse("A123456789")).toBe("A123456789") // Citizen
@@ -87,7 +87,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("allowOldResident option", () => {
     it("should allow old resident IDs by default", () => {
-      const schema = nationalId({ type: "resident" })
+      const schema = nationalId(true, { type: "resident" })
 
       // Should accept old resident IDs (default allowOldResident=true)
       expect(schema.parse("AA00000001")).toBe("AA00000001")
@@ -100,7 +100,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should reject old resident IDs when allowOldResident=false", () => {
-      const schema = nationalId({ type: "resident", allowOldResident: false })
+      const schema = nationalId(true, { type: "resident", allowOldResident: false })
 
       // Should reject old resident IDs
       expect(() => schema.parse("AA00000001")).toThrow("Invalid Taiwan National ID")
@@ -113,7 +113,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should work with type='both' and allowOldResident=false", () => {
-      const schema = nationalId({ type: "both", allowOldResident: false })
+      const schema = nationalId(true, { type: "both", allowOldResident: false })
 
       // Should accept citizen IDs
       expect(schema.parse("A123456789")).toBe("A123456789")
@@ -129,8 +129,8 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should not affect citizen IDs validation", () => {
-      const schemaWithOld = nationalId({ type: "citizen", allowOldResident: true })
-      const schemaWithoutOld = nationalId({ type: "citizen", allowOldResident: false })
+      const schemaWithOld = nationalId(true, { type: "citizen", allowOldResident: true })
+      const schemaWithoutOld = nationalId(true, { type: "citizen", allowOldResident: false })
 
       // Both should accept citizen IDs
       expect(schemaWithOld.parse("A123456789")).toBe("A123456789")
@@ -211,7 +211,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow()
@@ -219,7 +219,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = nationalId({ required: false })
+      const schema = nationalId(false)
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -228,8 +228,8 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = nationalId({ defaultValue: "A123456789" })
-      const optionalSchema = nationalId({ required: false, defaultValue: "A123456789" })
+      const requiredSchema = nationalId(true, { defaultValue: "A123456789" })
+      const optionalSchema = nationalId(false, { defaultValue: "A123456789" })
 
       expect(requiredSchema.parse("")).toBe("A123456789")
       expect(optionalSchema.parse("")).toBe("A123456789")
@@ -238,7 +238,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = nationalId({
+      const schema = nationalId(true, {
         transform: (val) => val.replace(/[-\s]/g, "").toUpperCase(),
       })
 
@@ -247,7 +247,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should apply transform before validation", () => {
-      const schema = nationalId({
+      const schema = nationalId(true, {
         transform: (val) => val.replace(/\s+/g, "").toUpperCase(),
       })
 
@@ -258,7 +258,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion and case normalization", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       // Test automatic uppercase conversion
       expect(schema.parse("a123456789")).toBe("A123456789")
@@ -266,7 +266,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should trim whitespace", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       expect(schema.parse("  A123456789  ")).toBe("A123456789")
       expect(schema.parse("\tZ187654324\n")).toBe("Z187654324")
@@ -276,7 +276,7 @@ describe("Taiwan nationalId() validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("A123456788")).toThrow("Invalid Taiwan National ID")
@@ -284,14 +284,14 @@ describe("Taiwan nationalId() validator", () => {
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("A123456788")).toThrow("無效的身分證字號")
     })
 
     it("should support custom i18n messages", () => {
-      const schema = nationalId({
+      const schema = nationalId(true, {
         i18n: {
           en: {
             required: "National ID is required",
@@ -316,7 +316,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("real world Taiwan national IDs", () => {
     it("should validate known citizen ID patterns", () => {
-      const schema = nationalId({ type: "citizen" })
+      const schema = nationalId(true, { type: "citizen" })
 
       // Test various city codes and gender combinations
       const validCitizenIds = [
@@ -334,7 +334,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should validate known old resident ID patterns", () => {
-      const schema = nationalId({ type: "resident" })
+      const schema = nationalId(true, { type: "resident" })
 
       // Test old format resident IDs
       const validOldResidentIds = [
@@ -352,7 +352,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should validate known new resident ID patterns", () => {
-      const schema = nationalId({ type: "resident" })
+      const schema = nationalId(true, { type: "resident" })
 
       // Test new format resident IDs
       const validNewResidentIds = [
@@ -370,7 +370,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should reject common invalid patterns", () => {
-      const schema = nationalId()
+      const schema = nationalId(true)
 
       const invalidIds = [
         "A000000000", // All zeros
@@ -393,7 +393,7 @@ describe("Taiwan nationalId() validator", () => {
 
   describe("edge cases", () => {
     it("should handle all valid city codes", () => {
-      const schema = nationalId({ type: "citizen" })
+      const schema = nationalId(true, { type: "citizen" })
 
       // Test all valid city codes
       const cityCodes = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
@@ -412,8 +412,8 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const schema = nationalId()
-      const optionalSchema = nationalId({ required: false })
+      const schema = nationalId(true)
+      const optionalSchema = nationalId(false)
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("   ")).toThrow("Required")
@@ -425,7 +425,7 @@ describe("Taiwan nationalId() validator", () => {
     })
 
     it("should preserve valid format after transformation", () => {
-      const schema = nationalId({
+      const schema = nationalId(true, {
         transform: (val) => val.replace(/[^A-Z0-9]/g, "").toUpperCase(),
       })
 

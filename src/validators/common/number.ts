@@ -69,7 +69,6 @@ export type NumberMessages = {
  * @property {Record<Locale, NumberMessages>} [i18n] - Custom error messages for different locales
  */
 export type NumberOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   min?: number
   max?: number
   defaultValue?: IsRequired extends true ? number : number | null
@@ -119,53 +118,55 @@ export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ?
  *
  * @example
  * ```typescript
- * // Basic number validation
+ * // Basic number validation (optional by default)
  * const basicSchema = number()
  * basicSchema.parse(42) // ✓ Valid
  * basicSchema.parse("42") // ✓ Valid (converted to number)
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required number
+ * const requiredSchema = number(true)
+ * requiredSchema.parse(42) // ✓ Valid
+ * requiredSchema.parse(null) // ✗ Invalid (required)
  *
  * // Integer only
- * const integerSchema = number({ type: "integer" })
+ * const integerSchema = number(false, { type: "integer" })
  * integerSchema.parse(42) // ✓ Valid
  * integerSchema.parse(42.5) // ✗ Invalid
  *
  * // Range validation
- * const rangeSchema = number({ min: 0, max: 100 })
+ * const rangeSchema = number(true, { min: 0, max: 100 })
  * rangeSchema.parse(50) // ✓ Valid
  * rangeSchema.parse(150) // ✗ Invalid
  *
  * // Positive numbers only
- * const positiveSchema = number({ positive: true })
+ * const positiveSchema = number(true, { positive: true })
  * positiveSchema.parse(5) // ✓ Valid
  * positiveSchema.parse(-5) // ✗ Invalid
  *
  * // Multiple of constraint
- * const multipleSchema = number({ multipleOf: 5 })
+ * const multipleSchema = number(true, { multipleOf: 5 })
  * multipleSchema.parse(10) // ✓ Valid
  * multipleSchema.parse(7) // ✗ Invalid
  *
  * // Precision control
- * const precisionSchema = number({ precision: 2 })
+ * const precisionSchema = number(true, { precision: 2 })
  * precisionSchema.parse(3.14) // ✓ Valid
  * precisionSchema.parse(3.14159) // ✗ Invalid
  *
  * // Comma-separated parsing
- * const commaSchema = number({ parseCommas: true })
+ * const commaSchema = number(false, { parseCommas: true })
  * commaSchema.parse("1,234.56") // ✓ Valid (parsed as 1234.56)
  *
  * // Optional with default
- * const optionalSchema = number({
- *   required: false,
- *   defaultValue: 0
- * })
+ * const optionalSchema = number(false, { defaultValue: 0 })
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link NumberOptions} for all available configuration options
  */
-export function number<IsRequired extends boolean = true>(options?: NumberOptions<IsRequired>): NumberSchema<IsRequired> {
+export function number<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<NumberOptions<IsRequired>, 'required'>): NumberSchema<IsRequired> {
   const {
-    required = true,
     min,
     max,
     defaultValue,
@@ -181,6 +182,8 @@ export function number<IsRequired extends boolean = true>(options?: NumberOption
     parseCommas = false,
     i18n,
   } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof NumberMessages, params?: Record<string, any>) => {
@@ -242,7 +245,7 @@ export function number<IsRequired extends boolean = true>(options?: NumberOption
     )
     .refine((val) => {
       // Required check first
-      if (required && val === null) {
+      if (isRequired && val === null) {
         throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
       }
 

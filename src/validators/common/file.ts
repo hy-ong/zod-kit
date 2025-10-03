@@ -76,7 +76,6 @@ export type FileMessages = {
  * @property {Record<Locale, FileMessages>} [i18n] - Custom error messages for different locales
  */
 export type FileOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   maxSize?: number
   minSize?: number
   type?: string | string[]
@@ -109,7 +108,8 @@ export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * Creates a Zod schema for file validation with comprehensive filtering options
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {FileOptions<IsRequired>} [options] - Configuration options for file validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {FileSchema<IsRequired>} Zod schema for file validation
  *
  * @description
@@ -129,42 +129,48 @@ export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * @example
  * ```typescript
  * // Basic file validation
- * const basicSchema = file()
+ * const basicSchema = file() // optional by default
  * basicSchema.parse(new File(["content"], "test.txt"))
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse(new File(["content"], "test.txt"))
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  *
  * // Size restrictions
- * const sizeSchema = file({
+ * const sizeSchema = file(false, {
  *   maxSize: 1024 * 1024, // 1MB
  *   minSize: 1024 // 1KB
  * })
  *
  * // Extension restrictions
- * const imageSchema = file({
+ * const imageSchema = file(false, {
  *   extension: [".jpg", ".png", ".gif"],
  *   maxSize: 5 * 1024 * 1024 // 5MB
  * })
  *
  * // MIME type restrictions
- * const documentSchema = file({
+ * const documentSchema = file(false, {
  *   type: ["application/pdf", "application/msword"],
  *   maxSize: 10 * 1024 * 1024 // 10MB
  * })
  *
  * // Image files only
- * const imageOnlySchema = file({ imageOnly: true })
+ * const imageOnlySchema = file(false, { imageOnly: true })
  *
  * // Document files only
- * const docOnlySchema = file({ documentOnly: true })
+ * const docOnlySchema = file(false, { documentOnly: true })
  *
  * // Name pattern validation
- * const patternSchema = file({
+ * const patternSchema = file(false, {
  *   namePattern: /^[a-zA-Z0-9_-]+\.(pdf|doc|docx)$/,
  *   maxSize: 5 * 1024 * 1024
  * })
  *
  * // Optional with default
- * const optionalSchema = file({
- *   required: false,
+ * const optionalSchema = file(false, {
  *   defaultValue: null
  * })
  * ```
@@ -172,9 +178,8 @@ export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link FileOptions} for all available configuration options
  */
-export function file<IsRequired extends boolean = true>(options?: FileOptions<IsRequired>): FileSchema<IsRequired> {
+export function file<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<FileOptions<IsRequired>, 'required'>): FileSchema<IsRequired> {
   const {
-    required = true,
     maxSize,
     minSize,
     type,
@@ -193,6 +198,8 @@ export function file<IsRequired extends boolean = true>(options?: FileOptions<Is
     defaultValue,
     i18n,
   } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof FileMessages, params?: Record<string, any>) => {

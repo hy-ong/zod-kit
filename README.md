@@ -39,12 +39,16 @@ pnpm add @hy_ong/zod-kit zod
 ```typescript
 import { email, password, text, mobile, datetime, time, postalCode } from '@hy_ong/zod-kit'
 
-// Simple email validation
-const emailSchema = email()
+// Simple email validation (required by default)
+const emailSchema = email(true)
 emailSchema.parse('user@example.com') // ✅ "user@example.com"
 
+// Optional email
+const optionalEmail = email(false)
+optionalEmail.parse(null) // ✅ null
+
 // Password with complexity requirements
-const passwordSchema = password({
+const passwordSchema = password(true, {
   minLength: 8,
   requireUppercase: true,
   requireDigits: true,
@@ -52,19 +56,19 @@ const passwordSchema = password({
 })
 
 // Taiwan mobile phone validation
-const phoneSchema = mobile()
+const phoneSchema = mobile(true)
 phoneSchema.parse('0912345678') // ✅ "0912345678"
 
 // DateTime validation
-const datetimeSchema = datetime()
+const datetimeSchema = datetime(true)
 datetimeSchema.parse('2024-03-15 14:30') // ✅ "2024-03-15 14:30"
 
 // Time validation
-const timeSchema = time()
+const timeSchema = time(true)
 timeSchema.parse('14:30') // ✅ "14:30"
 
 // Taiwan postal code validation
-const postalSchema = postalCode()
+const postalSchema = postalCode(true)
 postalSchema.parse('100001') // ✅ "100001"
 ```
 
@@ -72,37 +76,51 @@ postalSchema.parse('100001') // ✅ "100001"
 
 ### Common Validators
 
-#### `email(options?)`
+#### `email(required?, options?)`
 
 Validates email addresses with comprehensive format checking.
+
+**Parameters:**
+- `required` (boolean, optional): Whether the field is required. Default: `false`
+- `options` (object, optional): Configuration options
 
 ```typescript
 import { email } from '@hy_ong/zod-kit'
 
-// Basic usage
-const basicEmail = email()
+// Required email (recommended)
+const requiredEmail = email(true)
+
+// Optional email
+const optionalEmail = email(false)
+optionalEmail.parse(null) // ✅ null
 
 // With options
-const advancedEmail = email({
-  required: true,           // Default: true
+const advancedEmail = email(true, {
   allowedDomains: ['gmail.com', 'company.com'],
   minLength: 5,
   maxLength: 100,
   transform: (val) => val.toLowerCase(),
+  defaultValue: 'default@example.com',
   i18n: {
-    en: { invalid: 'Please enter a valid email' }
+    en: { invalid: 'Please enter a valid email' },
+    'zh-TW': { invalid: '請輸入有效的電子郵件' }
   }
 })
 ```
 
-#### `password(options?)`
+#### `password(required?, options?)`
 
 Validates passwords with customizable complexity requirements.
+
+**Parameters:**
+- `required` (boolean, optional): Whether the field is required. Default: `false`
+- `options` (object, optional): Configuration options
 
 ```typescript
 import { password } from '@hy_ong/zod-kit'
 
-const passwordSchema = password({
+// Required password with complexity rules
+const passwordSchema = password(true, {
   minLength: 8,             // Minimum length
   maxLength: 128,           // Maximum length
   requireUppercase: true,   // Require A-Z
@@ -113,67 +131,77 @@ const passwordSchema = password({
     { pattern: /[A-Z]/, message: 'Need uppercase' }
   ]
 })
+
+// Optional password
+const optionalPassword = password(false)
 ```
 
-#### `text(options?)`
+#### `text(required?, options?)`
 
 General text validation with length and pattern constraints.
 
 ```typescript
 import { text } from '@hy_ong/zod-kit'
 
-const nameSchema = text({
+const nameSchema = text(true, {
   minLength: 2,
   maxLength: 50,
   pattern: /^[a-zA-Z\s]+$/,
   transform: (val) => val.trim()
 })
+
+const optionalText = text(false)
 ```
 
-#### `number(options?)`
+#### `number(required?, options?)`
 
 Validates numeric values with range and type constraints.
 
 ```typescript
 import { number } from '@hy_ong/zod-kit'
 
-const ageSchema = number({
+const ageSchema = number(true, {
   min: 0,
   max: 150,
   integer: true,
   positive: true
 })
+
+const optionalNumber = number(false)
 ```
 
-#### `url(options?)`
+#### `url(required?, options?)`
 
 URL validation with protocol and domain restrictions.
 
 ```typescript
 import { url } from '@hy_ong/zod-kit'
 
-const urlSchema = url({
+const urlSchema = url(true, {
   protocols: ['https'],         // Only HTTPS allowed
   allowedDomains: ['safe.com'], // Domain whitelist
   requireTLD: true             // Require top-level domain
 })
+
+const optionalUrl = url(false)
 ```
 
-#### `boolean(options?)`
+#### `boolean(required?, options?)`
 
 Boolean validation with flexible input handling.
 
 ```typescript
 import { boolean } from '@hy_ong/zod-kit'
 
-const consentSchema = boolean({
-  required: true,
+const consentSchema = boolean(true, {
   trueValues: ['yes', '1', 'true'],  // Custom truthy values
   falseValues: ['no', '0', 'false'] // Custom falsy values
 })
+
+const optionalBoolean = boolean(false)
 ```
 
-#### `datetime(options?)`
+#### `datetime(required?, options?)`
 
 Validates datetime with comprehensive format support and timezone handling.
 
@@ -181,11 +209,11 @@ Validates datetime with comprehensive format support and timezone handling.
 import { datetime } from '@hy_ong/zod-kit'
 
 // Basic datetime validation
-const basicSchema = datetime()
+const basicSchema = datetime(true)
 basicSchema.parse('2024-03-15 14:30') // ✓ Valid
 
 // Business hours validation
-const businessHours = datetime({
+const businessHours = datetime(true, {
   format: 'YYYY-MM-DD HH:mm',
   minHour: 9,
   maxHour: 17,
@@ -193,19 +221,22 @@ const businessHours = datetime({
 })
 
 // Timezone-aware validation
-const timezoneSchema = datetime({
+const timezoneSchema = datetime(true, {
   timezone: 'Asia/Taipei',
   mustBeFuture: true
 })
 
 // Multiple format support
-const flexibleSchema = datetime({
+const flexibleSchema = datetime(true, {
   format: 'DD/MM/YYYY HH:mm'
 })
 flexibleSchema.parse('15/03/2024 14:30') // ✓ Valid
+
+// Optional datetime
+const optionalDatetime = datetime(false)
 ```
 
-#### `time(options?)`
+#### `time(required?, options?)`
 
 Time validation with multiple formats and constraints.
 
@@ -213,15 +244,15 @@ Time validation with multiple formats and constraints.
 import { time } from '@hy_ong/zod-kit'
 
 // Basic time validation (24-hour format)
-const basicSchema = time()
+const basicSchema = time(true)
 basicSchema.parse('14:30') // ✓ Valid
 
 // 12-hour format with AM/PM
-const ampmSchema = time({ format: 'hh:mm A' })
+const ampmSchema = time(true, { format: 'hh:mm A' })
 ampmSchema.parse('02:30 PM') // ✓ Valid
 
 // Business hours validation
-const businessHours = time({
+const businessHours = time(true, {
   format: 'HH:mm',
   minHour: 9,
   maxHour: 17,
@@ -229,28 +260,33 @@ const businessHours = time({
 })
 
 // Time range validation
-const timeRangeSchema = time({
+const timeRangeSchema = time(true, {
   min: '09:00',
   max: '17:00'
 })
+
+// Optional time
+const optionalTime = time(false)
 ```
 
-#### `date(options?)`
+#### `date(required?, options?)`
 
 Date validation with range and format constraints.
 
 ```typescript
 import { date } from '@hy_ong/zod-kit'
 
-const birthdateSchema = date({
+const birthdateSchema = date(true, {
   format: 'YYYY-MM-DD',
   minDate: '1900-01-01',
   maxDate: new Date(),
   timezone: 'Asia/Taipei'
 })
+
+const optionalDate = date(false)
 ```
 
-#### `file(options?)`
+#### `file(required?, options?)`
 
 File validation with MIME type filtering and size constraints.
 
@@ -258,113 +294,127 @@ File validation with MIME type filtering and size constraints.
 import { file } from '@hy_ong/zod-kit'
 
 // Basic file validation
-const basicSchema = file()
+const basicSchema = file(true)
 basicSchema.parse(new File(['content'], 'test.txt'))
 
 // Size restrictions
-const sizeSchema = file({
+const sizeSchema = file(true, {
   maxSize: 1024 * 1024, // 1MB
   minSize: 1024 // 1KB
 })
 
 // Extension restrictions
-const imageSchema = file({
+const imageSchema = file(true, {
   extension: ['.jpg', '.png', '.gif'],
   maxSize: 5 * 1024 * 1024 // 5MB
 })
 
 // MIME type restrictions
-const documentSchema = file({
+const documentSchema = file(true, {
   type: ['application/pdf', 'application/msword'],
   maxSize: 10 * 1024 * 1024 // 10MB
 })
 
 // Image files only
-const imageOnlySchema = file({ imageOnly: true })
+const imageOnlySchema = file(true, { imageOnly: true })
+
+// Optional file
+const optionalFile = file(false)
 ```
 
-#### `id(options?)`
+#### `id(required?, options?)`
 
 Flexible ID validation supporting multiple formats.
 
 ```typescript
 import { id } from '@hy_ong/zod-kit'
 
-const userIdSchema = id({
+const userIdSchema = id(true, {
   type: 'uuid',              // 'uuid', 'nanoid', 'objectId', 'auto', etc.
   allowedTypes: ['uuid', 'nanoid'], // Multiple allowed types
   customRegex: /^USR_[A-Z0-9]+$/    // Custom pattern
 })
+
+const optionalId = id(false)
 ```
 
 ### Taiwan-Specific Validators
 
-#### `nationalId(options?)`
+#### `nationalId(required?, options?)`
 
 Validates Taiwan National ID (身份證字號).
 
 ```typescript
 import { nationalId } from '@hy_ong/zod-kit'
 
-const idSchema = nationalId({
-  required: true,
+const idSchema = nationalId(true, {
   normalize: true,  // Convert to uppercase
   whitelist: ['A123456789'] // Allow specific IDs
 })
 
 idSchema.parse('A123456789') // ✅ Valid Taiwan National ID
+
+const optionalId = nationalId(false)
 ```
 
-#### `businessId(options?)`
+#### `businessId(required?, options?)`
 
 Validates Taiwan Business ID (統一編號).
 
 ```typescript
 import { businessId } from '@hy_ong/zod-kit'
 
-const bizSchema = businessId()
+const bizSchema = businessId(true)
 bizSchema.parse('12345675') // ✅ Valid business ID with checksum
+
+const optionalBizId = businessId(false)
 ```
 
-#### `mobile(options?)`
+#### `mobile(required?, options?)`
 
 Validates Taiwan mobile phone numbers.
 
 ```typescript
 import { mobile } from '@hy_ong/zod-kit'
 
-const phoneSchema = mobile({
+const phoneSchema = mobile(true, {
   allowInternational: true,  // Allow +886 prefix
   allowSeparators: true,     // Allow 0912-345-678
   operators: ['09']          // Restrict to specific operators
 })
+
+const optionalMobile = mobile(false)
 ```
 
-#### `tel(options?)`
+#### `tel(required?, options?)`
 
 Validates Taiwan landline telephone numbers.
 
 ```typescript
 import { tel } from '@hy_ong/zod-kit'
 
-const landlineSchema = tel({
+const landlineSchema = tel(true, {
   allowSeparators: true,     // Allow 02-1234-5678
   areaCodes: ['02', '03']    // Restrict to specific areas
 })
+
+const optionalTel = tel(false)
 ```
 
-#### `fax(options?)`
+#### `fax(required?, options?)`
 
 Validates Taiwan fax numbers (same format as landline).
 
 ```typescript
 import { fax } from '@hy_ong/zod-kit'
 
-const faxSchema = fax()
+const faxSchema = fax(true)
 faxSchema.parse('02-2345-6789') // ✅ Valid fax number
+
+const optionalFax = fax(false)
 ```
 
-#### `postalCode(options?)`
+#### `postalCode(required?, options?)`
 
 Validates Taiwan postal codes with support for 3-digit, 5-digit, and 6-digit formats.
 
@@ -372,31 +422,34 @@ Validates Taiwan postal codes with support for 3-digit, 5-digit, and 6-digit for
 import { postalCode } from '@hy_ong/zod-kit'
 
 // Accept 3-digit or 6-digit formats (recommended)
-const modernSchema = postalCode()
+const modernSchema = postalCode(true)
 modernSchema.parse('100')     // ✅ Valid 3-digit
 modernSchema.parse('100001')  // ✅ Valid 6-digit
 
 // Accept all formats
-const flexibleSchema = postalCode({ format: 'all' })
+const flexibleSchema = postalCode(true, { format: 'all' })
 flexibleSchema.parse('100')     // ✅ Valid
 flexibleSchema.parse('10001')   // ✅ Valid (5-digit legacy)
 flexibleSchema.parse('100001')  // ✅ Valid
 
 // Only 6-digit format (current standard)
-const modernOnlySchema = postalCode({ format: '6' })
+const modernOnlySchema = postalCode(true, { format: '6' })
 modernOnlySchema.parse('100001') // ✅ Valid
 modernOnlySchema.parse('100')    // ❌ Invalid
 
 // With dashes allowed
-const dashSchema = postalCode({ allowDashes: true })
+const dashSchema = postalCode(true, { allowDashes: true })
 dashSchema.parse('100-001')  // ✅ Valid (normalized to '100001')
 
 // Specific areas only
-const taipeiSchema = postalCode({
+const taipeiSchema = postalCode(true, {
   allowedPrefixes: ['100', '103', '104', '105', '106']
 })
 taipeiSchema.parse('100001') // ✅ Valid (Taipei area)
 taipeiSchema.parse('200001') // ❌ Invalid (not in allowlist)
+
+// Optional postal code
+const optionalPostal = postalCode(false)
 ```
 
 ## 🌐 Internationalization
@@ -411,7 +464,7 @@ setLocale('zh-TW') // Traditional Chinese
 setLocale('en')    // English (default)
 
 // Or use custom messages per validator
-const emailSchema = email({
+const emailSchema = email(true, {
   i18n: {
     en: {
       required: 'Email is required',
@@ -429,10 +482,10 @@ const emailSchema = email({
 
 ### Optional Fields
 
-Make any field optional by setting `required: false`:
+Make any field optional by passing `false` as the first argument:
 
 ```typescript
-const optionalEmail = email({ required: false })
+const optionalEmail = email(false)
 
 optionalEmail.parse(null)      // ✅ null
 optionalEmail.parse('')        // ✅ null
@@ -444,7 +497,7 @@ optionalEmail.parse('test@example.com') // ✅ "test@example.com"
 Transform values during validation:
 
 ```typescript
-const trimmedText = text({
+const trimmedText = text(true, {
   transform: (val) => val.trim().toLowerCase(),
   minLength: 1
 })
@@ -452,12 +505,25 @@ const trimmedText = text({
 trimmedText.parse('  HELLO  ') // ✅ "hello"
 ```
 
+### Default Values
+
+Provide default values for empty inputs:
+
+```typescript
+const emailWithDefault = email(true, {
+  defaultValue: 'default@example.com'
+})
+
+emailWithDefault.parse('')   // ✅ "default@example.com"
+emailWithDefault.parse(null) // ✅ "default@example.com"
+```
+
 ### Whitelist Validation
 
 Allow specific values regardless of format:
 
 ```typescript
-const flexibleId = id({
+const flexibleId = id(true, {
   type: 'uuid',
   whitelist: ['admin', 'system', 'test-user']
 })
@@ -475,8 +541,8 @@ import { z } from 'zod'
 import { email, password } from '@hy_ong/zod-kit'
 
 const userSchema = z.object({
-  email: email(),
-  password: password({ minLength: 8 }),
+  email: email(true),
+  password: password(true, { minLength: 8 }),
   confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match"

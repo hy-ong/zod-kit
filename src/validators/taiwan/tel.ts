@@ -39,7 +39,6 @@ export type TelMessages = {
  * @property {Record<Locale, TelMessages>} [i18n] - Custom error messages for different locales
  */
 export type TelOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
@@ -173,7 +172,8 @@ const validateTaiwanTel = (value: string): boolean => {
  * Creates a Zod schema for Taiwan landline telephone number validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {TelOptions<IsRequired>} [options] - Configuration options for telephone validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {TelSchema<IsRequired>} Zod schema for telephone number validation
  *
  * @description
@@ -193,33 +193,40 @@ const validateTaiwanTel = (value: string): boolean => {
  * @example
  * ```typescript
  * // Basic telephone number validation
- * const basicSchema = tel()
+ * const basicSchema = tel() // optional by default
  * basicSchema.parse("0223456789") // ✓ Valid (Taipei)
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("0223456789") // ✓ Valid (Taipei)
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  * basicSchema.parse("0312345678") // ✓ Valid (Taoyuan)
  * basicSchema.parse("02-2345-6789") // ✓ Valid (with separators)
  * basicSchema.parse("0812345678") // ✗ Invalid (wrong format for 08)
  *
  * // With whitelist (only specific numbers allowed)
- * const whitelistSchema = tel({
+ * const whitelistSchema = tel(false, {
  *   whitelist: ["0223456789", "0312345678"]
  * })
  * whitelistSchema.parse("0223456789") // ✓ Valid (in whitelist)
  * whitelistSchema.parse("0287654321") // ✗ Invalid (not in whitelist)
  *
  * // Optional telephone number
- * const optionalSchema = tel({ required: false })
+ * const optionalSchema = tel(false)
  * optionalSchema.parse("") // ✓ Valid (returns null)
  * optionalSchema.parse("0223456789") // ✓ Valid
  *
  * // With custom transformation (remove separators)
- * const transformSchema = tel({
+ * const transformSchema = tel(false, {
  *   transform: (value) => value.replace(/[^0-9]/g, '') // Keep only digits
  * })
  * transformSchema.parse("02-2345-6789") // ✓ Valid (separators removed)
  * transformSchema.parse("02 2345 6789") // ✓ Valid (spaces removed)
  *
  * // With custom error messages
- * const customSchema = tel({
+ * const customSchema = tel(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan landline number" },
  *     'zh-TW': { invalid: "請輸入有效的台灣市話號碼" }
@@ -231,11 +238,13 @@ const validateTaiwanTel = (value: string): boolean => {
  * @see {@link TelOptions} for all available configuration options
  * @see {@link validateTaiwanTel} for validation logic details
  */
-export function tel<IsRequired extends boolean = true>(options?: TelOptions<IsRequired>): TelSchema<IsRequired> {
-  const { required = true, whitelist, transform, defaultValue, i18n } = options ?? {}
+export function tel<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TelOptions<IsRequired>, 'required'>): TelSchema<IsRequired> {
+  const { whitelist, transform, defaultValue, i18n } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof TelMessages, params?: Record<string, any>) => {
@@ -265,7 +274,7 @@ export function tel<IsRequired extends boolean = true>(options?: TelOptions<IsRe
         return ""
       }
       // If the field is optional and empty string not in allowlist, return default value
-      if (!required) {
+      if (!isRequired) {
         return actualDefaultValue
       }
       // If a field is required, return the default value (will be validated later)
@@ -279,18 +288,18 @@ export function tel<IsRequired extends boolean = true>(options?: TelOptions<IsRe
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Allowlist check (if an allowlist is provided, only allow values in the allowlist)
     if (whitelist && whitelist.length > 0) {

@@ -147,7 +147,6 @@ export type DateTimeFormat =
  * @property {Record<Locale, DateTimeMessages>} [i18n] - Custom error messages for different locales
  */
 export type DateTimeOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   format?: DateTimeFormat
   min?: string | Date // Minimum datetime
   max?: string | Date // Maximum datetime
@@ -347,7 +346,8 @@ const normalizeDateTimeValue = (value: string, format: DateTimeFormat, timezone?
  * Creates a Zod schema for datetime validation with comprehensive options
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {DateTimeOptions<IsRequired>} [options] - Configuration options for datetime validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {DateTimeSchema<IsRequired>} Zod schema for datetime validation
  *
  * @description
@@ -369,8 +369,15 @@ const normalizeDateTimeValue = (value: string, format: DateTimeFormat, timezone?
  * @example
  * ```typescript
  * // Basic datetime validation
- * const basicSchema = datetime()
+ * const basicSchema = datetime() // optional by default
  * basicSchema.parse("2024-03-15 14:30") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("2024-03-15 14:30") // ✓ Valid
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  *
  * // Business hours validation
  * const businessHours = datetime({
@@ -381,20 +388,19 @@ const normalizeDateTimeValue = (value: string, format: DateTimeFormat, timezone?
  * })
  *
  * // Timezone-aware validation
- * const timezoneSchema = datetime({
+ * const timezoneSchema = datetime(false, {
  *   timezone: "Asia/Taipei",
  *   mustBeFuture: true
  * })
  *
  * // Multiple format support
- * const flexibleSchema = datetime({
+ * const flexibleSchema = datetime(false, {
  *   format: "DD/MM/YYYY HH:mm"
  * })
  * flexibleSchema.parse("15/03/2024 14:30") // ✓ Valid
  *
  * // Optional with default
- * const optionalSchema = datetime({
- *   required: false,
+ * const optionalSchema = datetime(false, {
  *   defaultValue: "2024-01-01 00:00"
  * })
  * ```
@@ -403,9 +409,8 @@ const normalizeDateTimeValue = (value: string, format: DateTimeFormat, timezone?
  * @see {@link DateTimeOptions} for all available configuration options
  * @see {@link DateTimeFormat} for supported datetime formats
  */
-export function datetime<IsRequired extends boolean = true>(options?: DateTimeOptions<IsRequired>): DateTimeSchema<IsRequired> {
+export function datetime<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<DateTimeOptions<IsRequired>, 'required'>): DateTimeSchema<IsRequired> {
   const {
-    required = true,
     format = "YYYY-MM-DD HH:mm",
     min,
     max,
@@ -432,8 +437,10 @@ export function datetime<IsRequired extends boolean = true>(options?: DateTimeOp
     i18n,
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof DateTimeMessages, params?: Record<string, any>) => {
@@ -479,7 +486,7 @@ export function datetime<IsRequired extends boolean = true>(options?: DateTimeOp
         return ""
       }
       // If the field is optional and empty string not in whitelist, return default value
-      if (!required) {
+      if (!isRequired) {
         return actualDefaultValue
       }
       // If a field is required, return the default value (will be validated later)
@@ -506,18 +513,18 @@ export function datetime<IsRequired extends boolean = true>(options?: DateTimeOp
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Whitelist check
     if (whitelist && whitelist.length > 0) {

@@ -86,7 +86,6 @@ export type DateMessages = {
  * @property {Record<Locale, DateMessages>} [i18n] - Custom error messages for different locales
  */
 export type DateOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   min?: string
   max?: string
   format?: string
@@ -116,7 +115,8 @@ export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * Creates a Zod schema for date validation with temporal constraints
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {DateOptions<IsRequired>} [options] - Configuration options for date validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {DateSchema<IsRequired>} Zod schema for date validation
  *
  * @description
@@ -138,15 +138,22 @@ export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * // Basic date validation (YYYY-MM-DD)
  * const basicSchema = date()
  * basicSchema.parse("2024-03-15") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("2024-03-15") // ✓ Valid
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  * basicSchema.parse("2024-13-01") // ✗ Invalid (month 13)
  *
  * // Custom format
- * const customFormatSchema = date({ format: "DD/MM/YYYY" })
+ * const customFormatSchema = date(false, { format: "DD/MM/YYYY" })
  * customFormatSchema.parse("15/03/2024") // ✓ Valid
  * customFormatSchema.parse("2024-03-15") // ✗ Invalid (wrong format)
  *
  * // Date range validation
- * const rangeSchema = date({
+ * const rangeSchema = date(false, {
  *   min: "2024-01-01",
  *   max: "2024-12-31"
  * })
@@ -154,25 +161,24 @@ export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * rangeSchema.parse("2023-12-31") // ✗ Invalid (before min)
  *
  * // Future dates only
- * const futureSchema = date({ mustBeFuture: true })
+ * const futureSchema = date(false, { mustBeFuture: true })
  * futureSchema.parse("2030-01-01") // ✓ Valid (assuming current date < 2030)
  * futureSchema.parse("2020-01-01") // ✗ Invalid (past date)
  *
  * // Weekdays only (Monday-Friday)
- * const weekdaySchema = date({ weekdaysOnly: true })
+ * const weekdaySchema = date(false, { weekdaysOnly: true })
  * weekdaySchema.parse("2024-03-15") // ✓ Valid (if Friday)
  * weekdaySchema.parse("2024-03-16") // ✗ Invalid (if Saturday)
  *
  * // Business date validation
- * const businessSchema = date({
+ * const businessSchema = date(false, {
  *   format: "YYYY-MM-DD",
  *   mustBeFuture: true,
  *   weekdaysOnly: true
  * })
  *
  * // Optional with default
- * const optionalSchema = date({
- *   required: false,
+ * const optionalSchema = date(false, {
  *   defaultValue: "2024-01-01"
  * })
  * ```
@@ -180,9 +186,8 @@ export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link DateOptions} for all available configuration options
  */
-export function date<IsRequired extends boolean = true>(options?: DateOptions<IsRequired>): DateSchema<IsRequired> {
+export function date<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<DateOptions<IsRequired>, 'required'>): DateSchema<IsRequired> {
   const {
-    required = true,
     min,
     max,
     format = "YYYY-MM-DD",
@@ -199,7 +204,9 @@ export function date<IsRequired extends boolean = true>(options?: DateOptions<Is
     i18n,
   } = options ?? {}
 
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const isRequired = required ?? false as IsRequired
+
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof DateMessages, params?: Record<string, any>) => {
@@ -229,13 +236,13 @@ export function date<IsRequired extends boolean = true>(options?: DateOptions<Is
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 

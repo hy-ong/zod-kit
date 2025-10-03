@@ -2,16 +2,16 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { datetime, setLocale, validateDateTimeFormat, parseDateTimeValue, normalizeDateTimeValue } from "../../src"
 import dayjs from "dayjs"
 
-describe("Taiwan datetime() validator", () => {
+describe("Taiwan datetime(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct datetime formats", () => {
-      const schemaISO = datetime({ format: "YYYY-MM-DD HH:mm" })
-      const schemaUS = datetime({ format: "MM/DD/YYYY HH:mm" })
-      const schemaEU = datetime({ format: "DD/MM/YYYY HH:mm" })
-      const schemaWithSeconds = datetime({ format: "YYYY-MM-DD HH:mm:ss" })
-      const schema12Hour = datetime({ format: "YYYY-MM-DD hh:mm A" })
+      const schemaISO = datetime(true, { format: "YYYY-MM-DD HH:mm" })
+      const schemaUS = datetime(true, { format: "MM/DD/YYYY HH:mm" })
+      const schemaEU = datetime(true, { format: "DD/MM/YYYY HH:mm" })
+      const schemaWithSeconds = datetime(true, { format: "YYYY-MM-DD HH:mm:ss" })
+      const schema12Hour = datetime(true, { format: "YYYY-MM-DD hh:mm A" })
 
       // ISO format
       expect(schemaISO.parse("2024-03-15 14:30")).toBe("2024-03-15 14:30")
@@ -37,9 +37,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate special formats", () => {
-      const isoSchema = datetime({ format: "ISO" })
-      const rfcSchema = datetime({ format: "RFC" })
-      const unixSchema = datetime({ format: "UNIX" })
+      const isoSchema = datetime(true, { format: "ISO" })
+      const rfcSchema = datetime(true, { format: "RFC" })
+      const unixSchema = datetime(true, { format: "UNIX" })
 
       // ISO 8601
       expect(isoSchema.parse("2024-03-15T14:30:45.000Z")).toBe("2024-03-15T14:30:45.000Z")
@@ -53,7 +53,7 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should reject invalid datetime formats", () => {
-      const schema = datetime({ format: "YYYY-MM-DD HH:mm" })
+      const schema = datetime(true, { format: "YYYY-MM-DD HH:mm" })
 
       // Invalid date formats
       expect(() => schema.parse("2024-13-15 14:30")).toThrow("Must be in YYYY-MM-DD HH:mm format")
@@ -65,7 +65,7 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should handle whitespace trimming", () => {
-      const schema = datetime({ format: "YYYY-MM-DD HH:mm" })
+      const schema = datetime(true, { format: "YYYY-MM-DD HH:mm" })
 
       expect(schema.parse("  2024-03-15 14:30  ")).toBe("2024-03-15 14:30")
       expect(schema.parse("\t2024-03-15 09:15\n")).toBe("2024-03-15 09:15")
@@ -74,9 +74,9 @@ describe("Taiwan datetime() validator", () => {
 
   describe("whitelist functionality", () => {
     it("should accept any string in whitelist regardless of format", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        whitelist: ["now", "tomorrow", "TBD"]
+        whitelist: ["now", "tomorrow", "TBD"],
       })
 
       expect(schema.parse("now")).toBe("now")
@@ -86,10 +86,10 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should reject values not in whitelist when whitelistOnly is true", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         whitelist: ["now", "2024-03-15 14:30"],
-        whitelistOnly: true
+        whitelistOnly: true,
       })
 
       expect(schema.parse("now")).toBe("now")
@@ -101,9 +101,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should work with empty whitelist", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        whitelist: []
+        whitelist: [],
       })
 
       // With empty whitelist, should still validate datetime format
@@ -112,9 +112,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should prioritize whitelist over format validation", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        whitelist: ["anytime", "flexible", "TBD"]
+        whitelist: ["anytime", "flexible", "TBD"],
       })
 
       expect(schema.parse("anytime")).toBe("anytime")
@@ -126,7 +126,7 @@ describe("Taiwan datetime() validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = datetime({ format: "YYYY-MM-DD HH:mm" })
+      const schema = datetime(true, { format: "YYYY-MM-DD HH:mm" })
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow("Required")
@@ -134,7 +134,7 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = datetime({ format: "YYYY-MM-DD HH:mm", required: false })
+      const schema = datetime(false, { format: "YYYY-MM-DD HH:mm" })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -143,15 +143,11 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = datetime({
+      const requiredSchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        defaultValue: "2024-01-01 12:00"
+        defaultValue: "2024-01-01 12:00",
       })
-      const optionalSchema = datetime({
-        format: "YYYY-MM-DD HH:mm",
-        required: false,
-        defaultValue: "2024-01-01 12:00"
-      })
+      const optionalSchema = datetime(false, { format: "YYYY-MM-DD HH:mm", defaultValue: "2024-01-01 12:00" })
 
       expect(requiredSchema.parse("")).toBe("2024-01-01 12:00")
       expect(requiredSchema.parse(null)).toBe("2024-01-01 12:00")
@@ -161,12 +157,7 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should handle whitelist with optional fields", () => {
-      const schema = datetime({
-        format: "YYYY-MM-DD HH:mm",
-        required: false,
-        whitelist: ["flexible", "2024-03-15 14:30"],
-        whitelistOnly: true
-      })
+      const schema = datetime(false, { format: "YYYY-MM-DD HH:mm", whitelist: ["flexible", "2024-03-15 14:30"], whitelistOnly: true })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("flexible")).toBe("flexible")
@@ -177,10 +168,10 @@ describe("Taiwan datetime() validator", () => {
 
   describe("datetime range validation", () => {
     it("should validate minimum and maximum datetimes", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         min: "2024-03-15 09:00",
-        max: "2024-03-15 17:00"
+        max: "2024-03-15 17:00",
       })
 
       // Valid datetimes within range
@@ -194,10 +185,10 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate hour ranges", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         minHour: 9,
-        maxHour: 17
+        maxHour: 17,
       })
 
       expect(schema.parse("2024-03-15 09:30")).toBe("2024-03-15 09:30")
@@ -208,9 +199,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate allowed hours", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        allowedHours: [9, 10, 14, 15, 16]
+        allowedHours: [9, 10, 14, 15, 16],
       })
 
       expect(schema.parse("2024-03-15 09:30")).toBe("2024-03-15 09:30")
@@ -222,9 +213,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate minute steps", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        minuteStep: 15
+        minuteStep: 15,
       })
 
       expect(schema.parse("2024-03-15 14:00")).toBe("2024-03-15 14:00")
@@ -239,9 +230,9 @@ describe("Taiwan datetime() validator", () => {
 
   describe("temporal validation", () => {
     it("should validate past dates", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        mustBePast: true
+        mustBePast: true,
       })
 
       const pastDate = dayjs().subtract(1, "day").format("YYYY-MM-DD HH:mm")
@@ -252,9 +243,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate future dates", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        mustBeFuture: true
+        mustBeFuture: true,
       })
 
       const pastDate = dayjs().subtract(1, "day").format("YYYY-MM-DD HH:mm")
@@ -265,9 +256,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate today", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        mustBeToday: true
+        mustBeToday: true,
       })
 
       const todayDate = dayjs().format("YYYY-MM-DD") + " 14:30"
@@ -278,14 +269,14 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate weekdays and weekends", () => {
-      const weekdaySchema = datetime({
+      const weekdaySchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        weekdaysOnly: true
+        weekdaysOnly: true,
       })
 
-      const weekendSchema = datetime({
+      const weekendSchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        weekendsOnly: true
+        weekendsOnly: true,
       })
 
       // Find a Monday and a Saturday
@@ -302,20 +293,20 @@ describe("Taiwan datetime() validator", () => {
 
   describe("timezone support", () => {
     it("should handle timezone parsing", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        timezone: "Asia/Taipei"
+        timezone: "Asia/Taipei",
       })
 
       expect(schema.parse("2024-03-15 14:30")).toBe("2024-03-15 14:30")
     })
 
     it("should validate with timezone-aware ranges", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         timezone: "Asia/Taipei",
         min: "2024-03-15 09:00",
-        max: "2024-03-15 17:00"
+        max: "2024-03-15 17:00",
       })
 
       expect(schema.parse("2024-03-15 12:30")).toBe("2024-03-15 12:30")
@@ -325,28 +316,28 @@ describe("Taiwan datetime() validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        transform: (val) => val.replace(/\//g, "-")
+        transform: (val) => val.replace(/\//g, "-"),
       })
 
       expect(schema.parse("2024/03/15 14:30")).toBe("2024-03-15 14:30")
     })
 
     it("should apply transform before validation", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        transform: (val) => val.replace(/T/g, " ").replace(/Z$/, "")
+        transform: (val) => val.replace(/T/g, " ").replace(/Z$/, ""),
       })
 
       expect(schema.parse("2024-03-15T14:30Z")).toBe("2024-03-15 14:30")
     })
 
     it("should work with whitelist after transform", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         whitelist: ["NOW", "2024-03-15 14:30"],
-        transform: (val) => val.toUpperCase()
+        transform: (val) => val.toUpperCase(),
       })
 
       expect(schema.parse("now")).toBe("NOW")
@@ -356,31 +347,31 @@ describe("Taiwan datetime() validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion", () => {
-      const schema = datetime({ format: "UNIX" })
+      const schema = datetime(true, { format: "UNIX" })
 
       // Test string conversion of numbers
       expect(schema.parse(1710508245)).toBe("1710508245")
     })
 
     it("should trim whitespace", () => {
-      const schema = datetime({ format: "YYYY-MM-DD HH:mm" })
+      const schema = datetime(true, { format: "YYYY-MM-DD HH:mm" })
 
       expect(schema.parse("  2024-03-15 14:30  ")).toBe("2024-03-15 14:30")
       expect(schema.parse("\t2024-03-15 09:15\n")).toBe("2024-03-15 09:15")
     })
 
     it("should handle different trim modes", () => {
-      const trimStartSchema = datetime({
+      const trimStartSchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        trimMode: "trimStart"
+        trimMode: "trimStart",
       })
-      const trimEndSchema = datetime({
+      const trimEndSchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        trimMode: "trimEnd"
+        trimMode: "trimEnd",
       })
-      const noTrimSchema = datetime({
+      const noTrimSchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        trimMode: "none"
+        trimMode: "none",
       })
 
       expect(trimStartSchema.parse("  2024-03-15 14:30  ")).toBe("2024-03-15 14:30  ")
@@ -389,10 +380,10 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should handle case transformations", () => {
-      const upperSchema = datetime({
+      const upperSchema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         whitelist: ["NOW", "TOMORROW"],
-        casing: "upper"
+        casing: "upper",
       })
 
       expect(upperSchema.parse("now")).toBe("NOW")
@@ -402,8 +393,8 @@ describe("Taiwan datetime() validator", () => {
 
   describe("custom regex validation", () => {
     it("should use custom regex instead of format validation", () => {
-      const schema = datetime({
-        regex: /^(morning|afternoon|evening|night)$/
+      const schema = datetime(true, {
+        regex: /^(morning|afternoon|evening|night)$/,
       })
 
       expect(schema.parse("morning")).toBe("morning")
@@ -412,9 +403,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should skip datetime parsing with custom regex", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         regex: /^(now|later|asap)$/,
-        mustBePast: true // This should be ignored when using regex
+        mustBePast: true, // This should be ignored when using regex
       })
 
       expect(schema.parse("now")).toBe("now")
@@ -425,9 +416,9 @@ describe("Taiwan datetime() validator", () => {
 
   describe("includes/excludes validation", () => {
     it("should validate includes", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        includes: "2024"
+        includes: "2024",
       })
 
       expect(schema.parse("2024-03-15 14:30")).toBe("2024-03-15 14:30")
@@ -435,9 +426,9 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate excludes", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         regex: /^[\d\-\s:test]+$/, // Custom regex to allow "test" in the string
-        excludes: ["test", "invalid"]
+        excludes: ["test", "invalid"],
       })
 
       expect(schema.parse("2024-03-15 14:30")).toBe("2024-03-15 14:30")
@@ -513,13 +504,13 @@ describe("Taiwan datetime() validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      expect(() => datetime().parse("")).toThrow("Required")
-      expect(() => datetime().parse("invalid")).toThrow("Must be in YYYY-MM-DD HH:mm format")
+      expect(() => datetime(true).parse("")).toThrow("Required")
+      expect(() => datetime(true).parse("invalid")).toThrow("Must be in YYYY-MM-DD HH:mm format")
     })
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = datetime({ format: "YYYY-MM-DD HH:mm" })
+      const schema = datetime(true, { format: "YYYY-MM-DD HH:mm" })
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("invalid")).toThrow("必須為 YYYY-MM-DD HH:mm 格式")
@@ -527,28 +518,28 @@ describe("Taiwan datetime() validator", () => {
 
     it("should support whitelist error messages", () => {
       setLocale("en")
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         whitelist: ["now"],
-        whitelistOnly: true
+        whitelistOnly: true,
       })
 
       expect(() => schema.parse("2024-03-15 14:30")).toThrow("DateTime is not in the allowed list")
     })
 
     it("should support custom i18n messages", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         i18n: {
           en: {
             required: "DateTime is required",
-            invalid: "Invalid datetime value"
+            invalid: "Invalid datetime value",
           },
           "zh-TW": {
             required: "請輸入日期時間",
-            invalid: "無效的日期時間值"
-          }
-        }
+            invalid: "無效的日期時間值",
+          },
+        },
       })
 
       setLocale("en")
@@ -559,18 +550,18 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should support custom whitelist messages", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         whitelist: ["now"],
         whitelistOnly: true,
         i18n: {
           en: {
-            notInWhitelist: "This datetime is not allowed"
+            notInWhitelist: "This datetime is not allowed",
           },
           "zh-TW": {
-            notInWhitelist: "此日期時間不被允許"
-          }
-        }
+            notInWhitelist: "此日期時間不被允許",
+          },
+        },
       })
 
       setLocale("en")
@@ -583,12 +574,12 @@ describe("Taiwan datetime() validator", () => {
 
   describe("real world datetime scenarios", () => {
     it("should validate business hours", () => {
-      const businessHours = datetime({
+      const businessHours = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         minHour: 9,
         maxHour: 17,
         weekdaysOnly: true,
-        minuteStep: 30
+        minuteStep: 30,
       })
 
       expect(businessHours.parse("2024-03-18 09:00")).toBe("2024-03-18 09:00") // Monday
@@ -599,11 +590,11 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should validate appointment slots", () => {
-      const appointmentSlots = datetime({
+      const appointmentSlots = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         allowedHours: [9, 10, 11, 14, 15, 16],
         minuteStep: 30,
-        weekdaysOnly: true
+        weekdaysOnly: true,
       })
 
       expect(appointmentSlots.parse("2024-03-18 09:00")).toBe("2024-03-18 09:00")
@@ -614,11 +605,7 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should handle flexible datetime input", () => {
-      const flexibleDateTime = datetime({
-        format: "YYYY-MM-DD HH:mm",
-        whitelist: ["now", "tomorrow", "next week", "asap"],
-        required: false
-      })
+      const flexibleDateTime = datetime(false, { format: "YYYY-MM-DD HH:mm", whitelist: ["now", "tomorrow", "next week", "asap"] })
 
       expect(flexibleDateTime.parse("now")).toBe("now")
       expect(flexibleDateTime.parse("2024-03-15 14:30")).toBe("2024-03-15 14:30")
@@ -629,15 +616,15 @@ describe("Taiwan datetime() validator", () => {
 
   describe("edge cases", () => {
     it("should handle various input types", () => {
-      const schema = datetime({ format: "UNIX" })
+      const schema = datetime(true, { format: "UNIX" })
 
       expect(schema.parse("1710508245")).toBe("1710508245")
       expect(schema.parse(1710508245)).toBe("1710508245")
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const requiredSchema = datetime({ format: "YYYY-MM-DD HH:mm", required: true })
-      const optionalSchema = datetime({ format: "YYYY-MM-DD HH:mm", required: false })
+      const requiredSchema = datetime(true, { format: "YYYY-MM-DD HH:mm" })
+      const optionalSchema = datetime(false, { format: "YYYY-MM-DD HH:mm" })
 
       expect(() => requiredSchema.parse("")).toThrow("Required")
       expect(() => requiredSchema.parse("   ")).toThrow("Required")
@@ -647,21 +634,16 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should preserve valid format after transformation", () => {
-      const schema = datetime({
+      const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
-        transform: (val) => val.replace(/[^0-9:\-\s]/g, "")
+        transform: (val) => val.replace(/[^0-9:\-\s]/g, ""),
       })
 
       expect(schema.parse("2024abc-03def-15 14:30")).toBe("2024-03-15 14:30")
     })
 
     it("should work with complex whitelist scenarios", () => {
-      const schema = datetime({
-        format: "YYYY-MM-DD HH:mm",
-        whitelist: ["2024-03-15 14:30", "TBD", "flexible", ""],
-        whitelistOnly: true,
-        required: false
-      })
+      const schema = datetime(false, { format: "YYYY-MM-DD HH:mm", whitelist: ["2024-03-15 14:30", "TBD", "flexible", ""], whitelistOnly: true })
 
       // Whitelist scenarios
       expect(schema.parse("2024-03-15 14:30")).toBe("2024-03-15 14:30")
@@ -674,8 +656,8 @@ describe("Taiwan datetime() validator", () => {
     })
 
     it("should handle boundary cases for different formats", () => {
-      const schema24 = datetime({ format: "YYYY-MM-DD HH:mm" })
-      const schema12 = datetime({ format: "YYYY-MM-DD hh:mm A" })
+      const schema24 = datetime(true, { format: "YYYY-MM-DD HH:mm" })
+      const schema12 = datetime(true, { format: "YYYY-MM-DD hh:mm A" })
 
       // Valid boundary cases
       expect(schema24.parse("2024-01-01 00:00")).toBe("2024-01-01 00:00")

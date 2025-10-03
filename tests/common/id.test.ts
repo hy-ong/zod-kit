@@ -51,43 +51,13 @@ const locales = [
 // Valid test IDs for different formats
 const validIds = {
   numeric: ["1", "123", "999999", "0"],
-  uuid: [
-    "550e8400-e29b-41d4-a716-446655440000",
-    "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-    "f47ac10b-58cc-4372-a567-0e02b2c3d479"
-  ],
-  objectId: [
-    "507f1f77bcf86cd799439011",
-    "507f191e810c19729de860ea",
-    "5a9427648b0beebeb69579cc"
-  ],
-  nanoid: [
-    "V1StGXR8_Z5jdHi6B-myT",
-    "3IBBoOd_b1YSlnKdvQ8fK",
-    "9_xnJ2QZt8vKl3_Kj5f7N"
-  ],
-  snowflake: [
-    "1234567890123456789",
-    "9876543210987654321",
-    "5555555555555555555"
-  ],
-  cuid: [
-    "cjld2cjxh0000qzrmn831i7rn",
-    "ckfr9f3rm0000jo082qvo1234",
-    "cl9ebqhxs000109kygp36rup2"
-  ],
-  ulid: [
-    "01BX5ZZKBKACTAV9WEVGEMMVRY",
-    "01F4A9WRNHXQM6WR0P9T2XKZG4",
-    "01GFQJ8KWT7M9QZRV4S3N2P8X5"
-  ],
-  shortid: [
-    "S1x8U-213",
-    "B1Ox_-hV2",
-    "rkH-OgHfr",
-    "H1f_-OxBf",
-    "_rJfOgSGr"
-  ]
+  uuid: ["550e8400-e29b-41d4-a716-446655440000", "6ba7b810-9dad-11d1-80b4-00c04fd430c8", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+  objectId: ["507f1f77bcf86cd799439011", "507f191e810c19729de860ea", "5a9427648b0beebeb69579cc"],
+  nanoid: ["V1StGXR8_Z5jdHi6B-myT", "3IBBoOd_b1YSlnKdvQ8fK", "9_xnJ2QZt8vKl3_Kj5f7N"],
+  snowflake: ["1234567890123456789", "9876543210987654321", "5555555555555555555"],
+  cuid: ["cjld2cjxh0000qzrmn831i7rn", "ckfr9f3rm0000jo082qvo1234", "cl9ebqhxs000109kygp36rup2"],
+  ulid: ["01BX5ZZKBKACTAV9WEVGEMMVRY", "01F4A9WRNHXQM6WR0P9T2XKZG4", "01GFQJ8KWT7M9QZRV4S3N2P8X5"],
+  shortid: ["S1x8U-213", "B1Ox_-hV2", "rkH-OgHfr", "H1f_-OxBf", "_rJfOgSGr"],
 } as const
 
 // Invalid test IDs for different formats
@@ -98,66 +68,66 @@ const invalidIds = {
     "550e8400-e29b-41d4-a716-44665544000g", // too long
     "550e8400-e29b-61d4-a716-446655440000", // wrong version (6 instead of 1-5)
     "550e8400-e29b-41d4-c716-446655440000", // wrong variant (c instead of 8,9,a,b)
-    "not-a-uuid-at-all"
+    "not-a-uuid-at-all",
   ],
   objectId: [
     "507f1f77bcf86cd79943901", // too short
     "507f1f77bcf86cd799439011g", // invalid character
-    "507f1f77bcf86cd799439011aa" // too long
+    "507f1f77bcf86cd799439011aa", // too long
   ],
   nanoid: [
     "V1StGXR8_Z5jdHi6B-myT_", // too long
     "V1StGXR8_Z5jdHi6B-my", // too short
-    "V1StGXR8_Z5jdHi6B-my&" // invalid character
+    "V1StGXR8_Z5jdHi6B-my&", // invalid character
   ],
   snowflake: [
     "123456789012345678", // too short
     "12345678901234567890", // too long
-    "123456789012345678a" // invalid character
+    "123456789012345678a", // invalid character
   ],
   cuid: [
     "jld2cjxh0000qzrmn831i7rn", // missing 'c' prefix
     "cjld2cjxh0000qzrmn831i7rn_", // too long
-    "cjld2cjxh0000qzrmn831i7r" // too short
+    "cjld2cjxh0000qzrmn831i7r", // too short
   ],
   ulid: [
     "01BX5ZZKBKACTAV9WEVGEMMVR", // too short
     "01BX5ZZKBKACTAV9WEVGEMMVRYX", // too long
-    "01BX5ZZKBKACTAV9WEVGEMMVO" // invalid character 'O'
+    "01BX5ZZKBKACTAV9WEVGEMMVO", // invalid character 'O'
   ],
   shortid: [
     "S1x8U-", // too short
     "S1x8U-213-very-long", // too long
-    "S1x8U-213+" // invalid character
-  ]
+    "S1x8U-213+", // invalid character
+  ],
 } as const
 
-describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
+describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
   beforeEach(() => setLocale(locale as Locale))
 
   describe("basic functionality", () => {
     it("should pass with valid ID", () => {
-      const schema = id()
+      const schema = id(true)
       expect(schema.parse("123")).toBe("123")
       expect(schema.parse("550e8400-e29b-41d4-a716-446655440000")).toBe("550e8400-e29b-41d4-a716-446655440000")
     })
 
     it("should fail with empty string when required", () => {
-      const schema = id()
+      const schema = id(true)
       expect(() => schema.parse("")).toThrow(messages.required)
       expect(() => schema.parse(null)).toThrow(messages.required)
       expect(() => schema.parse(undefined)).toThrow(messages.required)
     })
 
     it("should pass with null when not required", () => {
-      const schema = id({ required: false })
+      const schema = id(false)
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse(undefined)).toBe(null)
     })
 
     it("should handle default values", () => {
-      const schema = id({ required: false, defaultValue: "123" })
+      const schema = id(false, { defaultValue: "123" })
       expect(schema.parse("")).toBe("123")
       expect(schema.parse(null)).toBe("123")
       expect(schema.parse(undefined)).toBe("123")
@@ -165,24 +135,24 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should apply transform function", () => {
-      const schema = id({ type: "numeric", transform: (val) => val.toUpperCase() })
+      const schema = id(true, { type: "numeric", transform: (val) => val.toUpperCase() })
       expect(schema.parse("123")).toBe("123")
     })
   })
 
   describe("length validation", () => {
     it("should fail with string shorter than minLength", () => {
-      const schema = id({ minLength: 5 })
+      const schema = id(true, { minLength: 5 })
       expect(() => schema.parse("123")).toThrow(messages.minLength)
     })
 
     it("should fail with string longer than maxLength", () => {
-      const schema = id({ maxLength: 10 })
+      const schema = id(true, { maxLength: 10 })
       expect(() => schema.parse("12345678901")).toThrow(messages.maxLength)
     })
 
     it("should pass with valid length", () => {
-      const schema = id({ minLength: 3, maxLength: 10 })
+      const schema = id(true, { minLength: 3, maxLength: 10 })
       expect(schema.parse("12345")).toBe("12345")
     })
   })
@@ -190,15 +160,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
   describe("ID type validation", () => {
     describe("numeric IDs", () => {
       it("should accept valid numeric IDs", () => {
-        const schema = id({ type: "numeric" })
-        validIds.numeric.forEach(validId => {
+        const schema = id(true, { type: "numeric" })
+        validIds.numeric.forEach((validId) => {
           expect(schema.parse(validId)).toBe(validId)
         })
       })
 
       it("should reject invalid numeric IDs", () => {
-        const schema = id({ type: "numeric" })
-        invalidIds.numeric.forEach(invalidId => {
+        const schema = id(true, { type: "numeric" })
+        invalidIds.numeric.forEach((invalidId) => {
           expect(() => schema.parse(invalidId)).toThrow()
         })
       })
@@ -206,15 +176,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("UUID validation", () => {
       it("should accept valid UUIDs", () => {
-        const schema = id({ type: "uuid" })
-        validIds.uuid.forEach(validUuid => {
+        const schema = id(true, { type: "uuid" })
+        validIds.uuid.forEach((validUuid) => {
           expect(schema.parse(validUuid)).toBe(validUuid)
         })
       })
 
       it("should reject invalid UUIDs", () => {
-        const schema = id({ type: "uuid" })
-        invalidIds.uuid.forEach(invalidUuid => {
+        const schema = id(true, { type: "uuid" })
+        invalidIds.uuid.forEach((invalidUuid) => {
           expect(() => schema.parse(invalidUuid)).toThrow(messages.uuid)
         })
       })
@@ -222,15 +192,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("ObjectId validation", () => {
       it("should accept valid ObjectIds", () => {
-        const schema = id({ type: "objectId" })
-        validIds.objectId.forEach(validObjectId => {
+        const schema = id(true, { type: "objectId" })
+        validIds.objectId.forEach((validObjectId) => {
           expect(schema.parse(validObjectId)).toBe(validObjectId)
         })
       })
 
       it("should reject invalid ObjectIds", () => {
-        const schema = id({ type: "objectId" })
-        invalidIds.objectId.forEach(invalidObjectId => {
+        const schema = id(true, { type: "objectId" })
+        invalidIds.objectId.forEach((invalidObjectId) => {
           expect(() => schema.parse(invalidObjectId)).toThrow(messages.objectId)
         })
       })
@@ -238,15 +208,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("Nanoid validation", () => {
       it("should accept valid Nanoids", () => {
-        const schema = id({ type: "nanoid" })
-        validIds.nanoid.forEach(validNanoid => {
+        const schema = id(true, { type: "nanoid" })
+        validIds.nanoid.forEach((validNanoid) => {
           expect(schema.parse(validNanoid)).toBe(validNanoid)
         })
       })
 
       it("should reject invalid Nanoids", () => {
-        const schema = id({ type: "nanoid" })
-        invalidIds.nanoid.forEach(invalidNanoid => {
+        const schema = id(true, { type: "nanoid" })
+        invalidIds.nanoid.forEach((invalidNanoid) => {
           expect(() => schema.parse(invalidNanoid)).toThrow(messages.nanoid)
         })
       })
@@ -254,15 +224,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("Snowflake validation", () => {
       it("should accept valid Snowflake IDs", () => {
-        const schema = id({ type: "snowflake" })
-        validIds.snowflake.forEach(validSnowflake => {
+        const schema = id(true, { type: "snowflake" })
+        validIds.snowflake.forEach((validSnowflake) => {
           expect(schema.parse(validSnowflake)).toBe(validSnowflake)
         })
       })
 
       it("should reject invalid Snowflake IDs", () => {
-        const schema = id({ type: "snowflake" })
-        invalidIds.snowflake.forEach(invalidSnowflake => {
+        const schema = id(true, { type: "snowflake" })
+        invalidIds.snowflake.forEach((invalidSnowflake) => {
           expect(() => schema.parse(invalidSnowflake)).toThrow(messages.snowflake)
         })
       })
@@ -270,15 +240,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("CUID validation", () => {
       it("should accept valid CUIDs", () => {
-        const schema = id({ type: "cuid" })
-        validIds.cuid.forEach(validCuid => {
+        const schema = id(true, { type: "cuid" })
+        validIds.cuid.forEach((validCuid) => {
           expect(schema.parse(validCuid)).toBe(validCuid)
         })
       })
 
       it("should reject invalid CUIDs", () => {
-        const schema = id({ type: "cuid" })
-        invalidIds.cuid.forEach(invalidCuid => {
+        const schema = id(true, { type: "cuid" })
+        invalidIds.cuid.forEach((invalidCuid) => {
           expect(() => schema.parse(invalidCuid)).toThrow(messages.cuid)
         })
       })
@@ -286,15 +256,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("ULID validation", () => {
       it("should accept valid ULIDs", () => {
-        const schema = id({ type: "ulid" })
-        validIds.ulid.forEach(validUlid => {
+        const schema = id(true, { type: "ulid" })
+        validIds.ulid.forEach((validUlid) => {
           expect(schema.parse(validUlid)).toBe(validUlid)
         })
       })
 
       it("should reject invalid ULIDs", () => {
-        const schema = id({ type: "ulid" })
-        invalidIds.ulid.forEach(invalidUlid => {
+        const schema = id(true, { type: "ulid" })
+        invalidIds.ulid.forEach((invalidUlid) => {
           expect(() => schema.parse(invalidUlid)).toThrow(messages.ulid)
         })
       })
@@ -302,15 +272,15 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("ShortId validation", () => {
       it("should accept valid ShortIds", () => {
-        const schema = id({ type: "shortid" })
-        validIds.shortid.forEach(validShortid => {
+        const schema = id(true, { type: "shortid" })
+        validIds.shortid.forEach((validShortid) => {
           expect(schema.parse(validShortid)).toBe(validShortid)
         })
       })
 
       it("should reject invalid ShortIds", () => {
-        const schema = id({ type: "shortid" })
-        invalidIds.shortid.forEach(invalidShortid => {
+        const schema = id(true, { type: "shortid" })
+        invalidIds.shortid.forEach((invalidShortid) => {
           expect(() => schema.parse(invalidShortid)).toThrow(messages.shortid)
         })
       })
@@ -318,15 +288,17 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("auto detection", () => {
       it("should accept any valid ID format when type is auto", () => {
-        const schema = id({ type: "auto" })
+        const schema = id(true, { type: "auto" })
 
-        Object.values(validIds).flat().forEach(validId => {
-          expect(schema.parse(validId)).toBe(validId)
-        })
+        Object.values(validIds)
+          .flat()
+          .forEach((validId) => {
+            expect(schema.parse(validId)).toBe(validId)
+          })
       })
 
       it("should reject invalid ID formats when type is auto", () => {
-        const schema = id({ type: "auto" })
+        const schema = id(true, { type: "auto" })
 
         expect(() => schema.parse("bad-id")).toThrow(messages.invalid)
         expect(() => schema.parse("abc")).toThrow(messages.invalid)
@@ -336,14 +308,14 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
     describe("allowedTypes", () => {
       it("should accept IDs that match any allowed type", () => {
-        const schema = id({ allowedTypes: ["numeric", "uuid"] })
+        const schema = id(true, { allowedTypes: ["numeric", "uuid"] })
 
         expect(schema.parse("123")).toBe("123")
         expect(schema.parse("550e8400-e29b-41d4-a716-446655440000")).toBe("550e8400-e29b-41d4-a716-446655440000")
       })
 
       it("should reject IDs that don't match allowed types", () => {
-        const schema = id({ allowedTypes: ["numeric", "uuid"] })
+        const schema = id(true, { allowedTypes: ["numeric", "uuid"] })
 
         expect(() => schema.parse("507f1f77bcf86cd799439011")).toThrow() // ObjectId
         expect(() => schema.parse("V1StGXR8_Z5jdHi6B-myT")).toThrow() // Nanoid
@@ -353,38 +325,38 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
   describe("content validation", () => {
     it("should enforce includes requirement", () => {
-      const schema = id({ includes: "test" })
+      const schema = id(true, { includes: "test" })
       expect(() => schema.parse("123")).toThrow(messages.includes)
       expect(schema.parse("test123")).toBe("test123")
     })
 
     it("should enforce excludes requirement with string", () => {
-      const schema = id({ excludes: "bad" })
+      const schema = id(true, { excludes: "bad" })
       expect(() => schema.parse("bad123")).toThrow(messages.excludes)
       expect(schema.parse("good123")).toBe("good123")
     })
 
     it("should enforce excludes requirement with array", () => {
-      const schema = id({ excludes: ["bad", "evil"] })
+      const schema = id(true, { excludes: ["bad", "evil"] })
       expect(() => schema.parse("bad123")).toThrow()
       expect(() => schema.parse("evil123")).toThrow()
       expect(schema.parse("good123")).toBe("good123")
     })
 
     it("should enforce startsWith requirement", () => {
-      const schema = id({ startsWith: "id" })
+      const schema = id(true, { startsWith: "id" })
       expect(() => schema.parse("123")).toThrow(messages.startsWith)
       expect(schema.parse("id123")).toBe("id123")
     })
 
     it("should enforce endsWith requirement", () => {
-      const schema = id({ endsWith: "_end" })
+      const schema = id(true, { endsWith: "_end" })
       expect(() => schema.parse("123")).toThrow(messages.endsWith)
       expect(schema.parse("123_end")).toBe("123_end")
     })
 
     it("should enforce custom regex requirement", () => {
-      const schema = id({ customRegex: /^[A-Z]{2}\d{4}$/ })
+      const schema = id(true, { customRegex: /^[A-Z]{2}\d{4}$/ })
       expect(() => schema.parse("ab1234")).toThrow(messages.customFormat)
       expect(() => schema.parse("AB123")).toThrow(messages.customFormat)
       expect(schema.parse("AB1234")).toBe("AB1234")
@@ -393,19 +365,19 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
   describe("case sensitivity", () => {
     it("should be case sensitive by default", () => {
-      const schema = id({ startsWith: "ID" })
+      const schema = id(true, { startsWith: "ID" })
       expect(() => schema.parse("id123")).toThrow()
       expect(schema.parse("ID123")).toBe("ID123")
     })
 
     it("should be case insensitive when configured", () => {
-      const schema = id({ startsWith: "id", caseSensitive: false })
+      const schema = id(true, { startsWith: "id", caseSensitive: false })
       expect(schema.parse("id123")).toBe("id123")
       expect(schema.parse("ID123")).toBe("id123") // transformed to lowercase
     })
 
     it("should preserve case for UUID and ObjectId even when case insensitive", () => {
-      const schema = id({ type: "uuid", caseSensitive: false })
+      const schema = id(true, { type: "uuid", caseSensitive: false })
       const uuid = "550E8400-E29B-41D4-A716-446655440000"
       expect(schema.parse(uuid)).toBe(uuid) // case preserved for UUID
     })
@@ -426,7 +398,7 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
         },
       }
 
-      const schema = id({
+      const schema = id(true, {
         type: "numeric",
         i18n: customMessages,
       })
@@ -446,7 +418,7 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
         "zh-TW": { required: "自訂必填訊息" },
       }
 
-      const schema = id({
+      const schema = id(true, {
         type: "numeric",
         i18n: customMessages,
       })
@@ -463,7 +435,7 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
 
   describe("complex scenarios", () => {
     it("should handle all features combined", () => {
-      const schema = id({
+      const schema = id(true, {
         type: "uuid",
         minLength: 30,
         maxLength: 50,
@@ -483,12 +455,7 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should work with optional ID and all features", () => {
-      const schema = id({
-        required: false,
-        type: "numeric",
-        minLength: 3,
-        maxLength: 10,
-      })
+      const schema = id(false, { type: "numeric", minLength: 3, maxLength: 10 })
 
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse("")).toBe(null)
@@ -498,7 +465,7 @@ describe.each(locales)("id() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should handle multiple allowed types with constraints", () => {
-      const schema = id({
+      const schema = id(true, {
         allowedTypes: ["uuid", "objectId"],
         includes: "4",
         minLength: 20,

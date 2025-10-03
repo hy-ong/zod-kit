@@ -53,7 +53,6 @@ export type NationalIdType =
  * @property {Record<Locale, NationalIdMessages>} [i18n] - Custom error messages for different locales
  */
 export type NationalIdOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   type?: NationalIdType
   allowOldResident?: boolean
   transform?: (value: string) => string
@@ -295,12 +294,12 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * anyIdSchema.parse("AA12345678") // ✓ Valid old resident ID
  *
  * // Citizen IDs only
- * const citizenSchema = nationalId({ type: "citizen" })
+ * const citizenSchema = nationalId(false, { type: "citizen" })
  * citizenSchema.parse("A123456789") // ✓ Valid
  * citizenSchema.parse("A812345678") // ✗ Invalid (resident ID)
  *
  * // Resident IDs only (new format only)
- * const residentSchema = nationalId({
+ * const residentSchema = nationalId(false, {
  *   type: "resident",
  *   allowOldResident: false
  * })
@@ -308,13 +307,12 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * residentSchema.parse("AA12345678") // ✗ Invalid (old format)
  *
  * // Optional with custom transformation
- * const optionalSchema = nationalId({
- *   required: false,
+ * const optionalSchema = nationalId(false, {
  *   transform: (value) => value.replace(/[^A-Z0-9]/g, '') // Remove special chars
  * })
  *
  * // With custom error messages
- * const customSchema = nationalId({
+ * const customSchema = nationalId(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan National ID" },
  *     'zh-TW': { invalid: "請輸入有效的身分證或居留證號碼" }
@@ -327,9 +325,8 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * @see {@link NationalIdType} for supported ID types
  * @see {@link validateTaiwanNationalId} for validation logic details
  */
-export function nationalId<IsRequired extends boolean = true>(options?: NationalIdOptions<IsRequired>): NationalIdSchema<IsRequired> {
+export function nationalId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<NationalIdOptions<IsRequired>, 'required'>): NationalIdSchema<IsRequired> {
   const {
-    required = true,
     type = "both",
     allowOldResident = true,
     transform,
@@ -337,8 +334,10 @@ export function nationalId<IsRequired extends boolean = true>(options?: National
     i18n
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof NationalIdMessages, params?: Record<string, any>) => {
@@ -373,18 +372,18 @@ export function nationalId<IsRequired extends boolean = true>(options?: National
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Taiwan National ID validation
     if (!validateTaiwanNationalId(val, type, allowOldResident)) {

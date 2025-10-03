@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { file, setLocale } from "../../src"
 
-describe("file() features", () => {
+describe("file(true) features", () => {
   beforeEach(() => setLocale("en"))
 
   // Helper function to create mock files for testing
@@ -12,11 +12,11 @@ describe("file() features", () => {
     const file = new File([blob], name, { type })
 
     // Mock the size property since File constructor doesn't always set the exact size
-    Object.defineProperty(file, 'size', {
+    Object.defineProperty(file, "size", {
       value: size,
       writable: false,
       enumerable: true,
-      configurable: false
+      configurable: false,
     })
 
     return file
@@ -24,27 +24,27 @@ describe("file() features", () => {
 
   describe("basic file validation", () => {
     it("should accept valid File objects", () => {
-      const schema = file()
+      const schema = file(true)
       const mockFile = createMockFile("test.txt", 1024, "text/plain")
       expect(schema.parse(mockFile)).toBe(mockFile)
     })
 
     it("should reject non-File objects", () => {
-      const schema = file()
+      const schema = file(true)
       expect(() => schema.parse("not a file")).toThrow()
       expect(() => schema.parse(123)).toThrow()
       expect(() => schema.parse({})).toThrow()
     })
 
     it("should handle required validation", () => {
-      const schema = file()
+      const schema = file(true)
       expect(() => schema.parse(null)).toThrow("Required")
       expect(() => schema.parse(undefined)).toThrow("Required")
       expect(() => schema.parse("")).toThrow("Required")
     })
 
     it("should allow null when not required", () => {
-      const schema = file({ required: false })
+      const schema = file(false)
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse(undefined)).toBe(null)
       expect(schema.parse("")).toBe(null)
@@ -53,7 +53,7 @@ describe("file() features", () => {
 
   describe("file size validation", () => {
     it("should validate maximum file size", () => {
-      const schema = file({ maxSize: 1024 }) // 1KB
+      const schema = file(true, { maxSize: 1024 }) // 1KB
       const smallFile = createMockFile("small.txt", 512, "text/plain")
       const largeFile = createMockFile("large.txt", 2048, "text/plain")
 
@@ -62,7 +62,7 @@ describe("file() features", () => {
     })
 
     it("should validate minimum file size", () => {
-      const schema = file({ minSize: 1024 }) // 1KB
+      const schema = file(true, { minSize: 1024 }) // 1KB
       const smallFile = createMockFile("small.txt", 512, "text/plain")
       const largeFile = createMockFile("large.txt", 2048, "text/plain")
 
@@ -71,7 +71,7 @@ describe("file() features", () => {
     })
 
     it("should validate both min and max size", () => {
-      const schema = file({ minSize: 1024, maxSize: 4096 }) // 1KB - 4KB
+      const schema = file(true, { minSize: 1024, maxSize: 4096 }) // 1KB - 4KB
       const tooSmall = createMockFile("small.txt", 512, "text/plain")
       const justRight = createMockFile("medium.txt", 2048, "text/plain")
       const tooLarge = createMockFile("large.txt", 8192, "text/plain")
@@ -84,7 +84,7 @@ describe("file() features", () => {
 
   describe("file type validation", () => {
     it("should accept allowed MIME types", () => {
-      const schema = file({ type: "text/plain" })
+      const schema = file(true, { type: "text/plain" })
       const textFile = createMockFile("test.txt", 1024, "text/plain")
       const imageFile = createMockFile("test.jpg", 1024, "image/jpeg")
 
@@ -93,7 +93,7 @@ describe("file() features", () => {
     })
 
     it("should accept multiple allowed MIME types", () => {
-      const schema = file({ type: ["text/plain", "image/jpeg", "application/pdf"] })
+      const schema = file(true, { type: ["text/plain", "image/jpeg", "application/pdf"] })
       const textFile = createMockFile("test.txt", 1024, "text/plain")
       const imageFile = createMockFile("test.jpg", 1024, "image/jpeg")
       const pdfFile = createMockFile("test.pdf", 1024, "application/pdf")
@@ -106,7 +106,7 @@ describe("file() features", () => {
     })
 
     it("should reject blacklisted MIME types", () => {
-      const schema = file({ typeBlacklist: ["application/x-executable", "application/x-virus"] })
+      const schema = file(true, { typeBlacklist: ["application/x-executable", "application/x-virus"] })
       const textFile = createMockFile("test.txt", 1024, "text/plain")
       const exeFile = createMockFile("test.exe", 1024, "application/x-executable")
 
@@ -117,7 +117,7 @@ describe("file() features", () => {
 
   describe("file extension validation", () => {
     it("should validate single file extension", () => {
-      const schema = file({ extension: ".txt" })
+      const schema = file(true, { extension: ".txt" })
       const txtFile = createMockFile("test.txt", 1024, "text/plain")
       const jpgFile = createMockFile("test.jpg", 1024, "image/jpeg")
 
@@ -126,7 +126,7 @@ describe("file() features", () => {
     })
 
     it("should validate multiple file extensions", () => {
-      const schema = file({ extension: [".txt", ".pdf", ".doc"] })
+      const schema = file(true, { extension: [".txt", ".pdf", ".doc"] })
       const txtFile = createMockFile("test.txt", 1024, "text/plain")
       const pdfFile = createMockFile("test.pdf", 1024, "application/pdf")
       const jpgFile = createMockFile("test.jpg", 1024, "image/jpeg")
@@ -137,7 +137,7 @@ describe("file() features", () => {
     })
 
     it("should handle extensions without dots", () => {
-      const schema = file({ extension: ["txt", "pdf"] })
+      const schema = file(true, { extension: ["txt", "pdf"] })
       const txtFile = createMockFile("test.txt", 1024, "text/plain")
       const pdfFile = createMockFile("test.pdf", 1024, "application/pdf")
 
@@ -146,7 +146,7 @@ describe("file() features", () => {
     })
 
     it("should reject blacklisted extensions", () => {
-      const schema = file({ extensionBlacklist: [".exe", ".bat", ".cmd"] })
+      const schema = file(true, { extensionBlacklist: [".exe", ".bat", ".cmd"] })
       const txtFile = createMockFile("test.txt", 1024, "text/plain")
       const exeFile = createMockFile("virus.exe", 1024, "application/x-executable")
 
@@ -155,8 +155,8 @@ describe("file() features", () => {
     })
 
     it("should handle case sensitivity", () => {
-      const caseSensitiveSchema = file({ extension: [".txt"], caseSensitive: true })
-      const caseInsensitiveSchema = file({ extension: [".txt"], caseSensitive: false })
+      const caseSensitiveSchema = file(true, { extension: [".txt"], caseSensitive: true })
+      const caseInsensitiveSchema = file(true, { extension: [".txt"], caseSensitive: false })
       const upperCaseFile = createMockFile("test.TXT", 1024, "text/plain")
 
       expect(() => caseSensitiveSchema.parse(upperCaseFile)).toThrow("File extension must be one of: .txt")
@@ -166,7 +166,7 @@ describe("file() features", () => {
 
   describe("file name validation", () => {
     it("should validate file name patterns", () => {
-      const schema = file({ namePattern: /^[a-zA-Z0-9_-]+\.(txt|pdf)$/ })
+      const schema = file(true, { namePattern: /^[a-zA-Z0-9_-]+\.(txt|pdf)$/ })
       const validFile = createMockFile("valid_file-123.txt", 1024, "text/plain")
       const invalidFile = createMockFile("invalid file!.txt", 1024, "text/plain")
 
@@ -175,7 +175,7 @@ describe("file() features", () => {
     })
 
     it("should validate file name patterns with strings", () => {
-      const schema = file({ namePattern: "^report_\\d{4}\\.pdf$" })
+      const schema = file(true, { namePattern: "^report_\\d{4}\\.pdf$" })
       const validFile = createMockFile("report_2023.pdf", 1024, "application/pdf")
       const invalidFile = createMockFile("report_abc.pdf", 1024, "application/pdf")
 
@@ -184,7 +184,7 @@ describe("file() features", () => {
     })
 
     it("should reject blacklisted name patterns", () => {
-      const schema = file({ nameBlacklist: [/temp/i, /^test/] })
+      const schema = file(true, { nameBlacklist: [/temp/i, /^test/] })
       const goodFile = createMockFile("document.pdf", 1024, "application/pdf")
       const tempFile = createMockFile("TempFile.txt", 1024, "text/plain")
       const testFile = createMockFile("test_data.csv", 1024, "text/csv")
@@ -195,7 +195,7 @@ describe("file() features", () => {
     })
 
     it("should handle multiple blacklist patterns", () => {
-      const schema = file({ nameBlacklist: ["virus", /malware/i, /\.(exe|bat)$/] })
+      const schema = file(true, { nameBlacklist: ["virus", /malware/i, /\.(exe|bat)$/] })
       const goodFile = createMockFile("document.pdf", 1024, "application/pdf")
       const virusFile = createMockFile("virus.txt", 1024, "text/plain")
       const malwareFile = createMockFile("MALWARE_test.pdf", 1024, "application/pdf")
@@ -210,7 +210,7 @@ describe("file() features", () => {
 
   describe("file category validation", () => {
     it("should validate image files only", () => {
-      const schema = file({ imageOnly: true })
+      const schema = file(true, { imageOnly: true })
       const imageFile = createMockFile("photo.jpg", 1024, "image/jpeg")
       const textFile = createMockFile("document.txt", 1024, "text/plain")
 
@@ -219,7 +219,7 @@ describe("file() features", () => {
     })
 
     it("should validate document files only", () => {
-      const schema = file({ documentOnly: true })
+      const schema = file(true, { documentOnly: true })
       const pdfFile = createMockFile("document.pdf", 1024, "application/pdf")
       const imageFile = createMockFile("photo.jpg", 1024, "image/jpeg")
 
@@ -228,7 +228,7 @@ describe("file() features", () => {
     })
 
     it("should validate video files only", () => {
-      const schema = file({ videoOnly: true })
+      const schema = file(true, { videoOnly: true })
       const videoFile = createMockFile("movie.mp4", 1024, "video/mp4")
       const audioFile = createMockFile("song.mp3", 1024, "audio/mpeg")
 
@@ -237,7 +237,7 @@ describe("file() features", () => {
     })
 
     it("should validate audio files only", () => {
-      const schema = file({ audioOnly: true })
+      const schema = file(true, { audioOnly: true })
       const audioFile = createMockFile("song.mp3", 1024, "audio/mpeg")
       const videoFile = createMockFile("movie.mp4", 1024, "video/mp4")
 
@@ -246,7 +246,7 @@ describe("file() features", () => {
     })
 
     it("should validate archive files only", () => {
-      const schema = file({ archiveOnly: true })
+      const schema = file(true, { archiveOnly: true })
       const zipFile = createMockFile("archive.zip", 1024, "application/zip")
       const textFile = createMockFile("document.txt", 1024, "text/plain")
 
@@ -257,10 +257,10 @@ describe("file() features", () => {
 
   describe("transform functionality", () => {
     it("should apply transform function", () => {
-      const schema = file({
+      const schema = file(true, {
         transform: (file) => {
           return new File([file], file.name.toLowerCase(), { type: file.type })
-        }
+        },
       })
       const originalFile = createMockFile("TEST.TXT", 1024, "text/plain")
       const result = schema.parse(originalFile)
@@ -273,7 +273,7 @@ describe("file() features", () => {
   describe("default value functionality", () => {
     it("should use defaultValue for empty input when required", () => {
       const defaultFile = createMockFile("default.txt", 1024, "text/plain")
-      const schema = file({ defaultValue: defaultFile })
+      const schema = file(true, { defaultValue: defaultFile })
 
       expect(schema.parse("")).toBe(defaultFile)
       expect(schema.parse(null)).toBe(defaultFile)
@@ -282,7 +282,7 @@ describe("file() features", () => {
 
     it("should use defaultValue for empty input when not required", () => {
       const defaultFile = createMockFile("default.txt", 1024, "text/plain")
-      const schema = file({ required: false, defaultValue: defaultFile })
+      const schema = file(false, { defaultValue: defaultFile })
 
       expect(schema.parse("")).toBe(defaultFile)
       expect(schema.parse(null)).toBe(defaultFile)
@@ -292,7 +292,7 @@ describe("file() features", () => {
 
   describe("custom i18n messages", () => {
     it("should use custom messages when provided", () => {
-      const schema = file({
+      const schema = file(true, {
         maxSize: 1024,
         extension: [".pdf"],
         imageOnly: true,
@@ -323,7 +323,7 @@ describe("file() features", () => {
     })
 
     it("should fallback to default messages when custom not provided", () => {
-      const schema = file({
+      const schema = file(true, {
         videoOnly: true,
         i18n: {
           en: {
@@ -343,7 +343,7 @@ describe("file() features", () => {
 
     it("should use correct locale for custom messages", () => {
       setLocale("en")
-      const schemaEn = file({
+      const schemaEn = file(true, {
         imageOnly: true,
         i18n: {
           en: {
@@ -358,7 +358,7 @@ describe("file() features", () => {
       expect(() => schemaEn.parse(nonImageFile)).toThrow("English image message")
 
       setLocale("zh-TW")
-      const schemaZh = file({
+      const schemaZh = file(true, {
         imageOnly: true,
         i18n: {
           en: {
@@ -375,7 +375,7 @@ describe("file() features", () => {
 
   describe("complex scenarios", () => {
     it("should work with multiple validations", () => {
-      const schema = file({
+      const schema = file(true, {
         maxSize: 5 * 1024 * 1024, // 5MB
         minSize: 1024, // 1KB
         extension: [".jpg", ".png", ".pdf"],
@@ -397,11 +397,7 @@ describe("file() features", () => {
     })
 
     it("should handle null values correctly when not required", () => {
-      const schema = file({
-        required: false,
-        maxSize: 1024,
-        extension: [".txt"],
-      })
+      const schema = file(false, { maxSize: 1024, extension: [".txt"] })
 
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse("")).toBe(null)
@@ -412,7 +408,7 @@ describe("file() features", () => {
     })
 
     it("should work with transform and all validations together", () => {
-      const schema = file({
+      const schema = file(true, {
         maxSize: 2048,
         extension: [".txt"],
         namePattern: /^[a-z0-9_-]+\.txt$/,
@@ -429,7 +425,7 @@ describe("file() features", () => {
     })
 
     it("should validate predefined file categories with specific types", () => {
-      const imageSchema = file({ imageOnly: true, extension: [".jpg", ".png"] })
+      const imageSchema = file(true, { imageOnly: true, extension: [".jpg", ".png"] })
       const jpegFile = createMockFile("photo.jpg", 1024, "image/jpeg")
       const pngFile = createMockFile("image.png", 1024, "image/png")
       const gifFile = createMockFile("animated.gif", 1024, "image/gif") // Valid image type but wrong extension
@@ -442,30 +438,30 @@ describe("file() features", () => {
 
   describe("edge cases", () => {
     it("should handle files without extensions", () => {
-      const schema = file({ extension: [".txt"] })
+      const schema = file(true, { extension: [".txt"] })
       const noExtFile = createMockFile("README", 1024, "text/plain")
 
       expect(() => schema.parse(noExtFile)).toThrow("File extension must be one of: .txt")
     })
 
     it("should handle empty file names", () => {
-      const schema = file({ namePattern: /^.+$/ }) // Must have at least one character
+      const schema = file(true, { namePattern: /^.+$/ }) // Must have at least one character
       const emptyNameFile = createMockFile("", 1024, "text/plain")
 
       expect(() => schema.parse(emptyNameFile)).toThrow("File name must match pattern")
     })
 
     it("should handle zero-sized files", () => {
-      const schema = file({ minSize: 1 })
+      const schema = file(true, { minSize: 1 })
       const emptyFile = createMockFile("empty.txt", 0, "text/plain")
 
       expect(() => schema.parse(emptyFile)).toThrow("File size must be at least 1 B")
     })
 
     it("should format file sizes correctly", () => {
-      const smallSchema = file({ maxSize: 1024 })
-      const mediumSchema = file({ maxSize: 1024 * 1024 })
-      const largeSchema = file({ maxSize: 1024 * 1024 * 1024 })
+      const smallSchema = file(true, { maxSize: 1024 })
+      const mediumSchema = file(true, { maxSize: 1024 * 1024 })
+      const largeSchema = file(true, { maxSize: 1024 * 1024 * 1024 })
 
       const tooLargeSmall = createMockFile("file.txt", 2048, "text/plain")
       const tooLargeMedium = createMockFile("file.txt", 2 * 1024 * 1024, "text/plain")

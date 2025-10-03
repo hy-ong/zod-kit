@@ -1,12 +1,21 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.0.6",
-  "description": "Zod Kit",
+  "version": "0.1.1",
+  "description": "A comprehensive TypeScript library providing pre-built Zod validation schemas with full internationalization support for common data types and Taiwan-specific formats",
   "keywords": [
-    "hy_ong",
     "zod",
-    "kit",
-    "zod-kit"
+    "validation",
+    "schema",
+    "typescript",
+    "taiwan",
+    "i18n",
+    "form-validation",
+    "email",
+    "password",
+    "phone",
+    "postal-code",
+    "national-id",
+    "business-id"
   ],
   "homepage": "https://github.com/hy-ong/zod-kit#readme",
   "bugs": {
@@ -38,6 +47,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.14",
+    "glob": "^11.0.3",
     "zod": "^4.1.4"
   },
   "devDependencies": {

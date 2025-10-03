@@ -103,7 +103,6 @@ export type IdType =
  * @property {Record<Locale, IdMessages>} [i18n] - Custom error messages for different locales
  */
 export type IdOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   type?: IdType
   minLength?: number
   maxLength?: number
@@ -217,7 +216,8 @@ const validateIdType = (value: string, type: IdType): boolean => {
  * Creates a Zod schema for ID validation with comprehensive format support
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {IdOptions<IsRequired>} [options] - Configuration options for ID validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {IdSchema<IsRequired>} Zod schema for ID validation
  *
  * @description
@@ -244,23 +244,23 @@ const validateIdType = (value: string, type: IdType): boolean => {
  * autoSchema.parse("123456") // ✓ Valid (numeric)
  *
  * // Specific ID type
- * const uuidSchema = id({ type: "uuid" })
+ * const uuidSchema = id(false, { type: "uuid" })
  * uuidSchema.parse("550e8400-e29b-41d4-a716-446655440000") // ✓ Valid
  * uuidSchema.parse("invalid-uuid") // ✗ Invalid
  *
  * // Multiple allowed types
- * const multiSchema = id({ allowedTypes: ["uuid", "objectId"] })
+ * const multiSchema = id(false, { allowedTypes: ["uuid", "objectId"] })
  * multiSchema.parse("550e8400-e29b-41d4-a716-446655440000") // ✓ Valid (UUID)
  * multiSchema.parse("507f1f77bcf86cd799439011") // ✓ Valid (ObjectId)
  * multiSchema.parse("123456") // ✗ Invalid (numeric not allowed)
  *
  * // Custom regex pattern
- * const customSchema = id({ customRegex: /^CUST_\d{6}$/ })
+ * const customSchema = id(false, { customRegex: /^CUST_\d{6}$/ })
  * customSchema.parse("CUST_123456") // ✓ Valid
  * customSchema.parse("invalid") // ✗ Invalid
  *
  * // Content validation
- * const prefixSchema = id({
+ * const prefixSchema = id(false, {
  *   type: "auto",
  *   startsWith: "user_",
  *   minLength: 10
@@ -268,15 +268,14 @@ const validateIdType = (value: string, type: IdType): boolean => {
  * prefixSchema.parse("user_123456") // ✓ Valid
  *
  * // Case insensitive
- * const caseInsensitiveSchema = id({
+ * const caseInsensitiveSchema = id(false, {
  *   type: "uuid",
  *   caseSensitive: false
  * })
  * caseInsensitiveSchema.parse("550E8400-E29B-41D4-A716-446655440000") // ✓ Valid
  *
  * // Optional with default
- * const optionalSchema = id({
- *   required: false,
+ * const optionalSchema = id(false, {
  *   defaultValue: null
  * })
  * ```
@@ -287,9 +286,8 @@ const validateIdType = (value: string, type: IdType): boolean => {
  * @see {@link detectIdType} for auto-detection logic
  * @see {@link validateIdType} for type-specific validation
  */
-export function id<IsRequired extends boolean = true>(options?: IdOptions<IsRequired>): IdSchema<IsRequired> {
+export function id<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<IdOptions<IsRequired>, 'required'>): IdSchema<IsRequired> {
   const {
-    required = true,
     type = "auto",
     minLength,
     maxLength,
@@ -305,8 +303,10 @@ export function id<IsRequired extends boolean = true>(options?: IdOptions<IsRequ
     i18n,
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof IdMessages, params?: Record<string, any>) => {
@@ -336,14 +336,14 @@ export function id<IsRequired extends boolean = true>(options?: IdOptions<IsRequ
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema
     .refine((val) => {
       if (val === null) return true
 
       // Required check
-      if (required && (val === "" || val === "null" || val === "undefined")) {
+      if (isRequired && (val === "" || val === "null" || val === "undefined")) {
         throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
       }
 

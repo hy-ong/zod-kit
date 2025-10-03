@@ -39,7 +39,6 @@ export type MobileMessages = {
  * @property {Record<Locale, MobileMessages>} [i18n] - Custom error messages for different locales
  */
 export type MobileOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
@@ -87,7 +86,8 @@ const validateTaiwanMobile = (value: string): boolean => {
  * Creates a Zod schema for Taiwan mobile phone number validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {MobileOptions<IsRequired>} [options] - Configuration options for mobile validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {MobileSchema<IsRequired>} Zod schema for mobile phone validation
  *
  * @description
@@ -106,32 +106,39 @@ const validateTaiwanMobile = (value: string): boolean => {
  * @example
  * ```typescript
  * // Basic mobile number validation
- * const basicSchema = mobile()
+ * const basicSchema = mobile() // optional by default
  * basicSchema.parse("0912345678") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("0912345678") // ✓ Valid
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  * basicSchema.parse("0987654321") // ✓ Valid
  * basicSchema.parse("0812345678") // ✗ Invalid (wrong prefix)
  *
  * // With whitelist (only specific numbers allowed)
- * const whitelistSchema = mobile({
+ * const whitelistSchema = mobile(false, {
  *   whitelist: ["0912345678", "0987654321"]
  * })
  * whitelistSchema.parse("0912345678") // ✓ Valid (in whitelist)
  * whitelistSchema.parse("0911111111") // ✗ Invalid (not in whitelist)
  *
  * // Optional mobile number
- * const optionalSchema = mobile({ required: false })
+ * const optionalSchema = mobile(false)
  * optionalSchema.parse("") // ✓ Valid (returns null)
  * optionalSchema.parse("0912345678") // ✓ Valid
  *
  * // With custom transformation
- * const transformSchema = mobile({
+ * const transformSchema = mobile(false, {
  *   transform: (value) => value.replace(/[^0-9]/g, '') // Remove non-digits
  * })
  * transformSchema.parse("091-234-5678") // ✓ Valid (formatted input)
  * transformSchema.parse("091 234 5678") // ✓ Valid (spaced input)
  *
  * // With custom error messages
- * const customSchema = mobile({
+ * const customSchema = mobile(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan mobile number" },
  *     'zh-TW': { invalid: "請輸入有效的台灣手機號碼" }
@@ -143,11 +150,13 @@ const validateTaiwanMobile = (value: string): boolean => {
  * @see {@link MobileOptions} for all available configuration options
  * @see {@link validateTaiwanMobile} for validation logic details
  */
-export function mobile<IsRequired extends boolean = true>(options?: MobileOptions<IsRequired>): MobileSchema<IsRequired> {
-  const { required = true, whitelist, transform, defaultValue, i18n } = options ?? {}
+export function mobile<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<MobileOptions<IsRequired>, 'required'>): MobileSchema<IsRequired> {
+  const { whitelist, transform, defaultValue, i18n } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof MobileMessages, params?: Record<string, any>) => {
@@ -177,7 +186,7 @@ export function mobile<IsRequired extends boolean = true>(options?: MobileOption
         return ""
       }
       // If the field is optional and empty string not in allowlist, return default value
-      if (!required) {
+      if (!isRequired) {
         return actualDefaultValue
       }
       // If a field is required, return the default value (will be validated later)
@@ -191,18 +200,18 @@ export function mobile<IsRequired extends boolean = true>(options?: MobileOption
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Allowlist check (if an allowlist is provided, only allow values in the allowlist)
     if (whitelist && whitelist.length > 0) {

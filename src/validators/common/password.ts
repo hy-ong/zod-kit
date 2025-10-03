@@ -85,7 +85,6 @@ export type PasswordStrength = "weak" | "medium" | "strong" | "very-strong"
  * @property {Record<Locale, PasswordMessages>} [i18n] - Custom error messages for different locales
  */
 export type PasswordOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   min?: number
   max?: number
   uppercase?: boolean
@@ -191,7 +190,8 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * Creates a Zod schema for password validation with comprehensive security checks
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {PasswordOptions<IsRequired>} [options] - Configuration options for password validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {PasswordSchema<IsRequired>} Zod schema for password validation
  *
  * @description
@@ -212,11 +212,18 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * @example
  * ```typescript
  * // Basic password validation
- * const basicSchema = password()
+ * const basicSchema = password() // optional by default
  * basicSchema.parse("MyPassword123!") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("MyPassword123!") // ✓ Valid
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  *
  * // Strong password requirements
- * const strongSchema = password({
+ * const strongSchema = password(false, {
  *   min: 12,
  *   uppercase: true,
  *   lowercase: true,
@@ -226,7 +233,7 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * })
  *
  * // No common passwords
- * const secureSchema = password({
+ * const secureSchema = password(false, {
  *   noCommonWords: true,
  *   noRepeating: true,
  *   noSequential: true
@@ -236,7 +243,7 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * secureSchema.parse("abc123") // ✗ Invalid (sequential characters)
  *
  * // Custom requirements
- * const customSchema = password({
+ * const customSchema = password(false, {
  *   min: 8,
  *   includes: "@", // Must contain @
  *   excludes: ["admin", "user"], // Cannot contain these words
@@ -244,13 +251,12 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * })
  *
  * // Minimum strength requirement
- * const strengthSchema = password({ minStrength: "very-strong" })
+ * const strengthSchema = password(false, { minStrength: "very-strong" })
  * strengthSchema.parse("weak") // ✗ Invalid (insufficient strength)
  * strengthSchema.parse("MyVeryStr0ng!P@ssw0rd2024") // ✓ Valid
  *
  * // Optional with default
- * const optionalSchema = password({
- *   required: false,
+ * const optionalSchema = password(false, {
  *   defaultValue: null
  * })
  * ```
@@ -260,9 +266,8 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * @see {@link PasswordStrength} for strength level definitions
  * @see {@link calculatePasswordStrength} for strength calculation logic
  */
-export function password<IsRequired extends boolean = true>(options?: PasswordOptions<IsRequired>): PasswordSchema<IsRequired> {
+export function password<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<PasswordOptions<IsRequired>, 'required'>): PasswordSchema<IsRequired> {
   const {
-    required = true,
     min,
     max,
     uppercase,
@@ -281,8 +286,10 @@ export function password<IsRequired extends boolean = true>(options?: PasswordOp
     i18n,
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof PasswordMessages, params?: Record<string, any>) => {
@@ -311,13 +318,13 @@ export function password<IsRequired extends boolean = true>(options?: PasswordOp
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 

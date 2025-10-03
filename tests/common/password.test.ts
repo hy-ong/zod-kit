@@ -42,31 +42,31 @@ const locales = [
   },
 ] as const
 
-describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
+describe.each(locales)("password(true) locale: $locale", ({ locale, messages }) => {
   beforeEach(() => setLocale(locale as Locale))
 
   describe("basic functionality", () => {
     it("should pass with valid string", () => {
-      const schema = password()
+      const schema = password(true)
       expect(schema.parse("hello")).toBe("hello")
     })
 
     it("should fail with empty string when required", () => {
-      const schema = password()
+      const schema = password(true)
       expect(() => schema.parse("")).toThrow(messages.required)
       expect(() => schema.parse(null)).toThrow(messages.required)
       expect(() => schema.parse(undefined)).toThrow(messages.required)
     })
 
     it("should pass with null when not required", () => {
-      const schema = password({ required: false })
+      const schema = password(false)
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse(undefined)).toBe(null)
     })
 
     it("should handle default values", () => {
-      const schema = password({ required: false, defaultValue: "default123" })
+      const schema = password(false, { defaultValue: "default123" })
       expect(schema.parse("")).toBe("default123")
       expect(schema.parse(null)).toBe("default123")
       expect(schema.parse(undefined)).toBe("default123")
@@ -74,55 +74,55 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should apply transform function", () => {
-      const schema = password({ transform: (val) => val.toLowerCase() })
+      const schema = password(true, { transform: (val) => val.toLowerCase() })
       expect(schema.parse("HELLO")).toBe("hello")
     })
   })
 
   describe("length validation", () => {
     it("should fail with string shorter than min", () => {
-      const schema = password({ min: 8 })
+      const schema = password(true, { min: 8 })
       expect(() => schema.parse("short")).toThrow(messages.min)
     })
 
     it("should fail with string longer than max", () => {
-      const schema = password({ max: 20 })
+      const schema = password(true, { max: 20 })
       expect(() => schema.parse("this_is_a_very_long_password_that_exceeds_limit")).toThrow(messages.max)
     })
 
     it("should pass with valid length", () => {
-      const schema = password({ min: 5, max: 15 })
+      const schema = password(true, { min: 5, max: 15 })
       expect(schema.parse("validpassword")).toBe("validpassword")
     })
   })
 
   describe("character requirements", () => {
     it("should enforce uppercase requirement", () => {
-      const schema = password({ uppercase: true })
+      const schema = password(true, { uppercase: true })
       expect(() => schema.parse("lowercase1!")).toThrow(messages.uppercase)
       expect(schema.parse("Hello1!")).toBe("Hello1!")
     })
 
     it("should enforce lowercase requirement", () => {
-      const schema = password({ lowercase: true })
+      const schema = password(true, { lowercase: true })
       expect(() => schema.parse("UPPERCASE1!")).toThrow(messages.lowercase)
       expect(schema.parse("Test1!")).toBe("Test1!")
     })
 
     it("should enforce digit requirement", () => {
-      const schema = password({ digits: true })
+      const schema = password(true, { digits: true })
       expect(() => schema.parse("NoDigits!")).toThrow(messages.digits)
       expect(schema.parse("With1!")).toBe("With1!")
     })
 
     it("should enforce special character requirement", () => {
-      const schema = password({ special: true })
+      const schema = password(true, { special: true })
       expect(() => schema.parse("NoSpecial1")).toThrow(messages.special)
       expect(schema.parse("Valid1!")).toBe("Valid1!")
     })
 
     it("should enforce multiple requirements", () => {
-      const schema = password({ uppercase: true, lowercase: true, digits: true, special: true })
+      const schema = password(true, { uppercase: true, lowercase: true, digits: true, special: true })
       expect(() => schema.parse("nouppercase1!")).toThrow(messages.uppercase)
       expect(() => schema.parse("NOLOWERCASE1!")).toThrow(messages.lowercase)
       expect(() => schema.parse("NoDigits!")).toThrow(messages.digits)
@@ -133,14 +133,14 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
 
   describe("advanced security features", () => {
     it("should enforce no repeating characters", () => {
-      const schema = password({ noRepeating: true })
+      const schema = password(true, { noRepeating: true })
       expect(() => schema.parse("password111")).toThrow(messages.noRepeating)
       expect(() => schema.parse("helllo")).toThrow(messages.noRepeating)
       expect(schema.parse("password")).toBe("password")
     })
 
     it("should enforce no sequential characters", () => {
-      const schema = password({ noSequential: true })
+      const schema = password(true, { noSequential: true })
       expect(() => schema.parse("abc123")).toThrow(messages.noSequential)
       expect(() => schema.parse("xyz789")).toThrow(messages.noSequential)
       expect(() => schema.parse("password456")).toThrow(messages.noSequential)
@@ -148,7 +148,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should enforce no common words", () => {
-      const schema = password({ noCommonWords: true })
+      const schema = password(true, { noCommonWords: true })
       expect(() => schema.parse("password123")).toThrow(messages.noCommonWords)
       expect(() => schema.parse("admin")).toThrow(messages.noCommonWords)
       expect(() => schema.parse("qwerty")).toThrow(messages.noCommonWords)
@@ -156,7 +156,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should enforce minimum strength", () => {
-      const schema = password({ minStrength: "strong" })
+      const schema = password(true, { minStrength: "strong" })
       expect(() => schema.parse("weak")).toThrow(messages.minStrength)
       expect(() => schema.parse("123456")).toThrow(messages.minStrength)
       expect(schema.parse("StrongP@ssw0rd")).toBe("StrongP@ssw0rd")
@@ -165,26 +165,26 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
 
   describe("content validation", () => {
     it("should enforce includes requirement", () => {
-      const schema = password({ includes: "@" })
+      const schema = password(true, { includes: "@" })
       expect(() => schema.parse("password")).toThrow(messages.includes)
       expect(schema.parse("user@pass")).toBe("user@pass")
     })
 
     it("should enforce excludes requirement with string", () => {
-      const schema = password({ excludes: "test" })
+      const schema = password(true, { excludes: "test" })
       expect(() => schema.parse("testpassword")).toThrow(messages.excludes)
       expect(schema.parse("password")).toBe("password")
     })
 
     it("should enforce excludes requirement with array", () => {
-      const schema = password({ excludes: ["test", "admin"] })
+      const schema = password(true, { excludes: ["test", "admin"] })
       expect(() => schema.parse("testpassword")).toThrow()
       expect(() => schema.parse("adminpass")).toThrow()
       expect(schema.parse("password")).toBe("password")
     })
 
     it("should enforce regex requirement", () => {
-      const schema = password({ regex: /^[a-zA-Z0-9!@#$%^&*()]+$/ })
+      const schema = password(true, { regex: /^[a-zA-Z0-9!@#$%^&*()]+$/ })
       expect(() => schema.parse("invalid-password")).toThrow(messages.invalid)
       expect(schema.parse("Valid123!")).toBe("Valid123!")
     })
@@ -205,7 +205,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
         },
       }
 
-      const schema = password({
+      const schema = password(true, {
         min: 8,
         uppercase: true,
         i18n: customMessages,
@@ -228,7 +228,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
         "zh-TW": { required: "自訂必填訊息" },
       }
 
-      const schema = password({
+      const schema = password(true, {
         uppercase: true,
         i18n: customMessages,
       })
@@ -245,7 +245,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
 
   describe("complex scenarios", () => {
     it("should handle all features combined", () => {
-      const schema = password({
+      const schema = password(true, {
         min: 12,
         max: 50,
         uppercase: true,
@@ -277,14 +277,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
     })
 
     it("should work with optional password and all features", () => {
-      const schema = password({
-        required: false,
-        min: 8,
-        uppercase: true,
-        lowercase: true,
-        digits: true,
-        special: true,
-      })
+      const schema = password(false, { min: 8, uppercase: true, lowercase: true, digits: true, special: true })
 
       expect(schema.parse(null)).toBe(null)
       expect(schema.parse("")).toBe(null)
@@ -303,7 +296,7 @@ describe.each(locales)("password() locale: $locale", ({ locale, messages }) => {
 
     testStrengthScenarios.forEach(({ password: testPassword, expectedToPass, minStrength }) => {
       it(`should ${expectedToPass ? "pass" : "fail"} for password "${testPassword}" with minStrength "${minStrength}"`, () => {
-        const schema = password({ minStrength })
+        const schema = password(true, { minStrength })
 
         if (expectedToPass) {
           expect(schema.parse(testPassword)).toBe(testPassword)

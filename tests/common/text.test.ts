@@ -32,30 +32,30 @@ const locales = [
   },
 ] as const
 
-describe.each(locales)("text() locale: $locale", ({ locale, messages }) => {
+describe.each(locales)("text(true) locale: $locale", ({ locale, messages }) => {
   beforeEach(() => setLocale(locale as Locale))
 
   it("should pass with valid string", () => {
-    const schema = text()
+    const schema = text(true)
     expect(schema.parse("hello")).toBe("hello")
   })
 
   it("should fail with empty string when required", () => {
-    const schema = text()
+    const schema = text(true)
     expect(() => schema.parse("")).toThrow(messages.required)
     expect(() => schema.parse(null)).toThrow(messages.required)
     expect(() => schema.parse(undefined)).toThrow(messages.required)
   })
 
   it("should pass with null when not required", () => {
-    const schema = text({ required: false })
+    const schema = text(false)
     expect(schema.parse("")).toBe(null)
     expect(schema.parse(null)).toBe(null)
     expect(schema.parse(undefined)).toBe(null)
   })
 
   it("should fail with string shorter than minLength", () => {
-    const schema = text({ minLength: 5 })
+    const schema = text(true, { minLength: 5 })
     expect(() => schema.parse("hi")).toThrow(messages.minLength)
     expect(() => schema.parse("")).toThrow(messages.required) // Empty string triggers required first
     expect(() => schema.parse(null)).toThrow(messages.required) // Null triggers required first
@@ -63,42 +63,42 @@ describe.each(locales)("text() locale: $locale", ({ locale, messages }) => {
   })
 
   it("should fail with string longer than maxLength", () => {
-    const schema = text({ maxLength: 5 })
+    const schema = text(true, { maxLength: 5 })
     expect(() => schema.parse("hello world")).toThrow(messages.maxLength)
   })
 
   it("should fail if does not start with specified string", () => {
-    const schema = text({ startsWith: "pre" })
+    const schema = text(true, { startsWith: "pre" })
     expect(schema.parse("prepaid")).toBe("prepaid")
     expect(() => schema.parse("hello world")).toThrow(messages.startsWith)
   })
 
   it("should fail if does not end with specified string", () => {
-    const schema = text({ endsWith: "xyz" })
+    const schema = text(true, { endsWith: "xyz" })
     expect(schema.parse("hello xyz")).toBe("hello xyz")
     expect(() => schema.parse("hello world")).toThrow(messages.endsWith)
   })
 
   it("should fail if does not include specified substring", () => {
-    const schema = text({ includes: "foo" })
+    const schema = text(true, { includes: "foo" })
     expect(schema.parse("hello foo")).toBe("hello foo")
     expect(() => schema.parse("hello world")).toThrow(messages.includes)
   })
 
   it("should fail if does not match regex", () => {
-    const schema = text({ regex: /^[A-Z]+$/ })
+    const schema = text(true, { regex: /^[A-Z]+$/ })
     expect(schema.parse("HELLO")).toBe("HELLO")
     expect(() => schema.parse("hello")).toThrow(messages.invalid)
   })
 
   it("should fail if contains excluded substring", () => {
-    const schema = text({ excludes: "admin" })
+    const schema = text(true, { excludes: "admin" })
     expect(schema.parse("hello")).toBe("hello")
     expect(() => schema.parse("admin user")).toThrow(messages.excludes)
   })
 
   it("should fail if contains any excluded substring from array", () => {
-    const schema = text({ excludes: ["admin", "root", "test"] })
+    const schema = text(true, { excludes: ["admin", "root", "test"] })
     expect(schema.parse("hello")).toBe("hello")
     expect(() => schema.parse("admin user")).toThrow(/Must not contain|不得包含/)
     expect(() => schema.parse("root access")).toThrow(/Must not contain|不得包含/)
@@ -106,68 +106,68 @@ describe.each(locales)("text() locale: $locale", ({ locale, messages }) => {
   })
 
   it("should fail with notEmpty when only whitespace", () => {
-    const schema = text({ notEmpty: true, trimMode: "none" })
+    const schema = text(true, { notEmpty: true, trimMode: "none" })
     expect(schema.parse("hello")).toBe("hello")
     expect(() => schema.parse("   ")).toThrow(messages.notEmpty)
     expect(() => schema.parse("\t\n")).toThrow(messages.notEmpty)
   })
 })
 
-describe("text() trimMode functionality", () => {
+describe("text(true) trimMode functionality", () => {
   it("should trim by default", () => {
-    const schema = text()
+    const schema = text(true)
     expect(schema.parse("  hello  ")).toBe("hello")
   })
 
   it("should trim start only", () => {
-    const schema = text({ trimMode: "trimStart" })
+    const schema = text(true, { trimMode: "trimStart" })
     expect(schema.parse("  hello  ")).toBe("hello  ")
   })
 
   it("should trim end only", () => {
-    const schema = text({ trimMode: "trimEnd" })
+    const schema = text(true, { trimMode: "trimEnd" })
     expect(schema.parse("  hello  ")).toBe("  hello")
   })
 
   it("should not trim when mode is none", () => {
-    const schema = text({ trimMode: "none" })
+    const schema = text(true, { trimMode: "none" })
     expect(schema.parse("  hello  ")).toBe("  hello  ")
   })
 })
 
-describe("text() casing functionality", () => {
+describe("text(true) casing functionality", () => {
   it("should convert to uppercase", () => {
-    const schema = text({ casing: "upper" })
+    const schema = text(true, { casing: "upper" })
     expect(schema.parse("hello world")).toBe("HELLO WORLD")
   })
 
   it("should convert to lowercase", () => {
-    const schema = text({ casing: "lower" })
+    const schema = text(true, { casing: "lower" })
     expect(schema.parse("HELLO WORLD")).toBe("hello world")
   })
 
   it("should convert to title case", () => {
-    const schema = text({ casing: "title" })
+    const schema = text(true, { casing: "title" })
     expect(schema.parse("hello world")).toBe("Hello World")
     expect(schema.parse("HELLO WORLD")).toBe("Hello World")
   })
 
   it("should not change casing when none", () => {
-    const schema = text({ casing: "none" })
+    const schema = text(true, { casing: "none" })
     expect(schema.parse("Hello World")).toBe("Hello World")
   })
 })
 
-describe("text() transform functionality", () => {
+describe("text(true) transform functionality", () => {
   it("should apply custom transform function", () => {
-    const schema = text({
+    const schema = text(true, {
       transform: (val) => val.replace(/\s+/g, "-"),
     })
     expect(schema.parse("hello world test")).toBe("hello-world-test")
   })
 
   it("should apply transform after trimming and casing", () => {
-    const schema = text({
+    const schema = text(true, {
       trimMode: "trim",
       casing: "lower",
       transform: (val) => val.replace(/\s+/g, "_"),
@@ -176,27 +176,27 @@ describe("text() transform functionality", () => {
   })
 })
 
-describe("text() defaultValue functionality", () => {
+describe("text(true) defaultValue functionality", () => {
   it("should use defaultValue for empty input when required", () => {
-    const schema = text({ defaultValue: "default" })
+    const schema = text(true, { defaultValue: "default" })
     expect(schema.parse("")).toBe("default")
     expect(schema.parse(null)).toBe("default")
     expect(schema.parse(undefined)).toBe("default")
   })
 
   it("should use defaultValue for empty input when not required", () => {
-    const schema = text({ required: false, defaultValue: "default" })
+    const schema = text(false, { defaultValue: "default" })
     expect(schema.parse("")).toBe("default")
     expect(schema.parse(null)).toBe("default")
     expect(schema.parse(undefined)).toBe("default")
   })
 })
 
-describe("text() custom i18n messages", () => {
+describe("text(true) custom i18n messages", () => {
   beforeEach(() => setLocale("en"))
 
   it("should use custom messages when provided", () => {
-    const schema = text({
+    const schema = text(true, {
       minLength: 5,
       i18n: {
         en: {
@@ -215,7 +215,7 @@ describe("text() custom i18n messages", () => {
   })
 
   it("should fallback to default messages when custom not provided", () => {
-    const schema = text({
+    const schema = text(true, {
       maxLength: 3,
       i18n: {
         en: {
@@ -232,7 +232,7 @@ describe("text() custom i18n messages", () => {
   })
 
   it("should use correct locale for custom messages", () => {
-    const schema = text({
+    const schema = text(true, {
       i18n: {
         en: {
           required: "English required",
@@ -251,11 +251,11 @@ describe("text() custom i18n messages", () => {
   })
 })
 
-describe("text() complex scenarios", () => {
+describe("text(true) complex scenarios", () => {
   beforeEach(() => setLocale("en")) // Ensure a consistent locale for this test
 
   it("should work with multiple validations", () => {
-    const schema = text({
+    const schema = text(true, {
       minLength: 5,
       maxLength: 20,
       startsWith: "user_",
@@ -272,8 +272,7 @@ describe("text() complex scenarios", () => {
   })
 
   it("should handle null values correctly when not required", () => {
-    const schema = text({
-      required: false,
+    const schema = text(false, {
       minLength: 5,
       includes: "test",
     })

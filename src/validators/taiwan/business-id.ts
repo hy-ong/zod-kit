@@ -36,7 +36,6 @@ export type BusinessIdMessages = {
  * @property {Record<Locale, BusinessIdMessages>} [i18n] - Custom error messages for different locales
  */
 export type BusinessIdOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
   i18n?: Record<Locale, BusinessIdMessages>
@@ -148,23 +147,30 @@ const validateTaiwanBusinessId = (value: string): boolean => {
  * @example
  * ```typescript
  * // Basic business ID validation
- * const basicSchema = businessId()
+ * const basicSchema = businessId() // optional by default
  * basicSchema.parse("12345675") // ✓ Valid (if checksum correct)
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("12345675") // ✓ Valid (if checksum correct)
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  * basicSchema.parse("1234567") // ✗ Invalid (not 8 digits)
  *
  * // Optional business ID
- * const optionalSchema = businessId({ required: false })
+ * const optionalSchema = businessId(false)
  * optionalSchema.parse("") // ✓ Valid (returns null)
  * optionalSchema.parse("12345675") // ✓ Valid (if checksum correct)
  *
  * // With custom transformation
- * const transformSchema = businessId({
+ * const transformSchema = businessId(false, {
  *   transform: (value) => value.replace(/[^0-9]/g, '') // Remove non-digits
  * })
  * transformSchema.parse("1234-5675") // ✓ Valid (if checksum correct after cleaning)
  *
  * // With custom error messages
- * const customSchema = businessId({
+ * const customSchema = businessId(false, {
  *   i18n: {
  *     en: { invalid: "Please enter a valid Taiwan Business ID" },
  *     'zh-TW': { invalid: "請輸入有效的統一編號" }
@@ -176,16 +182,17 @@ const validateTaiwanBusinessId = (value: string): boolean => {
  * @see {@link BusinessIdOptions} for all available configuration options
  * @see {@link validateTaiwanBusinessId} for validation logic details
  */
-export function businessId<IsRequired extends boolean = true>(options?: BusinessIdOptions<IsRequired>): BusinessIdSchema<IsRequired> {
+export function businessId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<BusinessIdOptions<IsRequired>, 'required'>): BusinessIdSchema<IsRequired> {
   const {
-    required = true,
     transform,
     defaultValue,
     i18n
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof BusinessIdMessages, params?: Record<string, any>) => {
@@ -220,18 +227,18 @@ export function businessId<IsRequired extends boolean = true>(options?: Business
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Taiwan Business ID format validation (8 digits + checksum)
     if (!validateTaiwanBusinessId(val)) {

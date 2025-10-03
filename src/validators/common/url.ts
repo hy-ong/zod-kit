@@ -85,7 +85,6 @@ export type UrlMessages = {
  * @property {Record<Locale, UrlMessages>} [i18n] - Custom error messages for different locales
  */
 export type UrlOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   min?: number
   max?: number
   includes?: string
@@ -121,7 +120,8 @@ export type UrlSchema<IsRequired extends boolean> = IsRequired extends true ? Zo
  * Creates a Zod schema for URL validation with comprehensive constraints
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {UrlOptions<IsRequired>} [options] - Configuration options for URL validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {UrlSchema<IsRequired>} Zod schema for URL validation
  *
  * @description
@@ -145,43 +145,49 @@ export type UrlSchema<IsRequired extends boolean> = IsRequired extends true ? Zo
  * @example
  * ```typescript
  * // Basic URL validation
- * const basicSchema = url()
+ * const basicSchema = url() // optional by default
  * basicSchema.parse("https://example.com") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("https://example.com") // ✓ Valid
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  *
  * // HTTPS only
- * const httpsSchema = url({ protocols: ["https"] })
+ * const httpsSchema = url(false, { protocols: ["https"] })
  * httpsSchema.parse("https://example.com") // ✓ Valid
  * httpsSchema.parse("http://example.com") // ✗ Invalid
  *
  * // Domain restriction
- * const domainSchema = url({
+ * const domainSchema = url(false, {
  *   allowedDomains: ["company.com", "trusted.org"]
  * })
  * domainSchema.parse("https://app.company.com") // ✓ Valid (subdomain)
  * domainSchema.parse("https://example.com") // ✗ Invalid
  *
  * // Block localhost
- * const noLocalhostSchema = url({ blockLocalhost: true })
+ * const noLocalhostSchema = url(false, { blockLocalhost: true })
  * noLocalhostSchema.parse("https://example.com") // ✓ Valid
  * noLocalhostSchema.parse("http://localhost:3000") // ✗ Invalid
  *
  * // API endpoints with path requirements
- * const apiSchema = url({
+ * const apiSchema = url(false, {
  *   pathStartsWith: "/api/",
  *   mustHaveQuery: true
  * })
  * apiSchema.parse("https://api.com/api/users?page=1") // ✓ Valid
  *
  * // Port restrictions
- * const portSchema = url({
+ * const portSchema = url(false, {
  *   allowedPorts: [80, 443, 8080]
  * })
  * portSchema.parse("https://example.com:443") // ✓ Valid
  * portSchema.parse("https://example.com:3000") // ✗ Invalid
  *
  * // Optional with default
- * const optionalSchema = url({
- *   required: false,
+ * const optionalSchema = url(false, {
  *   defaultValue: null
  * })
  * ```
@@ -189,9 +195,8 @@ export type UrlSchema<IsRequired extends boolean> = IsRequired extends true ? Zo
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link UrlOptions} for all available configuration options
  */
-export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRequired>): UrlSchema<IsRequired> {
+export function url<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<UrlOptions<IsRequired>, 'required'>): UrlSchema<IsRequired> {
   const {
-    required = true,
     min,
     max,
     includes,
@@ -214,7 +219,9 @@ export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRe
     i18n,
   } = options ?? {}
 
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const isRequired = required ?? false as IsRequired
+
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof UrlMessages, params?: Record<string, any>) => {
@@ -244,13 +251,13 @@ export function url<IsRequired extends boolean = true>(options?: UrlOptions<IsRe
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 

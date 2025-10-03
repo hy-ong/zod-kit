@@ -60,7 +60,6 @@ export type TextMessages = {
  * @property {Record<Locale, TextMessages>} [i18n] - Custom error messages for different locales
  */
 export type TextOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   minLength?: number
   maxLength?: number
   startsWith?: string
@@ -108,17 +107,23 @@ export type TextSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  *
  * @example
  * ```typescript
- * // Basic text validation
+ * // Basic text validation (optional by default)
  * const basicSchema = text()
  * basicSchema.parse("Hello World") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required text
+ * const requiredSchema = text(true)
+ * requiredSchema.parse("Hello") // ✓ Valid
+ * requiredSchema.parse(null) // ✗ Invalid (required)
  *
  * // Length constraints
- * const lengthSchema = text({ minLength: 3, maxLength: 50 })
+ * const lengthSchema = text(true, { minLength: 3, maxLength: 50 })
  * lengthSchema.parse("Hello") // ✓ Valid
  * lengthSchema.parse("Hi") // ✗ Invalid (too short)
  *
  * // Content validation
- * const contentSchema = text({
+ * const contentSchema = text(true, {
  *   startsWith: "Hello",
  *   endsWith: "!",
  *   includes: "World"
@@ -126,38 +131,37 @@ export type TextSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * contentSchema.parse("Hello World!") // ✓ Valid
  *
  * // Case transformation
- * const upperSchema = text({ casing: "upper" })
+ * const upperSchema = text(false, { casing: "upper" })
  * upperSchema.parse("hello") // ✓ Valid (converted to "HELLO")
  *
  * // Trim modes
- * const trimStartSchema = text({ trimMode: "trimStart" })
+ * const trimStartSchema = text(false, { trimMode: "trimStart" })
  * trimStartSchema.parse("  hello  ") // ✓ Valid (result: "hello  ")
  *
  * // Regex validation
- * const regexSchema = text({ regex: /^[a-zA-Z]+$/ })
+ * const regexSchema = text(true, { regex: /^[a-zA-Z]+$/ })
  * regexSchema.parse("hello") // ✓ Valid
  * regexSchema.parse("hello123") // ✗ Invalid
  *
  * // Not empty (rejects whitespace-only)
- * const notEmptySchema = text({ notEmpty: true })
+ * const notEmptySchema = text(true, { notEmpty: true })
  * notEmptySchema.parse("hello") // ✓ Valid
  * notEmptySchema.parse("   ") // ✗ Invalid
  *
  * // Optional with default
- * const optionalSchema = text({
- *   required: false,
- *   defaultValue: "default text"
- * })
+ * const optionalSchema = text(false, { defaultValue: "default text" })
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link TextOptions} for all available configuration options
  */
-export function text<IsRequired extends boolean = true>(options?: TextOptions<IsRequired>): TextSchema<IsRequired> {
-  const { required = true, minLength, maxLength, startsWith, endsWith, includes, excludes, regex, trimMode = "trim", casing = "none", transform, notEmpty, defaultValue, i18n } = options ?? {}
+export function text<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TextOptions<IsRequired>, 'required'>): TextSchema<IsRequired> {
+  const { minLength, maxLength, startsWith, endsWith, includes, excludes, regex, trimMode = "trim", casing = "none", transform, notEmpty, defaultValue, i18n } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof TextMessages, params?: Record<string, any>) => {
@@ -217,14 +221,14 @@ export function text<IsRequired extends boolean = true>(options?: TextOptions<Is
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   // Single refine with all validations for better performance
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 

@@ -92,7 +92,6 @@ export type TimeFormat =
  * @property {Record<Locale, TimeMessages>} [i18n] - Custom error messages for different locales
  */
 export type TimeOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   format?: TimeFormat
   min?: string        // Minimum time (e.g., "09:00")
   max?: string        // Maximum time (e.g., "17:00")
@@ -284,7 +283,8 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * Creates a Zod schema for time validation with comprehensive options
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {TimeOptions<IsRequired>} [options] - Configuration options for time validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {TimeSchema<IsRequired>} Zod schema for time validation
  *
  * @description
@@ -306,10 +306,17 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * // Basic time validation (24-hour format)
  * const basicSchema = time()
  * basicSchema.parse("14:30") // ✓ Valid
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required validation
+ * const requiredSchema = parse("14:30") // ✓ Valid
+(true)
+ * requiredSchema.parse(null) // ✗ Invalid (required)
+ *
  * basicSchema.parse("2:30 PM") // ✗ Invalid (wrong format)
  *
  * // 12-hour format with AM/PM
- * const ampmSchema = time({ format: "hh:mm A" })
+ * const ampmSchema = time(false, { format: "hh:mm A" })
  * ampmSchema.parse("02:30 PM") // ✓ Valid
  * ampmSchema.parse("14:30") // ✗ Invalid (wrong format)
  *
@@ -325,7 +332,7 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * businessHours.parse("09:05") // ✗ Invalid (not 15-minute step)
  *
  * // Time range validation
- * const timeRangeSchema = time({
+ * const timeRangeSchema = time(false, {
  *   min: "09:00",
  *   max: "17:00"
  * })
@@ -340,7 +347,7 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * specificHours.parse("11:30") // ✗ Invalid (hour not allowed)
  *
  * // Whitelist specific times
- * const whitelistSchema = time({
+ * const whitelistSchema = time(false, {
  *   whitelist: ["09:00", "12:00", "17:00"],
  *   whitelistOnly: true
  * })
@@ -348,8 +355,7 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * whitelistSchema.parse("13:00") // ✗ Invalid (not in whitelist)
  *
  * // Optional with default
- * const optionalSchema = time({
- *   required: false,
+ * const optionalSchema = time(false, {
  *   defaultValue: "09:00"
  * })
  * optionalSchema.parse("") // ✓ Valid (returns "09:00")
@@ -359,9 +365,8 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * @see {@link TimeOptions} for all available configuration options
  * @see {@link TimeFormat} for supported time formats
  */
-export function time<IsRequired extends boolean = true>(options?: TimeOptions<IsRequired>): TimeSchema<IsRequired> {
+export function time<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TimeOptions<IsRequired>, 'required'>): TimeSchema<IsRequired> {
   const {
-    required = true,
     format = "HH:mm",
     min,
     max,
@@ -382,8 +387,10 @@ export function time<IsRequired extends boolean = true>(options?: TimeOptions<Is
     i18n,
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof TimeMessages, params?: Record<string, any>) => {
@@ -429,7 +436,7 @@ export function time<IsRequired extends boolean = true>(options?: TimeOptions<Is
         return ""
       }
       // If the field is optional and empty string not in whitelist, return default value
-      if (!required) {
+      if (!isRequired) {
         return actualDefaultValue
       }
       // If a field is required, return the default value (will be validated later)
@@ -456,18 +463,18 @@ export function time<IsRequired extends boolean = true>(options?: TimeOptions<Is
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Whitelist check
     if (whitelist && whitelist.length > 0) {

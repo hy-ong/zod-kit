@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { time, setLocale, validateTimeFormat, parseTimeToMinutes, normalizeTime } from "../../src"
 
-describe("Taiwan time() validator", () => {
+describe("Taiwan time(true) validator", () => {
   beforeEach(() => setLocale("en"))
 
   describe("basic functionality", () => {
     it("should validate correct time formats", () => {
-      const schema24 = time({ format: "HH:mm" })
-      const schema12 = time({ format: "hh:mm A" })
-      const schemaWithSeconds = time({ format: "HH:mm:ss" })
+      const schema24 = time(true, { format: "HH:mm" })
+      const schema12 = time(true, { format: "hh:mm A" })
+      const schemaWithSeconds = time(true, { format: "HH:mm:ss" })
 
       // 24-hour format
       expect(schema24.parse("09:30")).toBe("09:30")
@@ -29,8 +29,8 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should validate single digit hour format", () => {
-      const schemaH = time({ format: "H:mm" })
-      const schemah = time({ format: "h:mm A" })
+      const schemaH = time(true, { format: "H:mm" })
+      const schemah = time(true, { format: "h:mm A" })
 
       // Single digit 24-hour
       expect(schemaH.parse("9:30")).toBe("9:30")
@@ -42,7 +42,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should reject invalid time formats", () => {
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       // Invalid formats
       expect(() => schema.parse("25:30")).toThrow("Must be in HH:mm format")
@@ -54,7 +54,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should handle whitespace trimming", () => {
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       expect(schema.parse("  14:30  ")).toBe("14:30")
       expect(schema.parse("\t09:15\n")).toBe("09:15")
@@ -63,9 +63,9 @@ describe("Taiwan time() validator", () => {
 
   describe("whitelist functionality", () => {
     it("should accept any string in whitelist regardless of format", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        whitelist: ["anytime", "flexible", "TBD"]
+        whitelist: ["anytime", "flexible", "TBD"],
       })
 
       expect(schema.parse("anytime")).toBe("anytime")
@@ -75,10 +75,10 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should reject values not in whitelist when whitelistOnly is true", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         whitelist: ["morning", "14:30"],
-        whitelistOnly: true
+        whitelistOnly: true,
       })
 
       expect(schema.parse("morning")).toBe("morning")
@@ -90,9 +90,9 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should work with empty whitelist", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        whitelist: []
+        whitelist: [],
       })
 
       // With empty whitelist, should still validate time format
@@ -101,11 +101,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should prioritize whitelist over format validation", () => {
-      const schema = time({
-        required: false,
-        format: "HH:mm",
-        whitelist: ["not-a-time", "123", ""]
-      })
+      const schema = time(false, { format: "HH:mm", whitelist: ["not-a-time", "123", ""] })
 
       expect(schema.parse("not-a-time")).toBe("not-a-time")
       expect(schema.parse("123")).toBe("123")
@@ -115,7 +111,7 @@ describe("Taiwan time() validator", () => {
 
   describe("required/optional behavior", () => {
     it("should handle required=true (default)", () => {
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse(null)).toThrow("Required")
@@ -123,7 +119,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should handle required=false", () => {
-      const schema = time({ format: "HH:mm", required: false })
+      const schema = time(false, { format: "HH:mm" })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse(null)).toBe(null)
@@ -132,8 +128,8 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should use default values", () => {
-      const requiredSchema = time({ format: "HH:mm", defaultValue: "09:00" })
-      const optionalSchema = time({ format: "HH:mm", required: false, defaultValue: "12:00" })
+      const requiredSchema = time(true, { format: "HH:mm", defaultValue: "09:00" })
+      const optionalSchema = time(false, { format: "HH:mm", defaultValue: "12:00" })
 
       expect(requiredSchema.parse("")).toBe("09:00")
       expect(requiredSchema.parse(null)).toBe("09:00")
@@ -142,12 +138,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should handle whitelist with optional fields", () => {
-      const schema = time({
-        format: "HH:mm",
-        required: false,
-        whitelist: ["flexible", "14:30"],
-        whitelistOnly: true
-      })
+      const schema = time(false, { format: "HH:mm", whitelist: ["flexible", "14:30"], whitelistOnly: true })
 
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("flexible")).toBe("flexible")
@@ -158,10 +149,10 @@ describe("Taiwan time() validator", () => {
 
   describe("time range validation", () => {
     it("should validate minimum and maximum times", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         min: "09:00",
-        max: "17:00"
+        max: "17:00",
       })
 
       // Valid times within range
@@ -175,10 +166,10 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should validate hour ranges", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         minHour: 9,
-        maxHour: 17
+        maxHour: 17,
       })
 
       // Valid hours
@@ -191,9 +182,9 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should validate allowed hours", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        allowedHours: [9, 12, 15, 18]
+        allowedHours: [9, 12, 15, 18],
       })
 
       // Valid hours
@@ -208,9 +199,9 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should validate minute steps", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        minuteStep: 15
+        minuteStep: 15,
       })
 
       // Valid minute steps (0, 15, 30, 45)
@@ -227,28 +218,28 @@ describe("Taiwan time() validator", () => {
 
   describe("transform function", () => {
     it("should apply custom transform", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        transform: (val) => val.toUpperCase()
+        transform: (val) => val.toUpperCase(),
       })
 
       expect(schema.parse("14:30")).toBe("14:30")
     })
 
     it("should apply transform before validation", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        transform: (val) => val.replace(/\s+/g, "")
+        transform: (val) => val.replace(/\s+/g, ""),
       })
 
       expect(schema.parse("1 4 : 3 0")).toBe("14:30")
     })
 
     it("should work with whitelist after transform", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         transform: (val) => val.toLowerCase(),
-        whitelist: ["morning", "14:30"]
+        whitelist: ["morning", "14:30"],
       })
 
       expect(schema.parse("MORNING")).toBe("morning")
@@ -258,14 +249,14 @@ describe("Taiwan time() validator", () => {
 
   describe("input preprocessing", () => {
     it("should handle string conversion", () => {
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       // Test string conversion of numbers
       expect(() => schema.parse(1430)).toThrow("Must be in HH:mm format") // Invalid because not in HH:mm format
     })
 
     it("should trim whitespace", () => {
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       expect(schema.parse("  14:30  ")).toBe("14:30")
       expect(schema.parse("\t09:15\n")).toBe("09:15")
@@ -340,7 +331,7 @@ describe("Taiwan time() validator", () => {
   describe("i18n support", () => {
     it("should use English messages by default", () => {
       setLocale("en")
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       expect(() => schema.parse("")).toThrow("Required")
       expect(() => schema.parse("invalid")).toThrow("Must be in HH:mm format")
@@ -348,7 +339,7 @@ describe("Taiwan time() validator", () => {
 
     it("should use Chinese messages when locale is zh-TW", () => {
       setLocale("zh-TW")
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       expect(() => schema.parse("")).toThrow("必填")
       expect(() => schema.parse("invalid")).toThrow("必須為 HH:mm 格式")
@@ -356,28 +347,28 @@ describe("Taiwan time() validator", () => {
 
     it("should support whitelist error messages", () => {
       setLocale("en")
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         whitelist: ["morning"],
-        whitelistOnly: true
+        whitelistOnly: true,
       })
 
       expect(() => schema.parse("14:30")).toThrow("Time is not in the allowed list")
     })
 
     it("should support custom i18n messages", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         i18n: {
           en: {
             required: "Time is required",
-            invalid: "Please enter a valid time"
+            invalid: "Please enter a valid time",
           },
           "zh-TW": {
             required: "請輸入時間",
-            invalid: "請輸入有效的時間格式"
-          }
-        }
+            invalid: "請輸入有效的時間格式",
+          },
+        },
       })
 
       setLocale("en")
@@ -388,18 +379,18 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should support custom whitelist messages", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
         whitelist: ["morning"],
         whitelistOnly: true,
         i18n: {
           en: {
-            notInWhitelist: "This time is not allowed"
+            notInWhitelist: "This time is not allowed",
           },
           "zh-TW": {
-            notInWhitelist: "此時間不被允許"
-          }
-        }
+            notInWhitelist: "此時間不被允許",
+          },
+        },
       })
 
       setLocale("en")
@@ -412,11 +403,11 @@ describe("Taiwan time() validator", () => {
 
   describe("real world time scenarios", () => {
     it("should validate business hours", () => {
-      const businessHours = time({
+      const businessHours = time(true, {
         format: "HH:mm",
         min: "09:00",
         max: "17:00",
-        minuteStep: 30
+        minuteStep: 30,
       })
 
       expect(businessHours.parse("09:00")).toBe("09:00")
@@ -429,10 +420,10 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should validate appointment slots", () => {
-      const appointmentSlots = time({
+      const appointmentSlots = time(true, {
         format: "hh:mm A",
         allowedHours: [9, 10, 11, 14, 15, 16],
-        minuteStep: 15
+        minuteStep: 15,
       })
 
       expect(appointmentSlots.parse("09:00 AM")).toBe("09:00 AM")
@@ -444,11 +435,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should handle flexible time input", () => {
-      const flexibleTime = time({
-        format: "HH:mm",
-        whitelist: ["morning", "afternoon", "evening", "anytime"],
-        required: false
-      })
+      const flexibleTime = time(false, { format: "HH:mm", whitelist: ["morning", "afternoon", "evening", "anytime"] })
 
       expect(flexibleTime.parse("morning")).toBe("morning")
       expect(flexibleTime.parse("14:30")).toBe("14:30")
@@ -459,15 +446,15 @@ describe("Taiwan time() validator", () => {
 
   describe("edge cases", () => {
     it("should handle various input types", () => {
-      const schema = time({ format: "HH:mm" })
+      const schema = time(true, { format: "HH:mm" })
 
       // Test different input types that should be converted to string
       expect(schema.parse("14:30")).toBe("14:30")
     })
 
     it("should handle empty and whitespace inputs", () => {
-      const requiredSchema = time({ format: "HH:mm", required: true })
-      const optionalSchema = time({ format: "HH:mm", required: false })
+      const requiredSchema = time(true, { format: "HH:mm" })
+      const optionalSchema = time(false, { format: "HH:mm" })
 
       expect(() => requiredSchema.parse("")).toThrow("Required")
       expect(() => requiredSchema.parse("   ")).toThrow("Required")
@@ -477,9 +464,9 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should preserve valid format after transformation", () => {
-      const schema = time({
+      const schema = time(true, {
         format: "HH:mm",
-        transform: (val) => val.replace(/[^0-9:]/g, "").replace(/^(\d{2})(\d{2})$/, "$1:$2")
+        transform: (val) => val.replace(/[^0-9:]/g, "").replace(/^(\d{2})(\d{2})$/, "$1:$2"),
       })
 
       expect(schema.parse("14abc:30def")).toBe("14:30")
@@ -487,12 +474,7 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should work with complex whitelist scenarios", () => {
-      const schema = time({
-        format: "HH:mm",
-        whitelist: ["14:30", "TBD", "flexible", ""],
-        whitelistOnly: true,
-        required: false
-      })
+      const schema = time(false, { format: "HH:mm", whitelist: ["14:30", "TBD", "flexible", ""], whitelistOnly: true })
 
       // Whitelist scenarios
       expect(schema.parse("14:30")).toBe("14:30")
@@ -506,8 +488,8 @@ describe("Taiwan time() validator", () => {
     })
 
     it("should handle boundary cases for different formats", () => {
-      const schema24 = time({ format: "HH:mm" })
-      const schema12 = time({ format: "hh:mm A" })
+      const schema24 = time(true, { format: "HH:mm" })
+      const schema12 = time(true, { format: "hh:mm A" })
 
       // 24-hour boundary cases
       expect(schema24.parse("00:00")).toBe("00:00")

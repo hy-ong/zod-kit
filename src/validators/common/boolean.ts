@@ -34,7 +34,6 @@ export type BooleanMessages = {
  * @template IsRequired - Whether the field is required (affects return type)
  *
  * @interface BooleanOptions
- * @property {IsRequired} [required=true] - Whether the field is required
  * @property {boolean | null} [defaultValue] - Default value when input is empty
  * @property {boolean} [shouldBe] - Specific boolean value that must be matched
  * @property {unknown[]} [truthyValues] - Array of values that should be treated as true
@@ -44,7 +43,6 @@ export type BooleanMessages = {
  * @property {Record<Locale, BooleanMessages>} [i18n] - Custom error messages for different locales
  */
 export type BooleanOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   defaultValue?: IsRequired extends true ? boolean : boolean | null
   shouldBe?: boolean
   truthyValues?: unknown[]
@@ -67,7 +65,8 @@ export type BooleanSchema<IsRequired extends boolean> = IsRequired extends true 
  * Creates a Zod schema for boolean validation with flexible value interpretation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @param {BooleanOptions<IsRequired>} [options] - Configuration options for boolean validation
+ * @param {IsRequired} [required=false] - Whether the field is required
+ * @param {Omit<BooleanOptions<IsRequired>, 'required'>} [options] - Configuration options for boolean validation
  * @returns {BooleanSchema<IsRequired>} Zod schema for boolean validation
  *
  * @description
@@ -84,41 +83,43 @@ export type BooleanSchema<IsRequired extends boolean> = IsRequired extends true 
  *
  * @example
  * ```typescript
- * // Basic boolean validation
+ * // Basic boolean validation (optional by default)
  * const basicSchema = boolean()
  * basicSchema.parse(true) // ✓ Valid
  * basicSchema.parse("true") // ✓ Valid (converted to true)
+ * basicSchema.parse(null) // ✓ Valid (optional)
+ *
+ * // Required boolean
+ * const requiredSchema = boolean(true)
+ * requiredSchema.parse(true) // ✓ Valid
+ * requiredSchema.parse(null) // ✗ Invalid (required)
  *
  * // Strict mode (only actual booleans)
- * const strictSchema = boolean({ strict: true })
+ * const strictSchema = boolean(false, { strict: true })
  * strictSchema.parse(true) // ✓ Valid
  * strictSchema.parse("true") // ✗ Invalid
  *
  * // Must be true
- * const mustBeTrueSchema = boolean({ shouldBe: true })
+ * const mustBeTrueSchema = boolean(true, { shouldBe: true })
  * mustBeTrueSchema.parse(true) // ✓ Valid
  * mustBeTrueSchema.parse(false) // ✗ Invalid
  *
  * // Custom truthy/falsy values
- * const customSchema = boolean({
+ * const customSchema = boolean(false, {
  *   truthyValues: ["yes", "on", 1],
  *   falsyValues: ["no", "off", 0]
  * })
  * customSchema.parse("yes") // ✓ Valid (converted to true)
  *
  * // Optional with default
- * const optionalSchema = boolean({
- *   required: false,
- *   defaultValue: false
- * })
+ * const optionalSchema = boolean(false, { defaultValue: false })
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link BooleanOptions} for all available configuration options
  */
-export function boolean<IsRequired extends boolean = true>(options?: BooleanOptions<IsRequired>): BooleanSchema<IsRequired> {
+export function boolean<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<BooleanOptions<IsRequired>, 'required'>): BooleanSchema<IsRequired> {
   const {
-    required = true,
     defaultValue = null,
     shouldBe,
     truthyValues = [true, "true", 1, "1", "yes", "on"],
@@ -127,6 +128,8 @@ export function boolean<IsRequired extends boolean = true>(options?: BooleanOpti
     transform,
     i18n,
   } = options ?? {}
+
+  const isRequired = required ?? false as IsRequired
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof BooleanMessages, params?: Record<string, any>) => {
@@ -168,7 +171,7 @@ export function boolean<IsRequired extends boolean = true>(options?: BooleanOpti
     z.union([z.literal(true), z.literal(false), z.literal(null)])
   )
 
-  if (required && defaultValue === null) {
+  if (isRequired && defaultValue === null) {
     result = result.refine((val) => val !== null, { message: getMessage("required") })
   }
 

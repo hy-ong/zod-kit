@@ -80,7 +80,6 @@ export type PostalCodeFormat =
  * @property {Record<Locale, PostalCodeMessages>} [i18n] - Custom error messages for different locales
  */
 export type PostalCodeOptions<IsRequired extends boolean = true> = {
-  required?: IsRequired
   format?: PostalCodeFormat
   strictValidation?: boolean
   allowDashes?: boolean
@@ -829,48 +828,47 @@ const validateTaiwanPostalCode = (
  * modernSchema.parse("10001")   // ✗ Invalid (5-digit not allowed)
  *
  * // Accept all formats
- * const flexibleSchema = postalCode({ format: "all" })
+ * const flexibleSchema = postalCode(false, { format: "all" })
  * flexibleSchema.parse("100")     // ✓ Valid
  * flexibleSchema.parse("10001")   // ✓ Valid
  * flexibleSchema.parse("100001")  // ✓ Valid
  *
  * // Only 6-digit format (current standard)
- * const modernOnlySchema = postalCode({ format: "6" })
+ * const modernOnlySchema = postalCode(false, { format: "6" })
  * modernOnlySchema.parse("100001") // ✓ Valid
  * modernOnlySchema.parse("100")    // ✗ Invalid
  *
  * // With dashes allowed
- * const dashSchema = postalCode({ allowDashes: true })
+ * const dashSchema = postalCode(false, { allowDashes: true })
  * dashSchema.parse("100-001")  // ✓ Valid (normalized to "100001")
  * dashSchema.parse("100-01")   // ✓ Valid if 5-digit format allowed
  *
  * // Specific areas only
- * const taipeiSchema = postalCode({
+ * const taipeiSchema = postalCode(false, {
  *   allowedPrefixes: ["100", "103", "104", "105", "106"]
  * })
  * taipeiSchema.parse("100001") // ✓ Valid (Taipei area)
  * taipeiSchema.parse("200001") // ✗ Invalid (not in allowlist)
  *
  * // Block specific areas
- * const blockedSchema = postalCode({
+ * const blockedSchema = postalCode(false, {
  *   blockedPrefixes: ["999"] // Block test codes
  * })
  *
  * // With warning for legacy format
- * const warnSchema = postalCode({
+ * const warnSchema = postalCode(false, {
  *   format: "all",
  *   warn5Digit: true
  * })
  * // Will validate but may show warning for 5-digit codes
  *
  * // Optional with custom transformation
- * const optionalSchema = postalCode({
- *   required: false,
+ * const optionalSchema = postalCode(false, {
  *   transform: (value) => value.replace(/\D/g, '') // Remove non-digits
  * })
  *
  * // Strict suffix validation for real postal codes
- * const strictSchema = postalCode({
+ * const strictSchema = postalCode(false, {
  *   format: "6",
  *   strictSuffixValidation: true // Validates suffix range 001-999
  * })
@@ -878,7 +876,7 @@ const validateTaiwanPostalCode = (
  * strictSchema.parse("100000") // ✗ Invalid (suffix 000 not allowed)
  *
  * // Deprecate 5-digit codes entirely
- * const modern2024Schema = postalCode({
+ * const modern2024Schema = postalCode(false, {
  *   format: "all",
  *   deprecate5Digit: true // Throws error for any 5-digit code
  * })
@@ -891,9 +889,8 @@ const validateTaiwanPostalCode = (
  * @see {@link PostalCodeFormat} for supported formats
  * @see {@link validateTaiwanPostalCode} for validation logic details
  */
-export function postalCode<IsRequired extends boolean = true>(options?: PostalCodeOptions<IsRequired>): PostalCodeSchema<IsRequired> {
+export function postalCode<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<PostalCodeOptions<IsRequired>, 'required'>): PostalCodeSchema<IsRequired> {
   const {
-    required = true,
     format = "3+6",
     strictValidation = true,
     allowDashes = true,
@@ -907,8 +904,10 @@ export function postalCode<IsRequired extends boolean = true>(options?: PostalCo
     deprecate5Digit = false,
   } = options ?? {}
 
+  const isRequired = required ?? false as IsRequired
+
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (required ? "" : null)
+  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof PostalCodeMessages, params?: Record<string, any>) => {
@@ -948,18 +947,18 @@ export function postalCode<IsRequired extends boolean = true>(options?: PostalCo
     return processed
   }
 
-  const baseSchema = required ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
 
   const schema = baseSchema.refine((val) => {
     if (val === null) return true
 
     // Required check
-    if (required && (val === "" || val === "null" || val === "undefined")) {
+    if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       throw new z.ZodError([{ code: "custom", message: getMessage("required"), path: [] }])
     }
 
     if (val === null) return true
-    if (!required && val === "") return true
+    if (!isRequired && val === "") return true
 
     // Format-specific validation
     const cleanValue = val.replace(/[-\s]/g, "")
