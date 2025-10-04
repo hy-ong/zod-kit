@@ -79,7 +79,11 @@ export type TwMobileSchema<IsRequired extends boolean> = IsRequired extends true
 const validateTaiwanMobile = (value: string): boolean => {
   // Taiwan mobile phone format: 09 + 8 digits
   // Valid prefixes: 090, 091, 092, 093, 094, 095, 096, 097, 098, 099
-  return /^09[0-9]\d{7}$/.test(value)
+
+  // Remove common separators for validation
+  const cleanValue = value.replace(/[-\s]/g, "")
+
+  return /^09[0-9]\d{7}$/.test(cleanValue)
 }
 
 /**
@@ -214,17 +218,12 @@ export function twMobile<IsRequired extends boolean = false>(required?: IsRequir
     if (val === null) return
     if (!isRequired && val === "") return
 
-    // Allowlist check (if an allowlist is provided, only allow values in the allowlist)
-    if (whitelist && whitelist.length > 0) {
-      if (whitelist.includes(val)) {
-        return
-      }
-      // If not in the allowlist, reject regardless of format
-      ctx.addIssue({ code: "custom", message: getMessage("notInWhitelist") })
+    // Allowlist check (if in allowlist, accept regardless of format)
+    if (whitelist && whitelist.length > 0 && whitelist.includes(val)) {
       return
     }
 
-    // Taiwan mobile phone format validation (only if no allowlist or allowlist is empty)
+    // Taiwan mobile phone format validation
     if (!validateTaiwanMobile(val)) {
       ctx.addIssue({ code: "custom", message: getMessage("invalid") })
       return

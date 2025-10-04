@@ -9,6 +9,7 @@ describe("Taiwan twMobile(true) validator", () => {
       const schema = twMobile(true)
 
       // Valid Taiwan mobile phone numbers
+      expect(schema.parse("0923-658545")).toBe("0923-658545")
       expect(schema.parse("0901234567")).toBe("0901234567")
       expect(schema.parse("0911234567")).toBe("0911234567")
       expect(schema.parse("0921234567")).toBe("0921234567")
@@ -54,18 +55,29 @@ describe("Taiwan twMobile(true) validator", () => {
       expect(schema.parse("emergency-contact")).toBe("emergency-contact")
       expect(schema.parse("0801234567")).toBe("0801234567") // Invalid mobile but in allowlist
 
-      // Valid mobile phones not in the allowlist should be rejected
-      expect(() => schema.parse("0901234567")).toThrow("Not in allowed mobile phone list")
-      expect(() => schema.parse("0801111111")).toThrow("Not in allowed mobile phone list")
+      // Valid mobile phones not in the allowlist should still be accepted
+      expect(schema.parse("0901234567")).toBe("0901234567") // Valid format, not in whitelist
+      expect(schema.parse("0911234567")).toBe("0911234567") // Valid format, not in whitelist
+
+      // Invalid mobile numbers not in the allowlist should be rejected
+      expect(() => schema.parse("invalid-phone")).toThrow("Invalid Taiwan mobile phone format")
     })
 
-    it("should reject values not in whitelist when whitelist is provided", () => {
+    it("should accept both whitelist values and valid mobile numbers", () => {
       const schema = twMobile(true, {
         whitelist: ["allowed-value", "0901234567"],
       })
 
-      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
-      expect(() => schema.parse("invalid-value")).toThrow("Not in allowed mobile phone list")
+      // In whitelist
+      expect(schema.parse("allowed-value")).toBe("allowed-value")
+      expect(schema.parse("0901234567")).toBe("0901234567")
+
+      // Not in whitelist but valid format
+      expect(schema.parse("0911234567")).toBe("0911234567")
+      expect(schema.parse("0921234567")).toBe("0921234567")
+
+      // Not in whitelist and invalid format
+      expect(() => schema.parse("invalid-value")).toThrow("Invalid Taiwan mobile phone format")
     })
 
     it("should work with empty whitelist", () => {
@@ -120,7 +132,7 @@ describe("Taiwan twMobile(true) validator", () => {
       expect(schema.parse("")).toBe(null)
       expect(schema.parse("custom-value")).toBe("custom-value")
       expect(schema.parse("0901234567")).toBe("0901234567")
-      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
+      expect(schema.parse("0911234567")).toBe("0911234567") // Valid format, not in whitelist
     })
   })
 
@@ -157,7 +169,7 @@ describe("Taiwan twMobile(true) validator", () => {
       })
 
       expect(whitelistSchema.parse("customvalue")).toBe("customvalue")
-      expect(() => whitelistSchema.parse("091-123-4567")).toThrow("Not in allowed mobile phone list")
+      expect(whitelistSchema.parse("091-123-4567")).toBe("0911234567") // Valid format after transform
     })
   })
 
@@ -221,16 +233,17 @@ describe("Taiwan twMobile(true) validator", () => {
       expect(() => schema.parse("0801234567")).toThrow("無效的手機號碼格式")
     })
 
-    it("should support whitelist error messages", () => {
+    it("should accept valid format even when not in whitelist", () => {
       setLocale("en")
       const schema = twMobile(true, {
         whitelist: ["0901234567"],
       })
 
-      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
+      // Valid format, not in whitelist - should pass
+      expect(schema.parse("0911234567")).toBe("0911234567")
 
       setLocale("zh-TW")
-      expect(() => schema.parse("0911234567")).toThrow("不在允許的手機號碼清單中")
+      expect(schema.parse("0921234567")).toBe("0921234567")
     })
 
     it("should support custom i18n messages", () => {
@@ -258,24 +271,24 @@ describe("Taiwan twMobile(true) validator", () => {
       expect(() => schema.parse("0801234567")).toThrow("手機號碼格式錯誤")
     })
 
-    it("should support custom whitelist messages", () => {
+    it("should support custom invalid messages", () => {
       const schema = twMobile(true, {
         whitelist: ["0901234567"],
         i18n: {
           en: {
-            notInWhitelist: "This mobile phone number is not allowed",
+            invalid: "This mobile phone format is not valid",
           },
           "zh-TW": {
-            notInWhitelist: "此手機號碼不被允許",
+            invalid: "此手機號碼格式無效",
           },
         },
       })
 
       setLocale("en")
-      expect(() => schema.parse("0911234567")).toThrow("This mobile phone number is not allowed")
+      expect(() => schema.parse("0801234567")).toThrow("This mobile phone format is not valid")
 
       setLocale("zh-TW")
-      expect(() => schema.parse("0911234567")).toThrow("此手機號碼不被允許")
+      expect(() => schema.parse("0801234567")).toThrow("此手機號碼格式無效")
     })
   })
 
@@ -356,9 +369,11 @@ describe("Taiwan twMobile(true) validator", () => {
       expect(schema.parse("custom-contact-123")).toBe("custom-contact-123")
       expect(schema.parse("")).toBe("")
 
-      // Not in the allowlist
-      expect(() => schema.parse("0911234567")).toThrow("Not in allowed mobile phone list")
-      expect(() => schema.parse("other-value")).toThrow("Not in allowed mobile phone list")
+      // Valid format but not in the allowlist - should pass
+      expect(schema.parse("0911234567")).toBe("0911234567")
+
+      // Invalid format and not in allowlist - should fail
+      expect(() => schema.parse("other-value")).toThrow("Invalid Taiwan mobile phone format")
     })
   })
 })
