@@ -1,6 +1,6 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "A comprehensive TypeScript library providing pre-built Zod validation schemas with full internationalization support for common data types and Taiwan-specific formats",
   "keywords": [
     "zod",
@@ -43,7 +43,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublishOnly": "npm test -- --run && npm run build"
   },
   "dependencies": {
     "dayjs": "^1.11.19",
