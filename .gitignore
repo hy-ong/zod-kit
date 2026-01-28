@@ -122,3 +122,5 @@ public
 *.njsproj
 *.sln
 *.sw?
+
+.claude
