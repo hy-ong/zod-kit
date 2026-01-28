@@ -8,7 +8,7 @@
  * @version 0.0.5
  */
 
-import { z, ZodNullable, ZodType } from "zod"
+import { z, ZodType } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
@@ -99,17 +99,16 @@ export type FileOptions<IsRequired extends boolean = true> = {
  * Type alias for file validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @typedef FileSchema
- * @description Returns ZodType<File> if required, ZodNullable<ZodType<File>> if optional
+ * @description Returns ZodType with proper input/output types based on required flag
  */
-export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? ZodType<File> : ZodNullable<ZodType<File>>
+export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? ZodType<File, File | null> : ZodType<File | null, File | null>
 
 /**
  * Creates a Zod schema for file validation with comprehensive filtering options
  *
  * @template IsRequired - Whether the field is required (affects return type)
  * @param {IsRequired} [required=false] - Whether the field is required
- * @param {Omit<ValidatorOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
+ * @param {Omit<FileOptions<IsRequired>, 'required'>} [options] - Configuration options for validation
  * @returns {FileSchema<IsRequired>} Zod schema for file validation
  *
  * @description
@@ -178,7 +177,7 @@ export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link FileOptions} for all available configuration options
  */
-export function file<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<FileOptions<IsRequired>, 'required'>): FileSchema<IsRequired> {
+export function file<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<FileOptions<IsRequired>, "required">): FileSchema<IsRequired> {
   const {
     maxSize,
     minSize,
@@ -199,7 +198,7 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
     i18n,
   } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof FileMessages, params?: Record<string, any>) => {
@@ -234,31 +233,25 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
   const actualDefaultValue = defaultValue ?? null
 
   // Create properly typed base schema for File | null
-  const fileOrNullSchema = z.union([
-    z.instanceof(File),
-    z.null()
-  ])
+  const fileOrNullSchema = z.union([z.instanceof(File), z.null()])
 
-  const baseSchema = z.preprocess(
-    (val): File | null => {
-      if (val === "" || val === null || val === undefined) {
-        return actualDefaultValue
-      }
+  const baseSchema = z.preprocess((val): File | null => {
+    if (val === "" || val === null || val === undefined) {
+      return actualDefaultValue
+    }
 
-      if (!(val instanceof File)) {
-        return val as File | null
-      }
+    if (!(val instanceof File)) {
+      return val as File | null
+    }
 
-      let processed = val
+    let processed = val
 
-      if (transform) {
-        processed = transform(processed)
-      }
+    if (transform) {
+      processed = transform(processed)
+    }
 
-      return processed
-    },
-    fileOrNullSchema
-  )
+    return processed
+  }, fileOrNullSchema)
 
   const schema = baseSchema
     .refine((val) => !isRequired || val !== null, {
