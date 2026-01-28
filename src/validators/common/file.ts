@@ -233,14 +233,20 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
 
   const actualDefaultValue = defaultValue ?? null
 
+  // Create properly typed base schema for File | null
+  const fileOrNullSchema = z.union([
+    z.instanceof(File),
+    z.null()
+  ])
+
   const baseSchema = z.preprocess(
-    (val) => {
+    (val): File | null => {
       if (val === "" || val === null || val === undefined) {
         return actualDefaultValue
       }
 
       if (!(val instanceof File)) {
-        return val
+        return val as File | null
       }
 
       let processed = val
@@ -251,11 +257,11 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
 
       return processed
     },
-    z.union([z.instanceof(File).refine(() => true, { message: getMessage("invalid") }), z.null()])
+    fileOrNullSchema
   )
 
   const schema = baseSchema
-    .refine((val) => required === false || val !== null, {
+    .refine((val) => !isRequired || val !== null, {
       message: getMessage("required"),
     })
     .refine((val) => val === null || val instanceof File, {
