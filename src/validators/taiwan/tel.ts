@@ -75,6 +75,8 @@ export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * - 06: Tainan - 7 digits
  * - 07: Kaohsiung - 7 digits
  * - 08: Pingtung - 7 digits
+ * - 0800: Toll-free - 6 digits
+ * - 0809: Toll-free - 6 digits
  * - 082: Kinmen - 6 digits
  * - 0836: Matsu - 5 digits
  * - 089: Taitung - 6 digits
@@ -99,6 +101,7 @@ const validateTaiwanTel = (value: string): boolean => {
   // 06: Tainan - 7 digits
   // 07: Kaohsiung - 7 digits
   // 08: Pingtung - 7 digits
+  // 0800/0809: Toll-free - 6 digits
   // 082: Kinmen - 6 digits
   // 0836: Matsu - 5 digits
   // 089: Taitung - 6 digits
@@ -113,6 +116,10 @@ const validateTaiwanTel = (value: string): boolean => {
 
   // Check 4-digit area codes first
   const areaCode4 = cleanValue.substring(0, 4)
+  if (areaCode4 === "0800" || areaCode4 === "0809") {
+    // Toll-free: 0800/0809 + 6 digits, total 10 digits
+    return cleanValue.length === 10 && /^080[09]\d{6}$/.test(cleanValue)
+  }
   if (areaCode4 === "0836") {
     // Matsu: 0836 + 5 digits, total 9 digits
     return cleanValue.length === 9 && /^0836\d{5}$/.test(cleanValue)

@@ -39,6 +39,11 @@ describe("Taiwan twTel(true) validator", () => {
       // 4-digit area codes
       expect(schema.parse("082661234")).toBe("082661234") // 0826-61234 (9 digits, Wuqiu)
       expect(schema.parse("083621234")).toBe("083621234") // 0836-21234 (9 digits, Matsu)
+
+      // Toll-free numbers
+      expect(schema.parse("0800123456")).toBe("0800123456") // 0800-123-456 (10 digits)
+      expect(schema.parse("0809123456")).toBe("0809123456") // 0809-123-456 (10 digits)
+      expect(schema.parse("0800-012-345")).toBe("0800-012-345") // with separators
     })
 
     it("should validate numbers with separators", () => {
@@ -246,6 +251,11 @@ describe("Taiwan twTel(true) validator", () => {
         expect(validateTaiwanTel("082661234")).toBe(true) // Wuqiu
         expect(validateTaiwanTel("083621234")).toBe(true) // Matsu
 
+        // Toll-free numbers
+        expect(validateTaiwanTel("0800123456")).toBe(true) // 0800
+        expect(validateTaiwanTel("0809123456")).toBe(true) // 0809
+        expect(validateTaiwanTel("0800-123-456")).toBe(true) // with separators
+
         // Valid with separators
         expect(validateTaiwanTel("02-2345-6789")).toBe(true)
         expect(validateTaiwanTel("07 234 5678")).toBe(true)
@@ -264,6 +274,9 @@ describe("Taiwan twTel(true) validator", () => {
         expect(validateTaiwanTel("071234567")).toBe(false) // Invalid first digit for 07
         expect(validateTaiwanTel("037134567")).toBe(false) // Invalid first digit for 037
         expect(validateTaiwanTel("081234567")).toBe(false) // Invalid first digit for 08
+        expect(validateTaiwanTel("080012345")).toBe(false) // 0800 too short (9 digits)
+        expect(validateTaiwanTel("08001234567")).toBe(false) // 0800 too long (11 digits)
+        expect(validateTaiwanTel("0801123456")).toBe(false) // 0801 not valid toll-free prefix
       })
     })
   })
@@ -361,6 +374,8 @@ describe("Taiwan twTel(true) validator", () => {
         { code: "08", numbers: ["084234567"] }, // Pingtung (9 digits, first digit 4) - from utility test ✓
         { code: "082", numbers: ["082234567"] }, // Kinmen (9 digits, first digit 2) - from utility test ✓
         { code: "089", numbers: ["089234567"] }, // Taitung (9 digits, first digit 2) - from utility test ✓
+        { code: "0800", numbers: ["0800123456"] }, // Toll-free (10 digits)
+        { code: "0809", numbers: ["0809123456"] }, // Toll-free (10 digits)
         { code: "0826", numbers: ["082661234"] }, // Wuqiu (9 digits, first digit 6) - from utility test ✓
         { code: "0836", numbers: ["083621234"] }, // Matsu (9 digits, first digit 2) - from utility test ✓
       ]
