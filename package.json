@@ -1,6 +1,6 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "A comprehensive TypeScript library providing pre-built Zod validation schemas with full internationalization support for common data types and Taiwan-specific formats",
   "keywords": [
     "zod",
