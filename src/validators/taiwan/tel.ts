@@ -70,15 +70,15 @@ export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * - 03: Taoyuan, Hsinchu, Yilan, Hualien - 7-8 digits
  * - 037: Miaoli - 6-7 digits
  * - 04: Taichung, Changhua, Nantou - 7-8 digits
- * - 049: Nantou - 7 digits
+ * - 049: Nantou - 6-7 digits
  * - 05: Yunlin, Chiayi - 7 digits
  * - 06: Tainan - 7 digits
- * - 07: Kaohsiung - 7 digits
+ * - 07: Kaohsiung - 7-8 digits
  * - 08: Pingtung - 7 digits
  * - 0800: Toll-free - 6 digits
  * - 0809: Toll-free - 6 digits
  * - 082: Kinmen - 6 digits
- * - 0836: Matsu - 5 digits
+ * - 0836: Matsu - 5-6 digits
  * - 089: Taitung - 6 digits
  *
  * @example
@@ -96,14 +96,14 @@ const validateTaiwanTel = (value: string): boolean => {
   // 03: Taoyuan, Hsinchu, Yilan, Hualien - 7-8 digits
   // 037: Miaoli - 6-7 digits
   // 04: Taichung, Changhua, Nantou - 7-8 digits
-  // 049: Nantou - 7 digits
+  // 049: Nantou - 6-7 digits
   // 05: Yunlin, Chiayi - 7 digits
   // 06: Tainan - 7 digits
-  // 07: Kaohsiung - 7 digits
+  // 07: Kaohsiung - 7-8 digits
   // 08: Pingtung - 7 digits
   // 0800/0809: Toll-free - 6 digits
   // 082: Kinmen - 6 digits
-  // 0836: Matsu - 5 digits
+  // 0836: Matsu - 5-6 digits
   // 089: Taitung - 6 digits
 
   // Remove common separators for validation
@@ -121,8 +121,8 @@ const validateTaiwanTel = (value: string): boolean => {
     return cleanValue.length === 10 && /^080[09]\d{6}$/.test(cleanValue)
   }
   if (areaCode4 === "0836") {
-    // Matsu: 0836 + 5 digits, total 9 digits
-    return cleanValue.length === 9 && /^0836\d{5}$/.test(cleanValue)
+    // Matsu: 0836 + 5-6 digits, total 9-10 digits
+    return (cleanValue.length === 9 || cleanValue.length === 10) && /^0836\d{5,6}$/.test(cleanValue)
   }
 
   // Check 3-digit area codes
@@ -137,8 +137,8 @@ const validateTaiwanTel = (value: string): boolean => {
     return (cleanValue.length === 9 || cleanValue.length === 10) && /^037[2-9]\d{5,6}$/.test(cleanValue)
   }
   if (areaCode3 === "049") {
-    // Nantou: 049 + 7 digits, total 10 digits
-    return cleanValue.length === 10 && /^049\d{7}$/.test(cleanValue)
+    // Nantou: 049 + 6-7 digits, total 9-10 digits
+    return (cleanValue.length === 9 || cleanValue.length === 10) && /^049\d{6,7}$/.test(cleanValue)
   }
   if (areaCode3 === "082") {
     // Kinmen: 082 + 6 digits, total 9 digits
@@ -178,13 +178,13 @@ const validateTaiwanTel = (value: string): boolean => {
     return cleanValue.length === 9 && /^06\d{7}$/.test(cleanValue)
   }
   if (areaCode2 === "07") {
-    // Kaohsiung: 07 + 7 digits, total 9 digits
+    // Kaohsiung: 07 + 7-8 digits, total 9-10 digits
     // User number must start with 2-9 (not 0 or 1)
     const firstDigit = cleanValue[2]
     if (firstDigit === "0" || firstDigit === "1") {
       return false
     }
-    return cleanValue.length === 9 && /^07[2-9]\d{6}$/.test(cleanValue)
+    return (cleanValue.length === 9 || cleanValue.length === 10) && /^07[2-9]\d{6,7}$/.test(cleanValue)
   }
   if (areaCode2 === "08") {
     // Pingtung: 08 + 7 digits, total 9 digits

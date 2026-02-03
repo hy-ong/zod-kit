@@ -13,9 +13,10 @@ describe("Taiwan twTel(true) validator", () => {
       expect(schema.parse("0223456789")).toBe("0223456789") // 02-2345-6789 (10 digits)
       expect(schema.parse("0232345678")).toBe("0232345678") // 02-3234-5678 (10 digits)
 
-      // Kaohsiung (07) - requires 9 digits total, the first digit after 07 must be 2-9
+      // Kaohsiung (07) - requires 9-10 digits total, the first digit after 07 must be 2-9
       expect(schema.parse("072345678")).toBe("072345678") // 07-234-5678 (9 digits)
       expect(schema.parse("073456789")).toBe("073456789") // 07-345-6789 (9 digits)
+      expect(schema.parse("0787267820")).toBe("0787267820") // 07-8726-7820 (10 digits)
 
       // Taichung (04) - requires 9 digits total
       expect(schema.parse("041234567")).toBe("041234567") // 04-123-4567 (9 digits)
@@ -52,6 +53,7 @@ describe("Taiwan twTel(true) validator", () => {
       // Numbers with dashes
       expect(schema.parse("02-2345-6789")).toBe("02-2345-6789")
       expect(schema.parse("07-234-5678")).toBe("07-234-5678")
+      expect(schema.parse("07-87267820")).toBe("07-87267820")
       expect(schema.parse("082-234567")).toBe("082-234567")
 
       // Numbers with spaces
@@ -241,15 +243,18 @@ describe("Taiwan twTel(true) validator", () => {
       it("should correctly validate Taiwan telephone numbers", () => {
         // Valid numbers
         expect(validateTaiwanTel("0223456789")).toBe(true) // Taipei
-        expect(validateTaiwanTel("072345678")).toBe(true) // Kaohsiung
+        expect(validateTaiwanTel("072345678")).toBe(true) // Kaohsiung 9 digits
+        expect(validateTaiwanTel("0787267820")).toBe(true) // Kaohsiung 10 digits
         expect(validateTaiwanTel("041234567")).toBe(true) // Taichung
         expect(validateTaiwanTel("037234567")).toBe(true) // Miaoli
-        expect(validateTaiwanTel("0492345678")).toBe(true) // Nantou
+        expect(validateTaiwanTel("0492345678")).toBe(true) // Nantou 10 digits
+        expect(validateTaiwanTel("049234567")).toBe(true) // Nantou 9 digits
         expect(validateTaiwanTel("084234567")).toBe(true) // Pingtung
         expect(validateTaiwanTel("082234567")).toBe(true) // Kinmen
         expect(validateTaiwanTel("089234567")).toBe(true) // Taitung
         expect(validateTaiwanTel("082661234")).toBe(true) // Wuqiu
-        expect(validateTaiwanTel("083621234")).toBe(true) // Matsu
+        expect(validateTaiwanTel("083621234")).toBe(true) // Matsu 9 digits
+        expect(validateTaiwanTel("0836212345")).toBe(true) // Matsu 10 digits
 
         // Toll-free numbers
         expect(validateTaiwanTel("0800123456")).toBe(true) // 0800
@@ -259,6 +264,7 @@ describe("Taiwan twTel(true) validator", () => {
         // Valid with separators
         expect(validateTaiwanTel("02-2345-6789")).toBe(true)
         expect(validateTaiwanTel("07 234 5678")).toBe(true)
+        expect(validateTaiwanTel("07-8726-7820")).toBe(true)
         expect(validateTaiwanTel("082-234567")).toBe(true)
 
         // Invalid numbers
@@ -370,7 +376,7 @@ describe("Taiwan twTel(true) validator", () => {
         { code: "04", numbers: ["041234567"] }, // Taichung (9 digits) - from utility test ✓
         { code: "037", numbers: ["037234567"] }, // Miaoli (9 digits, first digit 2) - from utility test ✓
         { code: "049", numbers: ["0492345678"] }, // Nantou (10 digits, first digit 2) - from utility test ✓
-        { code: "07", numbers: ["072345678"] }, // Kaohsiung (9 digits, first digit 2) - from utility test ✓
+        { code: "07", numbers: ["072345678", "0787267820"] }, // Kaohsiung (9-10 digits, first digit 2-9) - from utility test ✓
         { code: "08", numbers: ["084234567"] }, // Pingtung (9 digits, first digit 4) - from utility test ✓
         { code: "082", numbers: ["082234567"] }, // Kinmen (9 digits, first digit 2) - from utility test ✓
         { code: "089", numbers: ["089234567"] }, // Taitung (9 digits, first digit 2) - from utility test ✓
@@ -405,6 +411,7 @@ describe("Taiwan twTel(true) validator", () => {
       const realLandlineNumbers = [
         "0223456789", // Taipei 10-digit (valid first digit 2) - from utility test ✓
         "072345678", // Kaohsiung 9-digit (valid first digit 2) - from utility test ✓
+        "0787267820", // Kaohsiung 10-digit (valid first digit 8) ✓
         "041234567", // Taichung 9-digit - from utility test ✓
         "037234567", // Miaoli 9-digit (valid first digit 2) - from utility test ✓
         "0492345678", // Nantou 10-digit (valid first digit 2) - from utility test ✓
