@@ -11,12 +11,12 @@ A comprehensive TypeScript library that provides pre-built validation schemas on
 - 🔍 **Pre-built schemas** - Common validation patterns ready to use
 - 🌐 **i18n support** - English and Traditional Chinese localization
 - 📝 **TypeScript-first** - Full type safety and IntelliSense support
-- ⚡ **Zero dependencies** - Built on top of Zod (peer dependency)
+- ⚡ **Lightweight** - Minimal dependencies with Zod as peer dependency
 - 🎯 **Highly configurable** - Flexible options for every use case
 - 🇹🇼 **Taiwan-specific** - National ID, business ID, phone numbers, postal codes, etc.
 - ⏰ **Date/Time support** - Comprehensive datetime, time, and date validation
 - 📎 **File validation** - MIME type filtering, size constraints, and file type checking
-- 🧪 **Battle-tested** - Comprehensive test suite with 500+ tests
+- 🧪 **Battle-tested** - Comprehensive test suite with 700+ tests
 
 ## 📦 Installation
 
@@ -32,7 +32,7 @@ yarn add @hy_ong/zod-kit zod
 pnpm add @hy_ong/zod-kit zod
 ```
 
-> **Note**: Zod is a peer dependency and must be installed separately.
+> **Note**: Zod is a peer dependency (`^4.3.6`) and must be installed separately.
 
 ## 🚀 Quick Start
 
@@ -566,7 +566,7 @@ npm test
 npm run build
 
 # Run tests in watch mode
-npm run test:watch
+npx vitest --watch
 ```
 
 ## 🧪 Testing
@@ -581,7 +581,7 @@ The library includes comprehensive tests covering:
 
 ```bash
 npm test                    # Run all tests
-npm run test:coverage      # Run with coverage report
+npx vitest --coverage      # Run with coverage report
 ```
 
 ## 📄 License
