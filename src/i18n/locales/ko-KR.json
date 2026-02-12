@@ -162,6 +162,31 @@
       "videoOnly": "동영상 파일만 허용됩니다",
       "audioOnly": "오디오 파일만 허용됩니다",
       "archiveOnly": "압축 파일만 허용됩니다"
+    },
+    "creditCard": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 신용카드 번호입니다",
+      "notInWhitelist": "신용카드 번호가 허용 목록에 없습니다"
+    },
+    "ip": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 IP 주소입니다",
+      "notIPv4": "유효한 IPv4 주소여야 합니다",
+      "notIPv6": "유효한 IPv6 주소여야 합니다",
+      "notInWhitelist": "IP 주소가 허용 목록에 없습니다"
+    },
+    "color": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 색상 형식입니다",
+      "notHex": "유효한 16진수 색상이어야 합니다",
+      "notRgb": "유효한 RGB 색상이어야 합니다",
+      "notHsl": "유효한 HSL 색상이어야 합니다"
+    },
+    "coordinate": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 좌표입니다",
+      "invalidLatitude": "위도는 -90에서 90 사이여야 합니다",
+      "invalidLongitude": "경도는 -180에서 180 사이여야 합니다"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "6자리 우편번호만 허용됩니다",
       "invalidSuffix": "유효하지 않은 우편번호 접미사 - 5자리는 01-99, 6자리는 001-999이어야 합니다",
       "deprecated5Digit": "5자리 우편번호는 폐지되어 더 이상 지원되지 않습니다"
+    },
+    "invoice": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 통일발표 번호입니다"
+    },
+    "licensePlate": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 차량 번호판입니다"
+    },
+    "bankAccount": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 은행 계좌입니다",
+      "invalidBankCode": "유효하지 않은 은행 코드입니다",
+      "invalidAccountNumber": "유효하지 않은 계좌 번호입니다"
+    },
+    "passport": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 여권 번호입니다"
     }
   }
 }

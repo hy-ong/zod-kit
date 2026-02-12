@@ -162,6 +162,31 @@
       "videoOnly": "動画ファイルのみ許可されています",
       "audioOnly": "音声ファイルのみ許可されています",
       "archiveOnly": "アーカイブファイルのみ許可されています"
+    },
+    "creditCard": {
+      "required": "必須項目です",
+      "invalid": "無効なクレジットカード番号です",
+      "notInWhitelist": "クレジットカード番号が許可リストにありません"
+    },
+    "ip": {
+      "required": "必須項目です",
+      "invalid": "無効なIPアドレスです",
+      "notIPv4": "有効なIPv4アドレスである必要があります",
+      "notIPv6": "有効なIPv6アドレスである必要があります",
+      "notInWhitelist": "IPアドレスが許可リストにありません"
+    },
+    "color": {
+      "required": "必須項目です",
+      "invalid": "無効な色形式です",
+      "notHex": "有効な16進数カラーである必要があります",
+      "notRgb": "有効なRGBカラーである必要があります",
+      "notHsl": "有効なHSLカラーである必要があります"
+    },
+    "coordinate": {
+      "required": "必須項目です",
+      "invalid": "無効な座標です",
+      "invalidLatitude": "緯度は-90から90の間である必要があります",
+      "invalidLongitude": "経度は-180から180の間である必要があります"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "6桁の郵便番号のみ使用可能です",
       "invalidSuffix": "無効な郵便番号の末尾 - 5桁は01-99、6桁は001-999である必要があります",
       "deprecated5Digit": "5桁の郵便番号は廃止されており、サポートされていません"
+    },
+    "invoice": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾統一発票番号です"
+    },
+    "licensePlate": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾ナンバープレートです"
+    },
+    "bankAccount": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾銀行口座です",
+      "invalidBankCode": "無効な銀行コードです",
+      "invalidAccountNumber": "無効な口座番号です"
+    },
+    "passport": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾パスポート番号です"
     }
   }
 }

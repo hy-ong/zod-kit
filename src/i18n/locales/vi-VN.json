@@ -162,6 +162,31 @@
       "videoOnly": "Chỉ cho phép tệp video",
       "audioOnly": "Chỉ cho phép tệp âm thanh",
       "archiveOnly": "Chỉ cho phép tệp nén"
+    },
+    "creditCard": {
+      "required": "Bắt buộc",
+      "invalid": "Số thẻ tín dụng không hợp lệ",
+      "notInWhitelist": "Số thẻ tín dụng không nằm trong danh sách cho phép"
+    },
+    "ip": {
+      "required": "Bắt buộc",
+      "invalid": "Địa chỉ IP không hợp lệ",
+      "notIPv4": "Phải là địa chỉ IPv4 hợp lệ",
+      "notIPv6": "Phải là địa chỉ IPv6 hợp lệ",
+      "notInWhitelist": "Địa chỉ IP không nằm trong danh sách cho phép"
+    },
+    "color": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng màu không hợp lệ",
+      "notHex": "Phải là màu hex hợp lệ",
+      "notRgb": "Phải là màu RGB hợp lệ",
+      "notHsl": "Phải là màu HSL hợp lệ"
+    },
+    "coordinate": {
+      "required": "Bắt buộc",
+      "invalid": "Tọa độ không hợp lệ",
+      "invalidLatitude": "Vĩ độ phải từ -90 đến 90",
+      "invalidLongitude": "Kinh độ phải từ -180 đến 180"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "Chỉ cho phép mã bưu chính 6 chữ số",
       "invalidSuffix": "Hậu tố mã bưu chính không hợp lệ - 5 chữ số phải là 01-99 hoặc 6 chữ số phải là 001-999",
       "deprecated5Digit": "Mã bưu chính 5 chữ số đã ngừng sử dụng và không còn được hỗ trợ"
+    },
+    "invoice": {
+      "required": "Bắt buộc",
+      "invalid": "Số hóa đơn thống nhất Đài Loan không hợp lệ"
+    },
+    "licensePlate": {
+      "required": "Bắt buộc",
+      "invalid": "Số biển số xe Đài Loan không hợp lệ"
+    },
+    "bankAccount": {
+      "required": "Bắt buộc",
+      "invalid": "Tài khoản ngân hàng Đài Loan không hợp lệ",
+      "invalidBankCode": "Mã ngân hàng không hợp lệ",
+      "invalidAccountNumber": "Số tài khoản không hợp lệ"
+    },
+    "passport": {
+      "required": "Bắt buộc",
+      "invalid": "Số hộ chiếu Đài Loan không hợp lệ"
     }
   }
 }

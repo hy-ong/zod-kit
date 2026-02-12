@@ -162,6 +162,31 @@
       "videoOnly": "仅允许视频文件",
       "audioOnly": "仅允许音频文件",
       "archiveOnly": "仅允许压缩文件"
+    },
+    "creditCard": {
+      "required": "必填",
+      "invalid": "无效的信用卡号码",
+      "notInWhitelist": "信用卡号码不在允许的列表中"
+    },
+    "ip": {
+      "required": "必填",
+      "invalid": "无效的 IP 地址",
+      "notIPv4": "必须为有效的 IPv4 地址",
+      "notIPv6": "必须为有效的 IPv6 地址",
+      "notInWhitelist": "IP 地址不在允许的列表中"
+    },
+    "color": {
+      "required": "必填",
+      "invalid": "无效的颜色格式",
+      "notHex": "必须为有效的十六进制颜色",
+      "notRgb": "必须为有效的 RGB 颜色",
+      "notHsl": "必须为有效的 HSL 颜色"
+    },
+    "coordinate": {
+      "required": "必填",
+      "invalid": "无效的坐标",
+      "invalidLatitude": "纬度必须介于 -90 与 90 之间",
+      "invalidLongitude": "经度必须介于 -180 与 180 之间"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "仅允许 6 位邮政编码",
       "invalidSuffix": "无效的邮政编码后缀 - 5 位格式须为 01-99，6 位格式须为 001-999",
       "deprecated5Digit": "5 位邮政编码已弃用且不再支持"
+    },
+    "invoice": {
+      "required": "必填",
+      "invalid": "无效的统一发票号码"
+    },
+    "licensePlate": {
+      "required": "必填",
+      "invalid": "无效的车牌号码"
+    },
+    "bankAccount": {
+      "required": "必填",
+      "invalid": "无效的银行账号",
+      "invalidBankCode": "无效的银行代码",
+      "invalidAccountNumber": "无效的账号号码"
+    },
+    "passport": {
+      "required": "必填",
+      "invalid": "无效的护照号码"
     }
   }
 }

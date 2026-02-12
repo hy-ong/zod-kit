@@ -162,6 +162,31 @@
       "videoOnly": "Hanya fail video dibenarkan",
       "audioOnly": "Hanya fail audio dibenarkan",
       "archiveOnly": "Hanya fail arkib dibenarkan"
+    },
+    "creditCard": {
+      "required": "Wajib diisi",
+      "invalid": "Nombor kad kredit tidak sah",
+      "notInWhitelist": "Nombor kad kredit tiada dalam senarai yang dibenarkan"
+    },
+    "ip": {
+      "required": "Wajib diisi",
+      "invalid": "Alamat IP tidak sah",
+      "notIPv4": "Mesti alamat IPv4 yang sah",
+      "notIPv6": "Mesti alamat IPv6 yang sah",
+      "notInWhitelist": "Alamat IP tiada dalam senarai yang dibenarkan"
+    },
+    "color": {
+      "required": "Wajib diisi",
+      "invalid": "Format warna tidak sah",
+      "notHex": "Mesti warna hex yang sah",
+      "notRgb": "Mesti warna RGB yang sah",
+      "notHsl": "Mesti warna HSL yang sah"
+    },
+    "coordinate": {
+      "required": "Wajib diisi",
+      "invalid": "Koordinat tidak sah",
+      "invalidLatitude": "Latitud mesti antara -90 dan 90",
+      "invalidLongitude": "Longitud mesti antara -180 dan 180"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "Hanya poskod 6 digit dibenarkan",
       "invalidSuffix": "Akhiran poskod tidak sah - mesti 01-99 untuk 5 digit atau 001-999 untuk 6 digit",
       "deprecated5Digit": "Poskod 5 digit telah ditamatkan dan tidak lagi disokong"
+    },
+    "invoice": {
+      "required": "Wajib diisi",
+      "invalid": "Nombor invois seragam Taiwan tidak sah"
+    },
+    "licensePlate": {
+      "required": "Wajib diisi",
+      "invalid": "Nombor plat lesen Taiwan tidak sah"
+    },
+    "bankAccount": {
+      "required": "Wajib diisi",
+      "invalid": "Akaun bank Taiwan tidak sah",
+      "invalidBankCode": "Kod bank tidak sah",
+      "invalidAccountNumber": "Nombor akaun tidak sah"
+    },
+    "passport": {
+      "required": "Wajib diisi",
+      "invalid": "Nombor pasport Taiwan tidak sah"
     }
   }
 }

@@ -162,6 +162,31 @@
       "videoOnly": "Only video files are allowed",
       "audioOnly": "Only audio files are allowed",
       "archiveOnly": "Only archive files are allowed"
+    },
+    "creditCard": {
+      "required": "Required",
+      "invalid": "Invalid credit card number",
+      "notInWhitelist": "Credit card number is not in the allowed list"
+    },
+    "ip": {
+      "required": "Required",
+      "invalid": "Invalid IP address",
+      "notIPv4": "Must be a valid IPv4 address",
+      "notIPv6": "Must be a valid IPv6 address",
+      "notInWhitelist": "IP address is not in the allowed list"
+    },
+    "color": {
+      "required": "Required",
+      "invalid": "Invalid color format",
+      "notHex": "Must be a valid hex color",
+      "notRgb": "Must be a valid RGB color",
+      "notHsl": "Must be a valid HSL color"
+    },
+    "coordinate": {
+      "required": "Required",
+      "invalid": "Invalid coordinate",
+      "invalidLatitude": "Latitude must be between -90 and 90",
+      "invalidLongitude": "Longitude must be between -180 and 180"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "Only 6-digit postal codes are allowed",
       "invalidSuffix": "Invalid postal code suffix - must be 01-99 for 5-digit or 001-999 for 6-digit codes",
       "deprecated5Digit": "5-digit postal codes are deprecated and no longer supported"
+    },
+    "invoice": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan uniform invoice number"
+    },
+    "licensePlate": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan license plate number"
+    },
+    "bankAccount": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan bank account",
+      "invalidBankCode": "Invalid bank code",
+      "invalidAccountNumber": "Invalid account number"
+    },
+    "passport": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan passport number"
     }
   }
 }

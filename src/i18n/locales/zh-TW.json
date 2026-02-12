@@ -162,6 +162,31 @@
       "videoOnly": "僅允許影片檔案",
       "audioOnly": "僅允許音訊檔案",
       "archiveOnly": "僅允許壓縮檔案"
+    },
+    "creditCard": {
+      "required": "必填",
+      "invalid": "無效的信用卡號碼",
+      "notInWhitelist": "信用卡號碼不在允許的清單中"
+    },
+    "ip": {
+      "required": "必填",
+      "invalid": "無效的 IP 位址",
+      "notIPv4": "必須為有效的 IPv4 位址",
+      "notIPv6": "必須為有效的 IPv6 位址",
+      "notInWhitelist": "IP 位址不在允許的清單中"
+    },
+    "color": {
+      "required": "必填",
+      "invalid": "無效的顏色格式",
+      "notHex": "必須為有效的十六進位顏色",
+      "notRgb": "必須為有效的 RGB 顏色",
+      "notHsl": "必須為有效的 HSL 顏色"
+    },
+    "coordinate": {
+      "required": "必填",
+      "invalid": "無效的座標",
+      "invalidLatitude": "緯度必須介於 -90 與 90 之間",
+      "invalidLongitude": "經度必須介於 -180 與 180 之間"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "僅允許 6 碼郵遞區號",
       "invalidSuffix": "無效的郵遞區號後碼 - 5 碼格式須為 01-99，6 碼格式須為 001-999",
       "deprecated5Digit": "5 碼郵遞區號已棄用且不再支援"
+    },
+    "invoice": {
+      "required": "必填",
+      "invalid": "無效的統一發票號碼"
+    },
+    "licensePlate": {
+      "required": "必填",
+      "invalid": "無效的車牌號碼"
+    },
+    "bankAccount": {
+      "required": "必填",
+      "invalid": "無效的銀行帳號",
+      "invalidBankCode": "無效的銀行代碼",
+      "invalidAccountNumber": "無效的帳號號碼"
+    },
+    "passport": {
+      "required": "必填",
+      "invalid": "無效的護照號碼"
     }
   }
 }

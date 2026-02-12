@@ -162,6 +162,31 @@
       "videoOnly": "Hanya file video yang diizinkan",
       "audioOnly": "Hanya file audio yang diizinkan",
       "archiveOnly": "Hanya file arsip yang diizinkan"
+    },
+    "creditCard": {
+      "required": "Wajib diisi",
+      "invalid": "Nomor kartu kredit tidak valid",
+      "notInWhitelist": "Nomor kartu kredit tidak ada dalam daftar yang diizinkan"
+    },
+    "ip": {
+      "required": "Wajib diisi",
+      "invalid": "Alamat IP tidak valid",
+      "notIPv4": "Harus alamat IPv4 yang valid",
+      "notIPv6": "Harus alamat IPv6 yang valid",
+      "notInWhitelist": "Alamat IP tidak ada dalam daftar yang diizinkan"
+    },
+    "color": {
+      "required": "Wajib diisi",
+      "invalid": "Format warna tidak valid",
+      "notHex": "Harus warna hex yang valid",
+      "notRgb": "Harus warna RGB yang valid",
+      "notHsl": "Harus warna HSL yang valid"
+    },
+    "coordinate": {
+      "required": "Wajib diisi",
+      "invalid": "Koordinat tidak valid",
+      "invalidLatitude": "Lintang harus antara -90 dan 90",
+      "invalidLongitude": "Bujur harus antara -180 dan 180"
     }
   },
   "taiwan": {
@@ -199,6 +224,24 @@
       "format6Only": "Hanya kode pos 6 digit yang diizinkan",
       "invalidSuffix": "Akhiran kode pos tidak valid - harus 01-99 untuk 5 digit atau 001-999 untuk 6 digit",
       "deprecated5Digit": "Kode pos 5 digit sudah tidak digunakan dan tidak lagi didukung"
+    },
+    "invoice": {
+      "required": "Wajib diisi",
+      "invalid": "Nomor faktur seragam Taiwan tidak valid"
+    },
+    "licensePlate": {
+      "required": "Wajib diisi",
+      "invalid": "Nomor pelat kendaraan Taiwan tidak valid"
+    },
+    "bankAccount": {
+      "required": "Wajib diisi",
+      "invalid": "Rekening bank Taiwan tidak valid",
+      "invalidBankCode": "Kode bank tidak valid",
+      "invalidAccountNumber": "Nomor rekening tidak valid"
+    },
+    "passport": {
+      "required": "Wajib diisi",
+      "invalid": "Nomor paspor Taiwan tidak valid"
     }
   }
 }
