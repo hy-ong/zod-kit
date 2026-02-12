@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import { twPostalCode, setLocale } from "../../src"
 
 describe("twPostalCode() features", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("3-digit postal code validation", () => {
     it("should accept valid 3-digit postal codes", () => {
@@ -344,7 +344,7 @@ describe("twPostalCode() features", () => {
       const schema = twPostalCode(true, {
         format: "3",
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
             invalid: "Custom invalid message",
             format3Only: "Custom 3-digit only message",
@@ -366,7 +366,7 @@ describe("twPostalCode() features", () => {
       const schema = twPostalCode(true, {
         format: "6",
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
           },
           "zh-TW": {
@@ -380,11 +380,11 @@ describe("twPostalCode() features", () => {
     })
 
     it("should use correct locale for custom messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schemaEn = twPostalCode(true, {
         format: "3",
         i18n: {
-          en: {
+          "en-US": {
             invalid: "English invalid message",
           },
           "zh-TW": {
@@ -398,7 +398,7 @@ describe("twPostalCode() features", () => {
       const schemaZh = twPostalCode(true, {
         format: "3",
         i18n: {
-          en: {
+          "en-US": {
             invalid: "English invalid message",
           },
           "zh-TW": {

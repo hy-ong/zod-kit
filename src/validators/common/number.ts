@@ -82,7 +82,7 @@ export type NumberOptions<IsRequired extends boolean = true> = {
   finite?: boolean
   transform?: (value: number) => number
   parseCommas?: boolean // Parse "1,234" as 1234
-  i18n?: Record<Locale, NumberMessages>
+  i18n?: Partial<Record<Locale, Partial<NumberMessages>>>
 }
 
 /**

@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "Wajib diisi",
+      "shouldBeTrue": "Harus True",
+      "shouldBeFalse": "Harus False",
+      "invalid": "Harus berupa nilai boolean"
+    },
+    "email": {
+      "required": "Wajib diisi",
+      "invalid": "Format email tidak valid",
+      "minLength": "Harus minimal ${minLength} karakter",
+      "maxLength": "Harus maksimal ${maxLength} karakter",
+      "includes": "Harus mengandung ${includes}",
+      "domain": "Harus dari domain: ${domain}",
+      "domainBlacklist": "Domain ${domain} tidak diizinkan",
+      "businessOnly": "Hanya alamat email bisnis yang diizinkan",
+      "noDisposable": "Alamat email sekali pakai tidak diizinkan"
+    },
+    "url": {
+      "required": "Wajib diisi",
+      "invalid": "Format URL tidak valid",
+      "min": "Harus minimal ${min} karakter",
+      "max": "Harus maksimal ${max} karakter",
+      "includes": "Harus mengandung ${includes}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "protocol": "Protokol harus salah satu dari: ${protocols}",
+      "domain": "Domain harus salah satu dari: ${domains}",
+      "domainBlacklist": "Domain ${domain} tidak diizinkan",
+      "port": "Port harus salah satu dari: ${ports}",
+      "pathStartsWith": "Path harus dimulai dengan ${path}",
+      "pathEndsWith": "Path harus diakhiri dengan ${path}",
+      "hasQuery": "URL harus memiliki parameter query",
+      "noQuery": "URL tidak boleh memiliki parameter query",
+      "hasFragment": "URL harus memiliki fragmen",
+      "noFragment": "URL tidak boleh memiliki fragmen",
+      "localhost": "URL localhost tidak diizinkan",
+      "noLocalhost": "URL localhost tidak diizinkan"
+    },
+    "password": {
+      "required": "Wajib diisi",
+      "min": "Harus minimal ${min} karakter",
+      "max": "Harus maksimal ${max} karakter",
+      "uppercase": "Harus mengandung minimal satu huruf besar",
+      "lowercase": "Harus mengandung minimal satu huruf kecil",
+      "digits": "Harus mengandung minimal satu digit",
+      "special": "Harus mengandung minimal satu karakter khusus",
+      "noRepeating": "Tidak boleh mengandung karakter berulang",
+      "noSequential": "Tidak boleh mengandung karakter berurutan",
+      "noCommonWords": "Tidak boleh mengandung kata atau pola umum",
+      "minStrength": "Kekuatan kata sandi harus minimal ${minStrength}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "includes": "Harus mengandung ${includes}",
+      "invalid": "Format kata sandi tidak valid"
+    },
+    "number": {
+      "required": "Wajib diisi",
+      "invalid": "Harus berupa angka yang valid",
+      "integer": "Harus berupa bilangan bulat",
+      "float": "Harus berupa bilangan desimal",
+      "min": "Harus minimal ${min}",
+      "max": "Harus maksimal ${max}",
+      "positive": "Harus positif",
+      "negative": "Harus negatif",
+      "nonNegative": "Harus non-negatif",
+      "nonPositive": "Harus non-positif",
+      "multipleOf": "Harus kelipatan dari ${multipleOf}",
+      "finite": "Harus berupa angka terhingga",
+      "precision": "Harus memiliki maksimal ${precision} tempat desimal"
+    },
+    "id": {
+      "required": "Wajib diisi",
+      "invalid": "Format ID tidak valid",
+      "minLength": "Harus minimal ${minLength} karakter",
+      "maxLength": "Harus maksimal ${maxLength} karakter",
+      "numeric": "Harus berupa ID numerik",
+      "uuid": "Harus berupa UUID yang valid",
+      "objectId": "Harus berupa MongoDB ObjectId yang valid",
+      "nanoid": "Harus berupa Nano ID yang valid",
+      "snowflake": "Harus berupa Snowflake ID yang valid",
+      "cuid": "Harus berupa CUID yang valid",
+      "ulid": "Harus berupa ULID yang valid",
+      "shortid": "Harus berupa Short ID yang valid",
+      "customFormat": "Format ID tidak valid",
+      "includes": "Harus mengandung ${includes}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "startsWith": "Harus dimulai dengan ${startsWith}",
+      "endsWith": "Harus diakhiri dengan ${endsWith}"
+    },
+    "text": {
+      "required": "Wajib diisi",
+      "notEmpty": "Tidak boleh kosong atau hanya spasi",
+      "minLength": "Harus minimal ${minLength} karakter",
+      "maxLength": "Harus maksimal ${maxLength} karakter",
+      "startsWith": "Harus dimulai dengan ${startsWith}",
+      "endsWith": "Harus diakhiri dengan ${endsWith}",
+      "includes": "Harus mengandung ${includes}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "invalid": "Format tidak valid"
+    },
+    "date": {
+      "required": "Wajib diisi",
+      "invalid": "Tanggal tidak valid",
+      "format": "Harus dalam format ${format}",
+      "min": "Tanggal harus pada atau setelah ${min}",
+      "max": "Tanggal harus pada atau sebelum ${max}",
+      "includes": "Harus mengandung ${includes}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "past": "Tanggal harus di masa lalu",
+      "future": "Tanggal harus di masa depan",
+      "today": "Tanggal harus hari ini",
+      "notToday": "Tanggal tidak boleh hari ini",
+      "weekday": "Tanggal harus hari kerja (Senin-Jumat)",
+      "weekend": "Tanggal harus akhir pekan (Sabtu-Minggu)"
+    },
+    "time": {
+      "required": "Wajib diisi",
+      "invalid": "Format waktu tidak valid",
+      "format": "Harus dalam format ${format}",
+      "min": "Waktu harus setelah ${min}",
+      "max": "Waktu harus sebelum ${max}",
+      "hour": "Jam harus antara ${minHour} dan ${maxHour}",
+      "minute": "Menit harus dalam interval ${minuteStep} menit",
+      "second": "Detik harus dalam interval ${secondStep} detik",
+      "includes": "Harus mengandung ${includes}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "customRegex": "Format waktu tidak valid",
+      "notInWhitelist": "Waktu tidak ada dalam daftar yang diizinkan"
+    },
+    "datetime": {
+      "required": "Wajib diisi",
+      "invalid": "Format tanggal waktu tidak valid",
+      "format": "Harus dalam format ${format}",
+      "min": "Tanggal waktu harus setelah ${min}",
+      "max": "Tanggal waktu harus sebelum ${max}",
+      "hour": "Jam harus antara ${minHour} dan ${maxHour}",
+      "minute": "Menit harus dalam interval ${minuteStep} menit",
+      "includes": "Harus mengandung ${includes}",
+      "excludes": "Tidak boleh mengandung ${excludes}",
+      "past": "Tanggal waktu harus di masa lalu",
+      "future": "Tanggal waktu harus di masa depan",
+      "today": "Tanggal waktu harus hari ini",
+      "notToday": "Tanggal waktu tidak boleh hari ini",
+      "weekday": "Tanggal waktu harus hari kerja (Senin-Jumat)",
+      "weekend": "Tanggal waktu harus akhir pekan (Sabtu-Minggu)",
+      "customRegex": "Format tanggal waktu tidak valid",
+      "notInWhitelist": "Tanggal waktu tidak ada dalam daftar yang diizinkan"
+    },
+    "file": {
+      "required": "Wajib diisi",
+      "invalid": "Format file tidak valid",
+      "size": "Ukuran file tidak boleh melebihi ${size}",
+      "minSize": "Ukuran file harus minimal ${minSize}",
+      "maxSize": "Ukuran file tidak boleh melebihi ${maxSize}",
+      "type": "Jenis file harus salah satu dari: ${type}",
+      "extension": "Ekstensi file harus salah satu dari: ${extension}",
+      "extensionBlacklist": "Ekstensi file ${extension} tidak diizinkan",
+      "name": "Nama file harus sesuai pola ${pattern}",
+      "nameBlacklist": "Nama file tidak boleh sesuai pola ${pattern}",
+      "imageOnly": "Hanya file gambar yang diizinkan",
+      "documentOnly": "Hanya file dokumen yang diizinkan",
+      "videoOnly": "Hanya file video yang diizinkan",
+      "audioOnly": "Hanya file audio yang diizinkan",
+      "archiveOnly": "Hanya file arsip yang diizinkan"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "Wajib diisi",
+      "invalid": "ID Bisnis Taiwan tidak valid"
+    },
+    "nationalId": {
+      "required": "Wajib diisi",
+      "invalid": "ID Nasional Taiwan tidak valid"
+    },
+    "mobile": {
+      "required": "Wajib diisi",
+      "invalid": "Format ponsel Taiwan tidak valid",
+      "notInWhitelist": "Tidak ada dalam daftar ponsel yang diizinkan"
+    },
+    "tel": {
+      "required": "Wajib diisi",
+      "invalid": "Format telepon rumah Taiwan tidak valid",
+      "notInWhitelist": "Tidak ada dalam daftar telepon rumah yang diizinkan"
+    },
+    "fax": {
+      "required": "Wajib diisi",
+      "invalid": "Format faks Taiwan tidak valid",
+      "notInWhitelist": "Tidak ada dalam daftar faks yang diizinkan"
+    },
+    "postalCode": {
+      "required": "Wajib diisi",
+      "invalid": "Kode pos Taiwan tidak valid",
+      "invalidFormat": "Format kode pos tidak valid",
+      "invalidRange": "Kode pos di luar rentang yang valid",
+      "legacy5DigitWarning": "Kode pos 5 digit adalah format lama, pertimbangkan untuk menggunakan format 6 digit",
+      "format3Only": "Hanya kode pos 3 digit yang diizinkan",
+      "format5Only": "Hanya kode pos 5 digit yang diizinkan",
+      "format6Only": "Hanya kode pos 6 digit yang diizinkan",
+      "invalidSuffix": "Akhiran kode pos tidak valid - harus 01-99 untuk 5 digit atau 001-999 untuk 6 digit",
+      "deprecated5Digit": "Kode pos 5 digit sudah tidak digunakan dan tidak lagi didukung"
+    }
+  }
+}

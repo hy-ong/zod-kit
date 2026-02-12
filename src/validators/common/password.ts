@@ -100,7 +100,7 @@ export type PasswordOptions<IsRequired extends boolean = true> = {
   regex?: RegExp
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, PasswordMessages>
+  i18n?: Partial<Record<Locale, Partial<PasswordMessages>>>
 }
 
 /**

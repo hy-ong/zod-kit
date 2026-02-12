@@ -92,7 +92,7 @@ export type FileOptions<IsRequired extends boolean = true> = {
   caseSensitive?: boolean
   transform?: (value: File) => File
   defaultValue?: IsRequired extends true ? File : File | null
-  i18n?: Record<Locale, FileMessages>
+  i18n?: Partial<Record<Locale, Partial<FileMessages>>>
 }
 
 /**

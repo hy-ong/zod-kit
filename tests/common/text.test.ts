@@ -3,7 +3,7 @@ import { Locale, setLocale, text } from "../../src"
 
 const locales = [
   {
-    locale: "en",
+    locale: "en-US",
     messages: {
       required: "Required",
       notEmpty: "Cannot be empty or whitespace only",
@@ -193,13 +193,13 @@ describe("text(true) defaultValue functionality", () => {
 })
 
 describe("text(true) custom i18n messages", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   it("should use custom messages when provided", () => {
     const schema = text(true, {
       minLength: 5,
       i18n: {
-        en: {
+        "en-US": {
           required: "Custom required message",
           minLength: "Custom min message: at least ${minLength} chars",
         },
@@ -218,7 +218,7 @@ describe("text(true) custom i18n messages", () => {
     const schema = text(true, {
       maxLength: 3,
       i18n: {
-        en: {
+        "en-US": {
           required: "Custom required message",
         },
         "zh-TW": {
@@ -234,7 +234,7 @@ describe("text(true) custom i18n messages", () => {
   it("should use correct locale for custom messages", () => {
     const schema = text(true, {
       i18n: {
-        en: {
+        "en-US": {
           required: "English required",
         },
         "zh-TW": {
@@ -243,7 +243,7 @@ describe("text(true) custom i18n messages", () => {
       },
     })
 
-    setLocale("en")
+    setLocale("en-US")
     expect(() => schema.parse("")).toThrow("English required")
 
     setLocale("zh-TW")
@@ -252,7 +252,7 @@ describe("text(true) custom i18n messages", () => {
 })
 
 describe("text(true) complex scenarios", () => {
-  beforeEach(() => setLocale("en")) // Ensure a consistent locale for this test
+  beforeEach(() => setLocale("en-US")) // Ensure a consistent locale for this test
 
   it("should work with multiple validations", () => {
     const schema = text(true, {

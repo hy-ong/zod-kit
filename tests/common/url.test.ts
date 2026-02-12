@@ -316,12 +316,12 @@ describe("url", () => {
     it("should use custom English messages", () => {
       const schema = url(true, {
         i18n: {
-          en: { invalid: "Custom URL format error" },
+          "en-US": { invalid: "Custom URL format error" },
           "zh-TW": { invalid: "自定義 URL 格式錯誤" },
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse("invalid-url")
       } catch (error: any) {
@@ -332,7 +332,7 @@ describe("url", () => {
     it("should use custom Chinese messages", () => {
       const schema = url(true, {
         i18n: {
-          en: { invalid: "Custom URL format error" },
+          "en-US": { invalid: "Custom URL format error" },
           "zh-TW": { invalid: "自定義 URL 格式錯誤" },
         },
       })
@@ -348,12 +348,12 @@ describe("url", () => {
     it("should fallback to default messages when custom not provided", () => {
       const schema = url(true, {
         i18n: {
-          en: { invalid: "Custom invalid error" },
+          "en-US": { invalid: "Custom invalid error" },
           "zh-TW": { invalid: "自定義無效錯誤" },
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse("")
       } catch (error: any) {
@@ -365,12 +365,12 @@ describe("url", () => {
       const schema = url(true, {
         protocols: ["https"],
         i18n: {
-          en: { protocol: "Only HTTPS allowed!" },
+          "en-US": { protocol: "Only HTTPS allowed!" },
           "zh-TW": { protocol: "僅允許 HTTPS！" },
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse("http://example.com")
       } catch (error: any) {
@@ -382,12 +382,12 @@ describe("url", () => {
       const schema = url(true, {
         allowedDomains: ["example.com"],
         i18n: {
-          en: { domain: "Only example.com allowed!" },
+          "en-US": { domain: "Only example.com allowed!" },
           "zh-TW": { domain: "僅允許 example.com！" },
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse("https://other.com")
       } catch (error: any) {
@@ -398,7 +398,7 @@ describe("url", () => {
 
   describe("localization", () => {
     it("should use English error messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = url(true)
 
       try {

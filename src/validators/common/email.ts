@@ -71,7 +71,7 @@ export type EmailOptions<IsRequired extends boolean = true> = {
   lowercase?: boolean
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, EmailMessages>
+  i18n?: Partial<Record<Locale, Partial<EmailMessages>>>
 }
 
 /**

@@ -109,7 +109,7 @@ export type TimeOptions<IsRequired extends boolean = true> = {
   whitelistOnly?: boolean // If true, only allow values in whitelist (default: false)
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TimeMessages>
+  i18n?: Partial<Record<Locale, Partial<TimeMessages>>>
 }
 
 /**

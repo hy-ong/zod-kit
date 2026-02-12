@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { twFax, setLocale, validateTaiwanFax } from "../../src"
 
 describe("Taiwan twFax(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan fax numbers", () => {
@@ -265,7 +265,7 @@ describe("Taiwan twFax(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twFax(true)
 
       expect(() => schema.parse("")).toThrow("Required")
@@ -281,7 +281,7 @@ describe("Taiwan twFax(true) validator", () => {
     })
 
     it("should support whitelist with valid format fallback", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twFax(true, {
         whitelist: ["special-fax"],
       })
@@ -299,7 +299,7 @@ describe("Taiwan twFax(true) validator", () => {
     it("should support custom i18n messages", () => {
       const schema = twFax(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "Fax number is required",
             invalid: "Fax number format is invalid",
             notInWhitelist: "Fax number not allowed",
@@ -312,7 +312,7 @@ describe("Taiwan twFax(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("Fax number is required")
       expect(() => schema.parse("0912345678")).toThrow("Fax number format is invalid")
 
@@ -325,7 +325,7 @@ describe("Taiwan twFax(true) validator", () => {
       const schema = twFax(true, {
         whitelist: ["special-value"],
         i18n: {
-          en: {
+          "en-US": {
             invalid: "This fax format is not valid",
           },
           "zh-TW": {
@@ -334,7 +334,7 @@ describe("Taiwan twFax(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("invalid-format")).toThrow("This fax format is not valid")
 
       setLocale("zh-TW")

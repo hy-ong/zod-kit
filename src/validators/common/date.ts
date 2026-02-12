@@ -99,7 +99,7 @@ export type DateOptions<IsRequired extends boolean = true> = {
   weekendsOnly?: boolean
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, DateMessages>
+  i18n?: Partial<Record<Locale, Partial<DateMessages>>>
 }
 
 /**

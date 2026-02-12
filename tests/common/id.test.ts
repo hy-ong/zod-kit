@@ -3,7 +3,7 @@ import { Locale, setLocale, id, detectIdType, validateIdType, ID_PATTERNS } from
 
 const locales = [
   {
-    locale: "en",
+    locale: "en-US",
     messages: {
       required: "Required",
       invalid: "Invalid ID format",
@@ -388,7 +388,7 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
   describe("custom i18n messages", () => {
     it("should use custom i18n messages when provided", () => {
       const customMessages = {
-        en: {
+        "en-US": {
           required: "Custom required message",
           invalid: "Custom invalid message",
           numeric: "Custom numeric message",
@@ -405,7 +405,7 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
         i18n: customMessages,
       })
 
-      if (locale === "en") {
+      if (locale === "en-US") {
         expect(() => schema.parse("")).toThrow("Custom required message")
         expect(() => schema.parse("abc")).toThrow("Custom numeric message")
       } else {
@@ -416,7 +416,7 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
 
     it("should fallback to default i18n when custom message not provided", () => {
       const customMessages = {
-        en: { required: "Custom required message" },
+        "en-US": { required: "Custom required message" },
         "zh-TW": { required: "自訂必填訊息" },
       }
 
@@ -425,7 +425,7 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
         i18n: customMessages,
       })
 
-      if (locale === "en") {
+      if (locale === "en-US") {
         expect(() => schema.parse("")).toThrow("Custom required message")
         expect(() => schema.parse("abc")).toThrow(messages.numeric)
       } else {

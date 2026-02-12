@@ -272,13 +272,13 @@ describe("boolean", () => {
   })
 
   describe("custom i18n messages", () => {
-    beforeEach(() => setLocale("en"))
+    beforeEach(() => setLocale("en-US"))
 
     it("should use custom messages when provided", () => {
       const schema = boolean(true, {
         shouldBe: true,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
             shouldBeTrue: "Custom should be true message",
           },
@@ -297,7 +297,7 @@ describe("boolean", () => {
       const schema = boolean(true, {
         shouldBe: false,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
           },
           "zh-TW": {
@@ -311,10 +311,10 @@ describe("boolean", () => {
     })
 
     it("should use correct locale for custom messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schemaEn = boolean(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "English required",
           },
           "zh-TW": {
@@ -327,7 +327,7 @@ describe("boolean", () => {
       setLocale("zh-TW")
       const schemaZh = boolean(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "English required",
           },
           "zh-TW": {

@@ -116,7 +116,7 @@ export type IdOptions<Type extends IdType | undefined = undefined> = {
   caseSensitive?: boolean
   transform?: (value: string) => string
   defaultValue?: any // Simplified to avoid complex conditional types
-  i18n?: Record<Locale, IdMessages>
+  i18n?: Partial<Record<Locale, Partial<IdMessages>>>
 }
 
 /**

@@ -49,7 +49,7 @@ export type BooleanOptions<IsRequired extends boolean = true> = {
   falsyValues?: unknown[]
   strict?: boolean
   transform?: (value: boolean) => boolean
-  i18n?: Record<Locale, BooleanMessages>
+  i18n?: Partial<Record<Locale, Partial<BooleanMessages>>>
 }
 
 /**

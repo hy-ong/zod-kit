@@ -1,10 +1,26 @@
 import zhTW from "./locales/zh-TW.json"
-import en from "./locales/en.json"
+import zhCN from "./locales/zh-CN.json"
+import enUS from "./locales/en-US.json"
+import enGB from "./locales/en-GB.json"
+import jaJP from "./locales/ja-JP.json"
+import koKR from "./locales/ko-KR.json"
+import msMY from "./locales/ms-MY.json"
+import idID from "./locales/id-ID.json"
+import thTH from "./locales/th-TH.json"
+import viVN from "./locales/vi-VN.json"
 import { getLocale } from "../config"
 
 const dicts = {
   "zh-TW": zhTW,
-  en,
+  "zh-CN": zhCN,
+  "en-US": enUS,
+  "en-GB": enGB,
+  "ja-JP": jaJP,
+  "ko-KR": koKR,
+  "ms-MY": msMY,
+  "id-ID": idID,
+  "th-TH": thTH,
+  "vi-VN": viVN,
 } satisfies Record<string, unknown>
 
 export const t = (key: string, params: Record<string, any> = {}): string => {

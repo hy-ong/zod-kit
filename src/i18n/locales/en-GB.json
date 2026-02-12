@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "Required",
+      "shouldBeTrue": "Must be True",
+      "shouldBeFalse": "Must be False",
+      "invalid": "Must be a boolean value"
+    },
+    "email": {
+      "required": "Required",
+      "invalid": "Invalid email format",
+      "minLength": "Must be at least ${minLength} characters",
+      "maxLength": "Must be at most ${maxLength} characters",
+      "includes": "Must include ${includes}",
+      "domain": "Must be from domain: ${domain}",
+      "domainBlacklist": "Domain ${domain} is not allowed",
+      "businessOnly": "Only business email addresses are allowed",
+      "noDisposable": "Disposable email addresses are not allowed"
+    },
+    "url": {
+      "required": "Required",
+      "invalid": "Invalid URL format",
+      "min": "Must be at least ${min} characters",
+      "max": "Must be at most ${max} characters",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "protocol": "Protocol must be one of: ${protocols}",
+      "domain": "Domain must be one of: ${domains}",
+      "domainBlacklist": "Domain ${domain} is not allowed",
+      "port": "Port must be one of: ${ports}",
+      "pathStartsWith": "Path must start with ${path}",
+      "pathEndsWith": "Path must end with ${path}",
+      "hasQuery": "URL must have query parameters",
+      "noQuery": "URL must not have query parameters",
+      "hasFragment": "URL must have a fragment",
+      "noFragment": "URL must not have a fragment",
+      "localhost": "Localhost URLs are not allowed",
+      "noLocalhost": "Localhost URLs are not allowed"
+    },
+    "password": {
+      "required": "Required",
+      "min": "Must be at least ${min} characters",
+      "max": "Must be at most ${max} characters",
+      "uppercase": "Must include at least one uppercase letter",
+      "lowercase": "Must include at least one lowercase letter",
+      "digits": "Must include at least one digit",
+      "special": "Must include at least one special character",
+      "noRepeating": "Must not contain repeating characters",
+      "noSequential": "Must not contain sequential characters",
+      "noCommonWords": "Must not contain common words or patterns",
+      "minStrength": "Password strength must be at least ${minStrength}",
+      "excludes": "Must not contain ${excludes}",
+      "includes": "Must include ${includes}",
+      "invalid": "Invalid password format"
+    },
+    "number": {
+      "required": "Required",
+      "invalid": "Must be a valid number",
+      "integer": "Must be an integer",
+      "float": "Must be a decimal number",
+      "min": "Must be at least ${min}",
+      "max": "Must be at most ${max}",
+      "positive": "Must be positive",
+      "negative": "Must be negative",
+      "nonNegative": "Must be non-negative",
+      "nonPositive": "Must be non-positive",
+      "multipleOf": "Must be a multiple of ${multipleOf}",
+      "finite": "Must be a finite number",
+      "precision": "Must have at most ${precision} decimal places"
+    },
+    "id": {
+      "required": "Required",
+      "invalid": "Invalid ID format",
+      "minLength": "Must be at least ${minLength} characters",
+      "maxLength": "Must be at most ${maxLength} characters",
+      "numeric": "Must be a numeric ID",
+      "uuid": "Must be a valid UUID",
+      "objectId": "Must be a valid MongoDB ObjectId",
+      "nanoid": "Must be a valid Nano ID",
+      "snowflake": "Must be a valid Snowflake ID",
+      "cuid": "Must be a valid CUID",
+      "ulid": "Must be a valid ULID",
+      "shortid": "Must be a valid Short ID",
+      "customFormat": "Invalid ID format",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "startsWith": "Must start with ${startsWith}",
+      "endsWith": "Must end with ${endsWith}"
+    },
+    "text": {
+      "required": "Required",
+      "notEmpty": "Cannot be empty or whitespace only",
+      "minLength": "Must be at least ${minLength} characters",
+      "maxLength": "Must be at most ${maxLength} characters",
+      "startsWith": "Must start with ${startsWith}",
+      "endsWith": "Must end with ${endsWith}",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "invalid": "Invalid format"
+    },
+    "date": {
+      "required": "Required",
+      "invalid": "Invalid date",
+      "format": "Must be in ${format} format",
+      "min": "Date must be on or after ${min}",
+      "max": "Date must be on or before ${max}",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "past": "Date must be in the past",
+      "future": "Date must be in the future",
+      "today": "Date must be today",
+      "notToday": "Date must not be today",
+      "weekday": "Date must be a weekday (Monday-Friday)",
+      "weekend": "Date must be a weekend (Saturday-Sunday)"
+    },
+    "time": {
+      "required": "Required",
+      "invalid": "Invalid time format",
+      "format": "Must be in ${format} format",
+      "min": "Time must be after ${min}",
+      "max": "Time must be before ${max}",
+      "hour": "Hour must be between ${minHour} and ${maxHour}",
+      "minute": "Minutes must be in ${minuteStep}-minute intervals",
+      "second": "Seconds must be in ${secondStep}-second intervals",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "customRegex": "Invalid time format",
+      "notInWhitelist": "Time is not in the allowed list"
+    },
+    "datetime": {
+      "required": "Required",
+      "invalid": "Invalid datetime format",
+      "format": "Must be in ${format} format",
+      "min": "DateTime must be after ${min}",
+      "max": "DateTime must be before ${max}",
+      "hour": "Hour must be between ${minHour} and ${maxHour}",
+      "minute": "Minutes must be in ${minuteStep}-minute intervals",
+      "includes": "Must include ${includes}",
+      "excludes": "Must not contain ${excludes}",
+      "past": "DateTime must be in the past",
+      "future": "DateTime must be in the future",
+      "today": "DateTime must be today",
+      "notToday": "DateTime must not be today",
+      "weekday": "DateTime must be a weekday (Monday-Friday)",
+      "weekend": "DateTime must be a weekend (Saturday-Sunday)",
+      "customRegex": "Invalid datetime format",
+      "notInWhitelist": "DateTime is not in the allowed list"
+    },
+    "file": {
+      "required": "Required",
+      "invalid": "Invalid file format",
+      "size": "File size must not exceed ${size}",
+      "minSize": "File size must be at least ${minSize}",
+      "maxSize": "File size must not exceed ${maxSize}",
+      "type": "File type must be one of: ${type}",
+      "extension": "File extension must be one of: ${extension}",
+      "extensionBlacklist": "File extension ${extension} is not allowed",
+      "name": "File name must match pattern ${pattern}",
+      "nameBlacklist": "File name must not match pattern ${pattern}",
+      "imageOnly": "Only image files are allowed",
+      "documentOnly": "Only document files are allowed",
+      "videoOnly": "Only video files are allowed",
+      "audioOnly": "Only audio files are allowed",
+      "archiveOnly": "Only archive files are allowed"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan Business ID"
+    },
+    "nationalId": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan National ID"
+    },
+    "mobile": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan mobile phone format",
+      "notInWhitelist": "Not in allowed mobile phone list"
+    },
+    "tel": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan telephone format",
+      "notInWhitelist": "Not in allowed telephone list"
+    },
+    "fax": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan fax format",
+      "notInWhitelist": "Not in allowed fax list"
+    },
+    "postalCode": {
+      "required": "Required",
+      "invalid": "Invalid Taiwan postal code",
+      "invalidFormat": "Invalid postal code format",
+      "invalidRange": "Postal code is outside valid range",
+      "legacy5DigitWarning": "5-digit postal codes are legacy format, consider using 6-digit format",
+      "format3Only": "Only 3-digit postal codes are allowed",
+      "format5Only": "Only 5-digit postal codes are allowed",
+      "format6Only": "Only 6-digit postal codes are allowed",
+      "invalidSuffix": "Invalid postal code suffix - must be 01-99 for 5-digit or 001-999 for 6-digit codes",
+      "deprecated5Digit": "5-digit postal codes are deprecated and no longer supported"
+    }
+  }
+}

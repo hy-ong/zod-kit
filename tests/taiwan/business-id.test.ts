@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { twBusinessId, setLocale, validateTaiwanBusinessId } from "../../src"
 
 describe("Taiwan twBusinessId(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan business IDs", () => {
@@ -139,7 +139,7 @@ describe("Taiwan twBusinessId(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twBusinessId(true)
 
       expect(() => schema.parse("")).toThrow("Required")
@@ -159,7 +159,7 @@ describe("Taiwan twBusinessId(true) validator", () => {
     it("should support custom i18n messages", () => {
       const schema = twBusinessId(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "Business ID is required",
             invalid: "Business ID is invalid",
           },
@@ -170,7 +170,7 @@ describe("Taiwan twBusinessId(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("Business ID is required")
       expect(() => schema.parse("12345672")).toThrow("Business ID is invalid")
 

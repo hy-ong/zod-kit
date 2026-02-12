@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { time, setLocale, validateTimeFormat, parseTimeToMinutes, normalizeTime } from "../../src"
 
 describe("Taiwan time(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct time formats", () => {
@@ -330,7 +330,7 @@ describe("Taiwan time(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = time(true, { format: "HH:mm" })
 
       expect(() => schema.parse("")).toThrow("Required")
@@ -346,7 +346,7 @@ describe("Taiwan time(true) validator", () => {
     })
 
     it("should support whitelist error messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = time(true, {
         format: "HH:mm",
         whitelist: ["morning"],
@@ -360,7 +360,7 @@ describe("Taiwan time(true) validator", () => {
       const schema = time(true, {
         format: "HH:mm",
         i18n: {
-          en: {
+          "en-US": {
             required: "Time is required",
             invalid: "Please enter a valid time",
           },
@@ -371,7 +371,7 @@ describe("Taiwan time(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("Time is required")
 
       setLocale("zh-TW")
@@ -384,7 +384,7 @@ describe("Taiwan time(true) validator", () => {
         whitelist: ["morning"],
         whitelistOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             notInWhitelist: "This time is not allowed",
           },
           "zh-TW": {
@@ -393,7 +393,7 @@ describe("Taiwan time(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("14:30")).toThrow("This time is not allowed")
 
       setLocale("zh-TW")

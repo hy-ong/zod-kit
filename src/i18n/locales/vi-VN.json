@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "Bắt buộc",
+      "shouldBeTrue": "Phải là True",
+      "shouldBeFalse": "Phải là False",
+      "invalid": "Phải là giá trị boolean"
+    },
+    "email": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng email không hợp lệ",
+      "minLength": "Phải có ít nhất ${minLength} ký tự",
+      "maxLength": "Phải có tối đa ${maxLength} ký tự",
+      "includes": "Phải bao gồm ${includes}",
+      "domain": "Phải từ tên miền: ${domain}",
+      "domainBlacklist": "Tên miền ${domain} không được phép",
+      "businessOnly": "Chỉ cho phép địa chỉ email doanh nghiệp",
+      "noDisposable": "Không cho phép địa chỉ email dùng một lần"
+    },
+    "url": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng URL không hợp lệ",
+      "min": "Phải có ít nhất ${min} ký tự",
+      "max": "Phải có tối đa ${max} ký tự",
+      "includes": "Phải bao gồm ${includes}",
+      "excludes": "Không được chứa ${excludes}",
+      "protocol": "Giao thức phải là một trong: ${protocols}",
+      "domain": "Tên miền phải là một trong: ${domains}",
+      "domainBlacklist": "Tên miền ${domain} không được phép",
+      "port": "Cổng phải là một trong: ${ports}",
+      "pathStartsWith": "Đường dẫn phải bắt đầu bằng ${path}",
+      "pathEndsWith": "Đường dẫn phải kết thúc bằng ${path}",
+      "hasQuery": "URL phải có tham số truy vấn",
+      "noQuery": "URL không được có tham số truy vấn",
+      "hasFragment": "URL phải có fragment",
+      "noFragment": "URL không được có fragment",
+      "localhost": "Không cho phép URL localhost",
+      "noLocalhost": "Không cho phép URL localhost"
+    },
+    "password": {
+      "required": "Bắt buộc",
+      "min": "Phải có ít nhất ${min} ký tự",
+      "max": "Phải có tối đa ${max} ký tự",
+      "uppercase": "Phải có ít nhất một chữ hoa",
+      "lowercase": "Phải có ít nhất một chữ thường",
+      "digits": "Phải có ít nhất một chữ số",
+      "special": "Phải có ít nhất một ký tự đặc biệt",
+      "noRepeating": "Không được chứa ký tự lặp lại",
+      "noSequential": "Không được chứa ký tự liên tiếp",
+      "noCommonWords": "Không được chứa từ hoặc mẫu phổ biến",
+      "minStrength": "Độ mạnh mật khẩu phải ít nhất ${minStrength}",
+      "excludes": "Không được chứa ${excludes}",
+      "includes": "Phải bao gồm ${includes}",
+      "invalid": "Định dạng mật khẩu không hợp lệ"
+    },
+    "number": {
+      "required": "Bắt buộc",
+      "invalid": "Phải là số hợp lệ",
+      "integer": "Phải là số nguyên",
+      "float": "Phải là số thập phân",
+      "min": "Phải ít nhất ${min}",
+      "max": "Phải tối đa ${max}",
+      "positive": "Phải là số dương",
+      "negative": "Phải là số âm",
+      "nonNegative": "Phải không âm",
+      "nonPositive": "Phải không dương",
+      "multipleOf": "Phải là bội số của ${multipleOf}",
+      "finite": "Phải là số hữu hạn",
+      "precision": "Phải có tối đa ${precision} chữ số thập phân"
+    },
+    "id": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng ID không hợp lệ",
+      "minLength": "Phải có ít nhất ${minLength} ký tự",
+      "maxLength": "Phải có tối đa ${maxLength} ký tự",
+      "numeric": "Phải là ID dạng số",
+      "uuid": "Phải là UUID hợp lệ",
+      "objectId": "Phải là MongoDB ObjectId hợp lệ",
+      "nanoid": "Phải là Nano ID hợp lệ",
+      "snowflake": "Phải là Snowflake ID hợp lệ",
+      "cuid": "Phải là CUID hợp lệ",
+      "ulid": "Phải là ULID hợp lệ",
+      "shortid": "Phải là Short ID hợp lệ",
+      "customFormat": "Định dạng ID không hợp lệ",
+      "includes": "Phải bao gồm ${includes}",
+      "excludes": "Không được chứa ${excludes}",
+      "startsWith": "Phải bắt đầu bằng ${startsWith}",
+      "endsWith": "Phải kết thúc bằng ${endsWith}"
+    },
+    "text": {
+      "required": "Bắt buộc",
+      "notEmpty": "Không được để trống hoặc chỉ có khoảng trắng",
+      "minLength": "Phải có ít nhất ${minLength} ký tự",
+      "maxLength": "Phải có tối đa ${maxLength} ký tự",
+      "startsWith": "Phải bắt đầu bằng ${startsWith}",
+      "endsWith": "Phải kết thúc bằng ${endsWith}",
+      "includes": "Phải bao gồm ${includes}",
+      "excludes": "Không được chứa ${excludes}",
+      "invalid": "Định dạng không hợp lệ"
+    },
+    "date": {
+      "required": "Bắt buộc",
+      "invalid": "Ngày không hợp lệ",
+      "format": "Phải theo định dạng ${format}",
+      "min": "Ngày phải từ ${min} trở đi",
+      "max": "Ngày phải đến ${max} trở về trước",
+      "includes": "Phải bao gồm ${includes}",
+      "excludes": "Không được chứa ${excludes}",
+      "past": "Ngày phải ở quá khứ",
+      "future": "Ngày phải ở tương lai",
+      "today": "Ngày phải là hôm nay",
+      "notToday": "Ngày không được là hôm nay",
+      "weekday": "Ngày phải là ngày trong tuần (Thứ Hai-Thứ Sáu)",
+      "weekend": "Ngày phải là cuối tuần (Thứ Bảy-Chủ Nhật)"
+    },
+    "time": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng thời gian không hợp lệ",
+      "format": "Phải theo định dạng ${format}",
+      "min": "Thời gian phải sau ${min}",
+      "max": "Thời gian phải trước ${max}",
+      "hour": "Giờ phải từ ${minHour} đến ${maxHour}",
+      "minute": "Phút phải theo khoảng ${minuteStep} phút",
+      "second": "Giây phải theo khoảng ${secondStep} giây",
+      "includes": "Phải bao gồm ${includes}",
+      "excludes": "Không được chứa ${excludes}",
+      "customRegex": "Định dạng thời gian không hợp lệ",
+      "notInWhitelist": "Thời gian không nằm trong danh sách cho phép"
+    },
+    "datetime": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng ngày giờ không hợp lệ",
+      "format": "Phải theo định dạng ${format}",
+      "min": "Ngày giờ phải sau ${min}",
+      "max": "Ngày giờ phải trước ${max}",
+      "hour": "Giờ phải từ ${minHour} đến ${maxHour}",
+      "minute": "Phút phải theo khoảng ${minuteStep} phút",
+      "includes": "Phải bao gồm ${includes}",
+      "excludes": "Không được chứa ${excludes}",
+      "past": "Ngày giờ phải ở quá khứ",
+      "future": "Ngày giờ phải ở tương lai",
+      "today": "Ngày giờ phải là hôm nay",
+      "notToday": "Ngày giờ không được là hôm nay",
+      "weekday": "Ngày giờ phải là ngày trong tuần (Thứ Hai-Thứ Sáu)",
+      "weekend": "Ngày giờ phải là cuối tuần (Thứ Bảy-Chủ Nhật)",
+      "customRegex": "Định dạng ngày giờ không hợp lệ",
+      "notInWhitelist": "Ngày giờ không nằm trong danh sách cho phép"
+    },
+    "file": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng tệp không hợp lệ",
+      "size": "Kích thước tệp không được vượt quá ${size}",
+      "minSize": "Kích thước tệp phải ít nhất ${minSize}",
+      "maxSize": "Kích thước tệp không được vượt quá ${maxSize}",
+      "type": "Loại tệp phải là một trong: ${type}",
+      "extension": "Phần mở rộng tệp phải là một trong: ${extension}",
+      "extensionBlacklist": "Phần mở rộng tệp ${extension} không được phép",
+      "name": "Tên tệp phải khớp mẫu ${pattern}",
+      "nameBlacklist": "Tên tệp không được khớp mẫu ${pattern}",
+      "imageOnly": "Chỉ cho phép tệp hình ảnh",
+      "documentOnly": "Chỉ cho phép tệp tài liệu",
+      "videoOnly": "Chỉ cho phép tệp video",
+      "audioOnly": "Chỉ cho phép tệp âm thanh",
+      "archiveOnly": "Chỉ cho phép tệp nén"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "Bắt buộc",
+      "invalid": "Mã số doanh nghiệp Đài Loan không hợp lệ"
+    },
+    "nationalId": {
+      "required": "Bắt buộc",
+      "invalid": "Số chứng minh nhân dân Đài Loan không hợp lệ"
+    },
+    "mobile": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng số điện thoại di động Đài Loan không hợp lệ",
+      "notInWhitelist": "Không nằm trong danh sách số điện thoại di động cho phép"
+    },
+    "tel": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng số điện thoại cố định Đài Loan không hợp lệ",
+      "notInWhitelist": "Không nằm trong danh sách số điện thoại cố định cho phép"
+    },
+    "fax": {
+      "required": "Bắt buộc",
+      "invalid": "Định dạng số fax Đài Loan không hợp lệ",
+      "notInWhitelist": "Không nằm trong danh sách số fax cho phép"
+    },
+    "postalCode": {
+      "required": "Bắt buộc",
+      "invalid": "Mã bưu chính Đài Loan không hợp lệ",
+      "invalidFormat": "Định dạng mã bưu chính không hợp lệ",
+      "invalidRange": "Mã bưu chính nằm ngoài phạm vi hợp lệ",
+      "legacy5DigitWarning": "Mã bưu chính 5 chữ số là định dạng cũ, hãy cân nhắc sử dụng định dạng 6 chữ số",
+      "format3Only": "Chỉ cho phép mã bưu chính 3 chữ số",
+      "format5Only": "Chỉ cho phép mã bưu chính 5 chữ số",
+      "format6Only": "Chỉ cho phép mã bưu chính 6 chữ số",
+      "invalidSuffix": "Hậu tố mã bưu chính không hợp lệ - 5 chữ số phải là 01-99 hoặc 6 chữ số phải là 001-999",
+      "deprecated5Digit": "Mã bưu chính 5 chữ số đã ngừng sử dụng và không còn được hỗ trợ"
+    }
+  }
+}

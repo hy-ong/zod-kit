@@ -57,7 +57,7 @@ export type TwNationalIdOptions<IsRequired extends boolean = true> = {
   allowOldResident?: boolean
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TwNationalIdMessages>
+  i18n?: Partial<Record<Locale, Partial<TwNationalIdMessages>>>
 }
 
 /**

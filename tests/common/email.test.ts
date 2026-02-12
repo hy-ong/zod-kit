@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { email, setLocale } from "../../src"
 
 describe("email(true) features", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("multiple domain support", () => {
     it("should accept multiple allowed domains", () => {
@@ -135,7 +135,7 @@ describe("email(true) features", () => {
         domain: "company.com",
         businessOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
             domain: "Custom domain message: ${domain}",
             businessOnly: "Custom business only message",
@@ -157,7 +157,7 @@ describe("email(true) features", () => {
       const schema = email(true, {
         noDisposable: true,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
           },
           "zh-TW": {
@@ -171,11 +171,11 @@ describe("email(true) features", () => {
     })
 
     it("should use correct locale for custom messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schemaEn = email(true, {
         businessOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             businessOnly: "English business message",
           },
           "zh-TW": {
@@ -189,7 +189,7 @@ describe("email(true) features", () => {
       const schemaZh = email(true, {
         businessOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             businessOnly: "English business message",
           },
           "zh-TW": {

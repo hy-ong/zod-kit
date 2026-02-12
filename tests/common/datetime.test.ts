@@ -3,7 +3,7 @@ import { datetime, setLocale, validateDateTimeFormat, parseDateTimeValue, normal
 import dayjs from "dayjs"
 
 describe("Taiwan datetime(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct datetime formats", () => {
@@ -503,7 +503,7 @@ describe("Taiwan datetime(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       expect(() => datetime(true).parse("")).toThrow("Required")
       expect(() => datetime(true).parse("invalid")).toThrow("Must be in YYYY-MM-DD HH:mm format")
     })
@@ -517,7 +517,7 @@ describe("Taiwan datetime(true) validator", () => {
     })
 
     it("should support whitelist error messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         whitelist: ["now"],
@@ -531,7 +531,7 @@ describe("Taiwan datetime(true) validator", () => {
       const schema = datetime(true, {
         format: "YYYY-MM-DD HH:mm",
         i18n: {
-          en: {
+          "en-US": {
             required: "DateTime is required",
             invalid: "Invalid datetime value",
           },
@@ -542,7 +542,7 @@ describe("Taiwan datetime(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("DateTime is required")
 
       setLocale("zh-TW")
@@ -555,7 +555,7 @@ describe("Taiwan datetime(true) validator", () => {
         whitelist: ["now"],
         whitelistOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             notInWhitelist: "This datetime is not allowed",
           },
           "zh-TW": {
@@ -564,7 +564,7 @@ describe("Taiwan datetime(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("2024-03-15 14:30")).toThrow("This datetime is not allowed")
 
       setLocale("zh-TW")

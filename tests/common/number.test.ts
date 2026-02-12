@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { number, setLocale } from "../../src"
 
 describe("number(true) features", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("type validation", () => {
     it("should accept integers when type='integer'", () => {
@@ -133,7 +133,7 @@ describe("number(true) features", () => {
         type: "integer",
         min: 0,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
             integer: "Custom integer message",
             min: "Custom min: at least ${min}",
@@ -156,7 +156,7 @@ describe("number(true) features", () => {
         type: "integer",
         max: 10,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
           },
           "zh-TW": {
@@ -171,11 +171,11 @@ describe("number(true) features", () => {
     })
 
     it("should use correct locale for custom messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schemaEn = number(true, {
         type: "integer",
         i18n: {
-          en: {
+          "en-US": {
             integer: "English integer message",
           },
           "zh-TW": {
@@ -189,7 +189,7 @@ describe("number(true) features", () => {
       const schemaZh = number(true, {
         type: "integer",
         i18n: {
-          en: {
+          "en-US": {
             integer: "English integer message",
           },
           "zh-TW": {

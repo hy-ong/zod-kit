@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "필수 항목입니다",
+      "shouldBeTrue": "True여야 합니다",
+      "shouldBeFalse": "False여야 합니다",
+      "invalid": "불리언 값이어야 합니다"
+    },
+    "email": {
+      "required": "필수 항목입니다",
+      "invalid": "이메일 형식이 올바르지 않습니다",
+      "minLength": "최소 ${minLength}자 이상이어야 합니다",
+      "maxLength": "최대 ${maxLength}자 이하여야 합니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "domain": "도메인은 ${domain}이어야 합니다",
+      "domainBlacklist": "도메인 ${domain}은(는) 허용되지 않습니다",
+      "businessOnly": "비즈니스 이메일 주소만 허용됩니다",
+      "noDisposable": "일회용 이메일 주소는 허용되지 않습니다"
+    },
+    "url": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 URL 형식입니다",
+      "min": "최소 ${min}자 이상이어야 합니다",
+      "max": "최대 ${max}자 이하여야 합니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "protocol": "프로토콜은 다음 중 하나여야 합니다: ${protocols}",
+      "domain": "도메인은 다음 중 하나여야 합니다: ${domains}",
+      "domainBlacklist": "도메인 ${domain}은(는) 허용되지 않습니다",
+      "port": "포트는 다음 중 하나여야 합니다: ${ports}",
+      "pathStartsWith": "경로는 「${path}」으로 시작해야 합니다",
+      "pathEndsWith": "경로는 「${path}」으로 끝나야 합니다",
+      "hasQuery": "URL에 쿼리 매개변수가 있어야 합니다",
+      "noQuery": "URL에 쿼리 매개변수가 없어야 합니다",
+      "hasFragment": "URL에 프래그먼트가 있어야 합니다",
+      "noFragment": "URL에 프래그먼트가 없어야 합니다",
+      "localhost": "로컬호스트 URL은 허용되지 않습니다",
+      "noLocalhost": "로컬호스트 URL은 허용되지 않습니다"
+    },
+    "password": {
+      "required": "필수 항목입니다",
+      "min": "최소 ${min}자 이상이어야 합니다",
+      "max": "최대 ${max}자 이하여야 합니다",
+      "uppercase": "대문자를 최소 1자 이상 포함해야 합니다",
+      "lowercase": "소문자를 최소 1자 이상 포함해야 합니다",
+      "digits": "숫자를 최소 1자 이상 포함해야 합니다",
+      "special": "특수문자를 최소 1자 이상 포함해야 합니다",
+      "noRepeating": "반복 문자를 포함할 수 없습니다",
+      "noSequential": "연속 문자를 포함할 수 없습니다",
+      "noCommonWords": "일반적인 단어나 패턴을 포함할 수 없습니다",
+      "minStrength": "비밀번호 강도는 최소 ${minStrength} 이상이어야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "invalid": "비밀번호 형식이 올바르지 않습니다"
+    },
+    "number": {
+      "required": "필수 항목입니다",
+      "invalid": "유효한 숫자여야 합니다",
+      "integer": "정수여야 합니다",
+      "float": "소수여야 합니다",
+      "min": "최솟값은 ${min}입니다",
+      "max": "최댓값은 ${max}입니다",
+      "positive": "양수여야 합니다",
+      "negative": "음수여야 합니다",
+      "nonNegative": "음수가 아니어야 합니다",
+      "nonPositive": "양수가 아니어야 합니다",
+      "multipleOf": "${multipleOf}의 배수여야 합니다",
+      "finite": "유한한 수여야 합니다",
+      "precision": "소수점 이하 ${precision}자리 이내여야 합니다"
+    },
+    "id": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 ID 형식입니다",
+      "minLength": "최소 ${minLength}자 이상이어야 합니다",
+      "maxLength": "최대 ${maxLength}자 이하여야 합니다",
+      "numeric": "숫자 ID여야 합니다",
+      "uuid": "유효한 UUID여야 합니다",
+      "objectId": "유효한 MongoDB ObjectId여야 합니다",
+      "nanoid": "유효한 Nano ID여야 합니다",
+      "snowflake": "유효한 Snowflake ID여야 합니다",
+      "cuid": "유효한 CUID여야 합니다",
+      "ulid": "유효한 ULID여야 합니다",
+      "shortid": "유효한 Short ID여야 합니다",
+      "customFormat": "유효하지 않은 ID 형식입니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "startsWith": "「${startsWith}」으로 시작해야 합니다",
+      "endsWith": "「${endsWith}」으로 끝나야 합니다"
+    },
+    "text": {
+      "required": "필수 항목입니다",
+      "notEmpty": "비어 있거나 공백만 포함할 수 없습니다",
+      "minLength": "최소 ${minLength}자 이상이어야 합니다",
+      "maxLength": "최대 ${maxLength}자 이하여야 합니다",
+      "startsWith": "「${startsWith}」으로 시작해야 합니다",
+      "endsWith": "「${endsWith}」으로 끝나야 합니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "invalid": "형식이 올바르지 않습니다"
+    },
+    "date": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 날짜입니다",
+      "format": "${format} 형식이어야 합니다",
+      "min": "날짜는 ${min} 이후여야 합니다",
+      "max": "날짜는 ${max} 이전이어야 합니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "past": "과거 날짜여야 합니다",
+      "future": "미래 날짜여야 합니다",
+      "today": "오늘 날짜여야 합니다",
+      "notToday": "오늘이 아닌 날짜여야 합니다",
+      "weekday": "평일(월요일~금요일)이어야 합니다",
+      "weekend": "주말(토요일~일요일)이어야 합니다"
+    },
+    "time": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 시간 형식입니다",
+      "format": "${format} 형식이어야 합니다",
+      "min": "시간은 ${min} 이후여야 합니다",
+      "max": "시간은 ${max} 이전이어야 합니다",
+      "hour": "시간은 ${minHour}에서 ${maxHour} 사이여야 합니다",
+      "minute": "분은 ${minuteStep}분 간격이어야 합니다",
+      "second": "초는 ${secondStep}초 간격이어야 합니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "customRegex": "유효하지 않은 시간 형식입니다",
+      "notInWhitelist": "허용 목록에 없는 시간입니다"
+    },
+    "datetime": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 날짜시간 형식입니다",
+      "format": "${format} 형식이어야 합니다",
+      "min": "날짜시간은 ${min} 이후여야 합니다",
+      "max": "날짜시간은 ${max} 이전이어야 합니다",
+      "hour": "시간은 ${minHour}에서 ${maxHour} 사이여야 합니다",
+      "minute": "분은 ${minuteStep}분 간격이어야 합니다",
+      "includes": "「${includes}」을(를) 포함해야 합니다",
+      "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
+      "past": "과거 날짜시간이어야 합니다",
+      "future": "미래 날짜시간이어야 합니다",
+      "today": "오늘이어야 합니다",
+      "notToday": "오늘이 아니어야 합니다",
+      "weekday": "평일(월요일~금요일)이어야 합니다",
+      "weekend": "주말(토요일~일요일)이어야 합니다",
+      "customRegex": "유효하지 않은 날짜시간 형식입니다",
+      "notInWhitelist": "허용 목록에 없는 날짜시간입니다"
+    },
+    "file": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 파일 형식입니다",
+      "size": "파일 크기는 ${size} 이하여야 합니다",
+      "minSize": "파일 크기는 ${minSize} 이상이어야 합니다",
+      "maxSize": "파일 크기는 ${maxSize} 이하여야 합니다",
+      "type": "파일 유형은 다음 중 하나여야 합니다: ${type}",
+      "extension": "파일 확장자는 다음 중 하나여야 합니다: ${extension}",
+      "extensionBlacklist": "파일 확장자 ${extension}은(는) 허용되지 않습니다",
+      "name": "파일 이름은 패턴 ${pattern}과(와) 일치해야 합니다",
+      "nameBlacklist": "파일 이름은 패턴 ${pattern}과(와) 일치하면 안 됩니다",
+      "imageOnly": "이미지 파일만 허용됩니다",
+      "documentOnly": "문서 파일만 허용됩니다",
+      "videoOnly": "동영상 파일만 허용됩니다",
+      "audioOnly": "오디오 파일만 허용됩니다",
+      "archiveOnly": "압축 파일만 허용됩니다"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 사업자등록번호입니다"
+    },
+    "nationalId": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 주민등록번호입니다"
+    },
+    "mobile": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 휴대전화 형식입니다",
+      "notInWhitelist": "허용된 휴대전화 목록에 없습니다"
+    },
+    "tel": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 유선전화 형식입니다",
+      "notInWhitelist": "허용된 유선전화 목록에 없습니다"
+    },
+    "fax": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 팩스 형식입니다",
+      "notInWhitelist": "허용된 팩스 목록에 없습니다"
+    },
+    "postalCode": {
+      "required": "필수 항목입니다",
+      "invalid": "유효하지 않은 대만 우편번호입니다",
+      "invalidFormat": "우편번호 형식이 올바르지 않습니다",
+      "invalidRange": "우편번호가 유효 범위를 벗어났습니다",
+      "legacy5DigitWarning": "5자리 우편번호는 구형식입니다. 6자리 형식 사용을 권장합니다",
+      "format3Only": "3자리 우편번호만 허용됩니다",
+      "format5Only": "5자리 우편번호만 허용됩니다",
+      "format6Only": "6자리 우편번호만 허용됩니다",
+      "invalidSuffix": "유효하지 않은 우편번호 접미사 - 5자리는 01-99, 6자리는 001-999이어야 합니다",
+      "deprecated5Digit": "5자리 우편번호는 폐지되어 더 이상 지원되지 않습니다"
+    }
+  }
+}

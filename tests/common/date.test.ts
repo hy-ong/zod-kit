@@ -159,7 +159,7 @@ describe("date", () => {
 
   describe("localization", () => {
     it("should use English error messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = date(true)
 
       try {
@@ -366,12 +366,12 @@ describe("date", () => {
     it("should use custom English messages", () => {
       const schema = date(true, {
         i18n: {
-          en: { format: "Custom date format error: ${format}" },
+          "en-US": { format: "Custom date format error: ${format}" },
           "zh-TW": { format: "自定義日期格式錯誤: ${format}" },
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse("invalid")
       } catch (error: any) {
@@ -382,7 +382,7 @@ describe("date", () => {
     it("should use custom Chinese messages", () => {
       const schema = date(true, {
         i18n: {
-          en: { format: "Custom date format error: ${format}" },
+          "en-US": { format: "Custom date format error: ${format}" },
           "zh-TW": { format: "自定義日期格式錯誤: ${format}" },
         },
       })
@@ -398,12 +398,12 @@ describe("date", () => {
     it("should fallback to default messages when custom not provided", () => {
       const schema = date(true, {
         i18n: {
-          en: { format: "Custom format error" },
+          "en-US": { format: "Custom format error" },
           "zh-TW": { format: "自定義格式錯誤" },
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse("")
       } catch (error: any) {
@@ -415,7 +415,7 @@ describe("date", () => {
       const schema = date(true, {
         mustBePast: true,
         i18n: {
-          en: { past: "Date must be in the past!" },
+          "en-US": { past: "Date must be in the past!" },
           "zh-TW": { past: "日期必須在過去！" },
         },
       })
@@ -424,7 +424,7 @@ describe("date", () => {
       tomorrow.setDate(tomorrow.getDate() + 1)
       const tomorrowStr = tomorrow.toISOString().split("T")[0]
 
-      setLocale("en")
+      setLocale("en-US")
       try {
         schema.parse(tomorrowStr)
       } catch (error: any) {

@@ -38,7 +38,7 @@ export type TwBusinessIdMessages = {
 export type TwBusinessIdOptions<IsRequired extends boolean = true> = {
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TwBusinessIdMessages>
+  i18n?: Partial<Record<Locale, Partial<TwBusinessIdMessages>>>
 }
 
 /**

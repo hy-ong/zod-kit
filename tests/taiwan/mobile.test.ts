@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { twMobile, setLocale, validateTaiwanMobile } from "../../src"
 
 describe("Taiwan twMobile(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan mobile phone numbers", () => {
@@ -218,7 +218,7 @@ describe("Taiwan twMobile(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twMobile(true)
 
       expect(() => schema.parse("")).toThrow("Required")
@@ -234,7 +234,7 @@ describe("Taiwan twMobile(true) validator", () => {
     })
 
     it("should accept valid format even when not in whitelist", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twMobile(true, {
         whitelist: ["0901234567"],
       })
@@ -249,7 +249,7 @@ describe("Taiwan twMobile(true) validator", () => {
     it("should support custom i18n messages", () => {
       const schema = twMobile(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "Mobile phone is required",
             invalid: "Mobile phone format is invalid",
             notInWhitelist: "Mobile phone not allowed",
@@ -262,7 +262,7 @@ describe("Taiwan twMobile(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("Mobile phone is required")
       expect(() => schema.parse("0801234567")).toThrow("Mobile phone format is invalid")
 
@@ -275,7 +275,7 @@ describe("Taiwan twMobile(true) validator", () => {
       const schema = twMobile(true, {
         whitelist: ["0901234567"],
         i18n: {
-          en: {
+          "en-US": {
             invalid: "This mobile phone format is not valid",
           },
           "zh-TW": {
@@ -284,7 +284,7 @@ describe("Taiwan twMobile(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("0801234567")).toThrow("This mobile phone format is not valid")
 
       setLocale("zh-TW")

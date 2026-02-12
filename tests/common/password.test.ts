@@ -3,7 +3,7 @@ import { Locale, setLocale, password } from "../../src"
 
 const locales = [
   {
-    locale: "en",
+    locale: "en-US",
     messages: {
       required: "Required",
       min: "Must be at least 8 characters",
@@ -193,7 +193,7 @@ describe.each(locales)("password(true) locale: $locale", ({ locale, messages }) 
   describe("custom i18n messages", () => {
     it("should use custom i18n messages when provided", () => {
       const customMessages = {
-        en: {
+        "en-US": {
           required: "Custom required message",
           min: "Custom min ${min} message",
           uppercase: "Custom uppercase message",
@@ -211,7 +211,7 @@ describe.each(locales)("password(true) locale: $locale", ({ locale, messages }) 
         i18n: customMessages,
       })
 
-      if (locale === "en") {
+      if (locale === "en-US") {
         expect(() => schema.parse("")).toThrow("Custom required message")
         expect(() => schema.parse("short")).toThrow("Custom min 8 message")
         expect(() => schema.parse("nouppercase")).toThrow("Custom uppercase message")
@@ -224,7 +224,7 @@ describe.each(locales)("password(true) locale: $locale", ({ locale, messages }) 
 
     it("should fallback to default i18n when custom message not provided", () => {
       const customMessages = {
-        en: { required: "Custom required message" },
+        "en-US": { required: "Custom required message" },
         "zh-TW": { required: "自訂必填訊息" },
       }
 
@@ -233,7 +233,7 @@ describe.each(locales)("password(true) locale: $locale", ({ locale, messages }) 
         i18n: customMessages,
       })
 
-      if (locale === "en") {
+      if (locale === "en-US") {
         expect(() => schema.parse("")).toThrow("Custom required message")
         expect(() => schema.parse("nouppercase")).toThrow(messages.uppercase)
       } else {

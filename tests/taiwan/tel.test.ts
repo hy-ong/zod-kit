@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { twTel, setLocale, validateTaiwanTel } from "../../src"
 
 describe("Taiwan twTel(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan landline telephone numbers", () => {
@@ -289,7 +289,7 @@ describe("Taiwan twTel(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twTel(true)
 
       expect(() => schema.parse("")).toThrow("Required")
@@ -305,7 +305,7 @@ describe("Taiwan twTel(true) validator", () => {
     })
 
     it("should support whitelist with valid format fallback", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twTel(true, {
         whitelist: ["special-number"],
       })
@@ -323,7 +323,7 @@ describe("Taiwan twTel(true) validator", () => {
     it("should support custom i18n messages", () => {
       const schema = twTel(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "Telephone number is required",
             invalid: "Telephone number format is invalid",
             notInWhitelist: "Telephone number not allowed",
@@ -336,7 +336,7 @@ describe("Taiwan twTel(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("Telephone number is required")
       expect(() => schema.parse("0912345678")).toThrow("Telephone number format is invalid")
 
@@ -349,7 +349,7 @@ describe("Taiwan twTel(true) validator", () => {
       const schema = twTel(true, {
         whitelist: ["special-value"],
         i18n: {
-          en: {
+          "en-US": {
             invalid: "This telephone format is not valid",
           },
           "zh-TW": {
@@ -358,7 +358,7 @@ describe("Taiwan twTel(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("invalid-format")).toThrow("This telephone format is not valid")
 
       setLocale("zh-TW")

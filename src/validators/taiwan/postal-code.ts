@@ -88,7 +88,7 @@ export type TwPostalCodeOptions<IsRequired extends boolean = true> = {
   blockedPrefixes?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TwPostalCodeMessages>
+  i18n?: Partial<Record<Locale, Partial<TwPostalCodeMessages>>>
   strictSuffixValidation?: boolean
   deprecate5Digit?: boolean
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { file, setLocale } from "../../src"
 
 describe("file(true) features", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   // Helper function to create mock files for testing
   const createMockFile = (name: string, size: number, type: string, content?: string): File => {
@@ -297,7 +297,7 @@ describe("file(true) features", () => {
         extension: [".pdf"],
         imageOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
             maxSize: "Custom size message: ${maxSize}",
             extension: "Custom extension message: ${extension}",
@@ -326,7 +326,7 @@ describe("file(true) features", () => {
       const schema = file(true, {
         videoOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             required: "Custom required message",
           },
           "zh-TW": {
@@ -342,11 +342,11 @@ describe("file(true) features", () => {
     })
 
     it("should use correct locale for custom messages", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schemaEn = file(true, {
         imageOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             imageOnly: "English image message",
           },
           "zh-TW": {
@@ -361,7 +361,7 @@ describe("file(true) features", () => {
       const schemaZh = file(true, {
         imageOnly: true,
         i18n: {
-          en: {
+          "en-US": {
             imageOnly: "English image message",
           },
           "zh-TW": {

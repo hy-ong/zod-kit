@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { twNationalId, setLocale, validateTaiwanNationalId, validateCitizenId, validateOldResidentId, validateNewResidentId } from "../../src"
 
 describe("Taiwan twNationalId(true) validator", () => {
-  beforeEach(() => setLocale("en"))
+  beforeEach(() => setLocale("en-US"))
 
   describe("basic functionality", () => {
     it("should validate correct Taiwan national IDs (both types)", () => {
@@ -275,7 +275,7 @@ describe("Taiwan twNationalId(true) validator", () => {
 
   describe("i18n support", () => {
     it("should use English messages by default", () => {
-      setLocale("en")
+      setLocale("en-US")
       const schema = twNationalId(true)
 
       expect(() => schema.parse("")).toThrow("Required")
@@ -293,7 +293,7 @@ describe("Taiwan twNationalId(true) validator", () => {
     it("should support custom i18n messages", () => {
       const schema = twNationalId(true, {
         i18n: {
-          en: {
+          "en-US": {
             required: "National ID is required",
             invalid: "National ID is invalid",
           },
@@ -304,7 +304,7 @@ describe("Taiwan twNationalId(true) validator", () => {
         },
       })
 
-      setLocale("en")
+      setLocale("en-US")
       expect(() => schema.parse("")).toThrow("National ID is required")
       expect(() => schema.parse("A123456788")).toThrow("National ID is invalid")
 

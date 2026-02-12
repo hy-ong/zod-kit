@@ -72,7 +72,7 @@ export type TextOptions<IsRequired extends boolean = true> = {
   transform?: (value: string) => string
   notEmpty?: boolean
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TextMessages>
+  i18n?: Partial<Record<Locale, Partial<TextMessages>>>
 }
 
 /**

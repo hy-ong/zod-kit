@@ -104,7 +104,7 @@ export type UrlOptions<IsRequired extends boolean = true> = {
   blockLocalhost?: boolean
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, UrlMessages>
+  i18n?: Partial<Record<Locale, Partial<UrlMessages>>>
 }
 
 /**

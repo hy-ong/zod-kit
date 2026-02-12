@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "必須項目です",
+      "shouldBeTrue": "Trueである必要があります",
+      "shouldBeFalse": "Falseである必要があります",
+      "invalid": "ブール値である必要があります"
+    },
+    "email": {
+      "required": "必須項目です",
+      "invalid": "メールアドレスの形式が無効です",
+      "minLength": "${minLength}文字以上で入力してください",
+      "maxLength": "${maxLength}文字以下で入力してください",
+      "includes": "「${includes}」を含む必要があります",
+      "domain": "ドメインは ${domain} である必要があります",
+      "domainBlacklist": "ドメイン ${domain} は許可されていません",
+      "businessOnly": "ビジネスメールアドレスのみ使用可能です",
+      "noDisposable": "使い捨てメールアドレスは使用できません"
+    },
+    "url": {
+      "required": "必須項目です",
+      "invalid": "無効なURL形式です",
+      "min": "${min}文字以上で入力してください",
+      "max": "${max}文字以下で入力してください",
+      "includes": "「${includes}」を含む必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "protocol": "プロトコルは次のいずれかである必要があります：${protocols}",
+      "domain": "ドメインは次のいずれかである必要があります：${domains}",
+      "domainBlacklist": "ドメイン ${domain} は許可されていません",
+      "port": "ポートは次のいずれかである必要があります：${ports}",
+      "pathStartsWith": "パスは「${path}」で始まる必要があります",
+      "pathEndsWith": "パスは「${path}」で終わる必要があります",
+      "hasQuery": "URLにクエリパラメータが必要です",
+      "noQuery": "URLにクエリパラメータを含めることはできません",
+      "hasFragment": "URLにフラグメントが必要です",
+      "noFragment": "URLにフラグメントを含めることはできません",
+      "localhost": "ローカルホストURLは許可されていません",
+      "noLocalhost": "ローカルホストURLは許可されていません"
+    },
+    "password": {
+      "required": "必須項目です",
+      "min": "${min}文字以上で入力してください",
+      "max": "${max}文字以下で入力してください",
+      "uppercase": "大文字を1文字以上含む必要があります",
+      "lowercase": "小文字を1文字以上含む必要があります",
+      "digits": "数字を1文字以上含む必要があります",
+      "special": "特殊文字を1文字以上含む必要があります",
+      "noRepeating": "繰り返し文字を含めることはできません",
+      "noSequential": "連続文字を含めることはできません",
+      "noCommonWords": "一般的な単語やパターンを含めることはできません",
+      "minStrength": "パスワード強度は ${minStrength} 以上である必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "includes": "「${includes}」を含む必要があります",
+      "invalid": "パスワードの形式が無効です"
+    },
+    "number": {
+      "required": "必須項目です",
+      "invalid": "有効な数値である必要があります",
+      "integer": "整数である必要があります",
+      "float": "小数である必要があります",
+      "min": "${min} 以上である必要があります",
+      "max": "${max} 以下である必要があります",
+      "positive": "正の数である必要があります",
+      "negative": "負の数である必要があります",
+      "nonNegative": "非負の数である必要があります",
+      "nonPositive": "非正の数である必要があります",
+      "multipleOf": "${multipleOf} の倍数である必要があります",
+      "finite": "有限の数である必要があります",
+      "precision": "小数点以下は ${precision} 桁以内である必要があります"
+    },
+    "id": {
+      "required": "必須項目です",
+      "invalid": "無効なID形式です",
+      "minLength": "${minLength}文字以上で入力してください",
+      "maxLength": "${maxLength}文字以下で入力してください",
+      "numeric": "数値IDである必要があります",
+      "uuid": "有効なUUIDである必要があります",
+      "objectId": "有効なMongoDB ObjectIdである必要があります",
+      "nanoid": "有効なNano IDである必要があります",
+      "snowflake": "有効なSnowflake IDである必要があります",
+      "cuid": "有効なCUIDである必要があります",
+      "ulid": "有効なULIDである必要があります",
+      "shortid": "有効なShort IDである必要があります",
+      "customFormat": "無効なID形式です",
+      "includes": "「${includes}」を含む必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "startsWith": "「${startsWith}」で始まる必要があります",
+      "endsWith": "「${endsWith}」で終わる必要があります"
+    },
+    "text": {
+      "required": "必須項目です",
+      "notEmpty": "空白のみの入力はできません",
+      "minLength": "${minLength}文字以上で入力してください",
+      "maxLength": "${maxLength}文字以下で入力してください",
+      "startsWith": "「${startsWith}」で始まる必要があります",
+      "endsWith": "「${endsWith}」で終わる必要があります",
+      "includes": "「${includes}」を含む必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "invalid": "形式が無効です"
+    },
+    "date": {
+      "required": "必須項目です",
+      "invalid": "無効な日付です",
+      "format": "${format} 形式で入力してください",
+      "min": "日付は ${min} 以降である必要があります",
+      "max": "日付は ${max} 以前である必要があります",
+      "includes": "「${includes}」を含む必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "past": "過去の日付である必要があります",
+      "future": "未来の日付である必要があります",
+      "today": "今日の日付である必要があります",
+      "notToday": "今日以外の日付である必要があります",
+      "weekday": "平日（月曜〜金曜）である必要があります",
+      "weekend": "週末（土曜〜日曜）である必要があります"
+    },
+    "time": {
+      "required": "必須項目です",
+      "invalid": "無効な時刻形式です",
+      "format": "${format} 形式で入力してください",
+      "min": "時刻は ${min} 以降である必要があります",
+      "max": "時刻は ${max} 以前である必要があります",
+      "hour": "時間は ${minHour} から ${maxHour} の間である必要があります",
+      "minute": "分は ${minuteStep} 分間隔である必要があります",
+      "second": "秒は ${secondStep} 秒間隔である必要があります",
+      "includes": "「${includes}」を含む必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "customRegex": "無効な時刻形式です",
+      "notInWhitelist": "許可リストに含まれていない時刻です"
+    },
+    "datetime": {
+      "required": "必須項目です",
+      "invalid": "無効な日時形式です",
+      "format": "${format} 形式で入力してください",
+      "min": "日時は ${min} 以降である必要があります",
+      "max": "日時は ${max} 以前である必要があります",
+      "hour": "時間は ${minHour} から ${maxHour} の間である必要があります",
+      "minute": "分は ${minuteStep} 分間隔である必要があります",
+      "includes": "「${includes}」を含む必要があります",
+      "excludes": "「${excludes}」を含めることはできません",
+      "past": "過去の日時である必要があります",
+      "future": "未来の日時である必要があります",
+      "today": "今日の日時である必要があります",
+      "notToday": "今日以外の日時である必要があります",
+      "weekday": "平日（月曜〜金曜）である必要があります",
+      "weekend": "週末（土曜〜日曜）である必要があります",
+      "customRegex": "無効な日時形式です",
+      "notInWhitelist": "許可リストに含まれていない日時です"
+    },
+    "file": {
+      "required": "必須項目です",
+      "invalid": "無効なファイル形式です",
+      "size": "ファイルサイズは ${size} 以下である必要があります",
+      "minSize": "ファイルサイズは ${minSize} 以上である必要があります",
+      "maxSize": "ファイルサイズは ${maxSize} 以下である必要があります",
+      "type": "ファイルタイプは次のいずれかである必要があります：${type}",
+      "extension": "ファイル拡張子は次のいずれかである必要があります：${extension}",
+      "extensionBlacklist": "ファイル拡張子 ${extension} は許可されていません",
+      "name": "ファイル名はパターン ${pattern} に一致する必要があります",
+      "nameBlacklist": "ファイル名はパターン ${pattern} に一致してはいけません",
+      "imageOnly": "画像ファイルのみ許可されています",
+      "documentOnly": "ドキュメントファイルのみ許可されています",
+      "videoOnly": "動画ファイルのみ許可されています",
+      "audioOnly": "音声ファイルのみ許可されています",
+      "archiveOnly": "アーカイブファイルのみ許可されています"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾統一編號です"
+    },
+    "nationalId": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾身分証番号です"
+    },
+    "mobile": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾携帯電話番号形式です",
+      "notInWhitelist": "許可された携帯電話番号リストに含まれていません"
+    },
+    "tel": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾固定電話番号形式です",
+      "notInWhitelist": "許可された固定電話番号リストに含まれていません"
+    },
+    "fax": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾FAX番号形式です",
+      "notInWhitelist": "許可されたFAX番号リストに含まれていません"
+    },
+    "postalCode": {
+      "required": "必須項目です",
+      "invalid": "無効な台湾郵便番号です",
+      "invalidFormat": "郵便番号の形式が無効です",
+      "invalidRange": "郵便番号が有効範囲外です",
+      "legacy5DigitWarning": "5桁の郵便番号は旧形式です。6桁形式の使用を推奨します",
+      "format3Only": "3桁の郵便番号のみ使用可能です",
+      "format5Only": "5桁の郵便番号のみ使用可能です",
+      "format6Only": "6桁の郵便番号のみ使用可能です",
+      "invalidSuffix": "無効な郵便番号の末尾 - 5桁は01-99、6桁は001-999である必要があります",
+      "deprecated5Digit": "5桁の郵便番号は廃止されており、サポートされていません"
+    }
+  }
+}

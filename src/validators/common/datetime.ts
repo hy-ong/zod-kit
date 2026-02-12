@@ -170,7 +170,7 @@ export type DateTimeOptions<IsRequired extends boolean = true> = {
   whitelistOnly?: boolean // If true, only allow values in whitelist
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, DateTimeMessages>
+  i18n?: Partial<Record<Locale, Partial<DateTimeMessages>>>
 }
 
 /**

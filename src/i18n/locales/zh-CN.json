@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "必填",
+      "shouldBeTrue": "必须为是",
+      "shouldBeFalse": "必须为否",
+      "invalid": "必须为布尔值"
+    },
+    "email": {
+      "required": "必填",
+      "invalid": "电子邮件格式错误",
+      "minLength": "长度至少 ${minLength} 个字符",
+      "maxLength": "长度最多 ${maxLength} 个字符",
+      "includes": "必须包含「${includes}」",
+      "domain": "必须为 ${domain} 域名",
+      "domainBlacklist": "不允许使用 ${domain} 域名",
+      "businessOnly": "仅允许企业邮箱地址",
+      "noDisposable": "不允许使用临时邮箱地址"
+    },
+    "url": {
+      "required": "必填",
+      "invalid": "无效的 URL 格式",
+      "min": "长度至少 ${min} 个字符",
+      "max": "长度最多 ${max} 个字符",
+      "includes": "必须包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "protocol": "协议必须为：${protocols}",
+      "domain": "域名必须为：${domains}",
+      "domainBlacklist": "不允许使用域名 ${domain}",
+      "port": "端口必须为：${ports}",
+      "pathStartsWith": "路径必须以「${path}」开头",
+      "pathEndsWith": "路径必须以「${path}」结尾",
+      "hasQuery": "URL 必须包含查询参数",
+      "noQuery": "URL 不得包含查询参数",
+      "hasFragment": "URL 必须包含锚点",
+      "noFragment": "URL 不得包含锚点",
+      "localhost": "不允许使用本地 URL",
+      "noLocalhost": "不允许使用本地 URL"
+    },
+    "password": {
+      "required": "必填",
+      "min": "长度至少 ${min} 个字符",
+      "max": "长度最多 ${max} 个字符",
+      "uppercase": "必须包含至少一个大写字母",
+      "lowercase": "必须包含至少一个小写字母",
+      "digits": "必须包含至少一个数字",
+      "special": "必须包含至少一个特殊符号",
+      "noRepeating": "不可包含重复字符",
+      "noSequential": "不可包含连续字符",
+      "noCommonWords": "不可包含常见密码或模式",
+      "minStrength": "密码强度必须至少为 ${minStrength}",
+      "excludes": "不得包含「${excludes}」",
+      "includes": "必须包含「${includes}」",
+      "invalid": "密码格式错误"
+    },
+    "number": {
+      "required": "必填",
+      "invalid": "必须为有效数字",
+      "integer": "必须为整数",
+      "float": "必须为小数",
+      "min": "最小值 ${min}",
+      "max": "最大值 ${max}",
+      "positive": "必须为正数",
+      "negative": "必须为负数",
+      "nonNegative": "不可为负数",
+      "nonPositive": "不可为正数",
+      "multipleOf": "必须为 ${multipleOf} 的倍数",
+      "finite": "必须为有限数字",
+      "precision": "小数位数不可超过 ${precision} 位"
+    },
+    "id": {
+      "required": "必填",
+      "invalid": "无效的 ID 格式",
+      "minLength": "长度至少 ${minLength} 个字符",
+      "maxLength": "长度最多 ${maxLength} 个字符",
+      "numeric": "必须为数字 ID",
+      "uuid": "必须为有效的 UUID",
+      "objectId": "必须为有效的 MongoDB ObjectId",
+      "nanoid": "必须为有效的 Nano ID",
+      "snowflake": "必须为有效的 Snowflake ID",
+      "cuid": "必须为有效的 CUID",
+      "ulid": "必须为有效的 ULID",
+      "shortid": "必须为有效的 Short ID",
+      "customFormat": "无效的 ID 格式",
+      "includes": "必须包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "startsWith": "必须以「${startsWith}」开头",
+      "endsWith": "必须以「${endsWith}」结尾"
+    },
+    "text": {
+      "required": "必填",
+      "notEmpty": "不可为空白或仅含空格",
+      "minLength": "长度至少 ${minLength} 个字符",
+      "maxLength": "长度最多 ${maxLength} 个字符",
+      "startsWith": "必须以「${startsWith}」开头",
+      "endsWith": "必须以「${endsWith}」结尾",
+      "includes": "必须包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "invalid": "格式错误"
+    },
+    "date": {
+      "required": "必填",
+      "invalid": "无效日期",
+      "format": "必须为 ${format} 格式",
+      "min": "日期不得早于 ${min}",
+      "max": "日期不得晚于 ${max}",
+      "includes": "必须包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "past": "必须为过去的日期",
+      "future": "必须为未来的日期",
+      "today": "必须为今天",
+      "notToday": "不得为今天",
+      "weekday": "必须为工作日（周一至周五）",
+      "weekend": "必须为周末（周六至周日）"
+    },
+    "time": {
+      "required": "必填",
+      "invalid": "无效的时间格式",
+      "format": "必须为 ${format} 格式",
+      "min": "时间不得早于 ${min}",
+      "max": "时间不得晚于 ${max}",
+      "hour": "小时必须介于 ${minHour} 与 ${maxHour} 之间",
+      "minute": "分钟必须为 ${minuteStep} 分钟间隔",
+      "second": "秒数必须为 ${secondStep} 秒间隔",
+      "includes": "必须包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "customRegex": "无效的时间格式",
+      "notInWhitelist": "时间不在允许列表中"
+    },
+    "datetime": {
+      "required": "必填",
+      "invalid": "无效的日期时间格式",
+      "format": "必须为 ${format} 格式",
+      "min": "日期时间不得早于 ${min}",
+      "max": "日期时间不得晚于 ${max}",
+      "hour": "小时必须介于 ${minHour} 与 ${maxHour} 之间",
+      "minute": "分钟必须为 ${minuteStep} 分钟间隔",
+      "includes": "必须包含「${includes}」",
+      "excludes": "不得包含「${excludes}」",
+      "past": "必须为过去的日期时间",
+      "future": "必须为未来的日期时间",
+      "today": "必须为今天",
+      "notToday": "不得为今天",
+      "weekday": "必须为工作日（周一至周五）",
+      "weekend": "必须为周末（周六至周日）",
+      "customRegex": "无效的日期时间格式",
+      "notInWhitelist": "日期时间不在允许列表中"
+    },
+    "file": {
+      "required": "必填",
+      "invalid": "无效的文件格式",
+      "size": "文件大小不得超过 ${size}",
+      "minSize": "文件大小至少 ${minSize}",
+      "maxSize": "文件大小不得超过 ${maxSize}",
+      "type": "文件类型必须为：${type}",
+      "extension": "扩展名必须为：${extension}",
+      "extensionBlacklist": "不允许使用扩展名 ${extension}",
+      "name": "文件名必须符合格式 ${pattern}",
+      "nameBlacklist": "文件名不得符合格式 ${pattern}",
+      "imageOnly": "仅允许图片文件",
+      "documentOnly": "仅允许文档文件",
+      "videoOnly": "仅允许视频文件",
+      "audioOnly": "仅允许音频文件",
+      "archiveOnly": "仅允许压缩文件"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "必填",
+      "invalid": "无效的统一编号"
+    },
+    "nationalId": {
+      "required": "必填",
+      "invalid": "无效的身份证号"
+    },
+    "mobile": {
+      "required": "必填",
+      "invalid": "无效的手机号码格式",
+      "notInWhitelist": "不在允许的手机号码列表中"
+    },
+    "tel": {
+      "required": "必填",
+      "invalid": "无效的座机号码格式",
+      "notInWhitelist": "不在允许的座机号码列表中"
+    },
+    "fax": {
+      "required": "必填",
+      "invalid": "无效的传真号码格式",
+      "notInWhitelist": "不在允许的传真号码列表中"
+    },
+    "postalCode": {
+      "required": "必填",
+      "invalid": "无效的邮政编码",
+      "invalidFormat": "邮政编码格式错误",
+      "invalidRange": "邮政编码超出有效范围",
+      "legacy5DigitWarning": "5 位邮政编码为旧式格式，建议使用 6 位格式",
+      "format3Only": "仅允许 3 位邮政编码",
+      "format5Only": "仅允许 5 位邮政编码",
+      "format6Only": "仅允许 6 位邮政编码",
+      "invalidSuffix": "无效的邮政编码后缀 - 5 位格式须为 01-99，6 位格式须为 001-999",
+      "deprecated5Digit": "5 位邮政编码已弃用且不再支持"
+    }
+  }
+}

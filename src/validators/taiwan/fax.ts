@@ -42,7 +42,7 @@ export type TwFaxOptions<IsRequired extends boolean = true> = {
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
-  i18n?: Record<Locale, TwFaxMessages>
+  i18n?: Partial<Record<Locale, Partial<TwFaxMessages>>>
 }
 
 /**

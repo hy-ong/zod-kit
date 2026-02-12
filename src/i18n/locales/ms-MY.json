@@ -1,0 +1,204 @@
+{
+  "common": {
+    "boolean": {
+      "required": "Wajib diisi",
+      "shouldBeTrue": "Mesti True",
+      "shouldBeFalse": "Mesti False",
+      "invalid": "Mesti nilai boolean"
+    },
+    "email": {
+      "required": "Wajib diisi",
+      "invalid": "Format e-mel tidak sah",
+      "minLength": "Mesti sekurang-kurangnya ${minLength} aksara",
+      "maxLength": "Mesti tidak melebihi ${maxLength} aksara",
+      "includes": "Mesti mengandungi ${includes}",
+      "domain": "Mesti daripada domain: ${domain}",
+      "domainBlacklist": "Domain ${domain} tidak dibenarkan",
+      "businessOnly": "Hanya alamat e-mel perniagaan dibenarkan",
+      "noDisposable": "Alamat e-mel pakai buang tidak dibenarkan"
+    },
+    "url": {
+      "required": "Wajib diisi",
+      "invalid": "Format URL tidak sah",
+      "min": "Mesti sekurang-kurangnya ${min} aksara",
+      "max": "Mesti tidak melebihi ${max} aksara",
+      "includes": "Mesti mengandungi ${includes}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "protocol": "Protokol mesti salah satu daripada: ${protocols}",
+      "domain": "Domain mesti salah satu daripada: ${domains}",
+      "domainBlacklist": "Domain ${domain} tidak dibenarkan",
+      "port": "Port mesti salah satu daripada: ${ports}",
+      "pathStartsWith": "Laluan mesti bermula dengan ${path}",
+      "pathEndsWith": "Laluan mesti berakhir dengan ${path}",
+      "hasQuery": "URL mesti mempunyai parameter pertanyaan",
+      "noQuery": "URL tidak boleh mempunyai parameter pertanyaan",
+      "hasFragment": "URL mesti mempunyai fragmen",
+      "noFragment": "URL tidak boleh mempunyai fragmen",
+      "localhost": "URL localhost tidak dibenarkan",
+      "noLocalhost": "URL localhost tidak dibenarkan"
+    },
+    "password": {
+      "required": "Wajib diisi",
+      "min": "Mesti sekurang-kurangnya ${min} aksara",
+      "max": "Mesti tidak melebihi ${max} aksara",
+      "uppercase": "Mesti mengandungi sekurang-kurangnya satu huruf besar",
+      "lowercase": "Mesti mengandungi sekurang-kurangnya satu huruf kecil",
+      "digits": "Mesti mengandungi sekurang-kurangnya satu digit",
+      "special": "Mesti mengandungi sekurang-kurangnya satu aksara khas",
+      "noRepeating": "Tidak boleh mengandungi aksara berulang",
+      "noSequential": "Tidak boleh mengandungi aksara berturutan",
+      "noCommonWords": "Tidak boleh mengandungi perkataan atau corak biasa",
+      "minStrength": "Kekuatan kata laluan mesti sekurang-kurangnya ${minStrength}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "includes": "Mesti mengandungi ${includes}",
+      "invalid": "Format kata laluan tidak sah"
+    },
+    "number": {
+      "required": "Wajib diisi",
+      "invalid": "Mesti nombor yang sah",
+      "integer": "Mesti integer",
+      "float": "Mesti nombor perpuluhan",
+      "min": "Mesti sekurang-kurangnya ${min}",
+      "max": "Mesti tidak melebihi ${max}",
+      "positive": "Mesti positif",
+      "negative": "Mesti negatif",
+      "nonNegative": "Mesti bukan negatif",
+      "nonPositive": "Mesti bukan positif",
+      "multipleOf": "Mesti gandaan ${multipleOf}",
+      "finite": "Mesti nombor terhingga",
+      "precision": "Mesti tidak melebihi ${precision} tempat perpuluhan"
+    },
+    "id": {
+      "required": "Wajib diisi",
+      "invalid": "Format ID tidak sah",
+      "minLength": "Mesti sekurang-kurangnya ${minLength} aksara",
+      "maxLength": "Mesti tidak melebihi ${maxLength} aksara",
+      "numeric": "Mesti ID numerik",
+      "uuid": "Mesti UUID yang sah",
+      "objectId": "Mesti MongoDB ObjectId yang sah",
+      "nanoid": "Mesti Nano ID yang sah",
+      "snowflake": "Mesti Snowflake ID yang sah",
+      "cuid": "Mesti CUID yang sah",
+      "ulid": "Mesti ULID yang sah",
+      "shortid": "Mesti Short ID yang sah",
+      "customFormat": "Format ID tidak sah",
+      "includes": "Mesti mengandungi ${includes}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "startsWith": "Mesti bermula dengan ${startsWith}",
+      "endsWith": "Mesti berakhir dengan ${endsWith}"
+    },
+    "text": {
+      "required": "Wajib diisi",
+      "notEmpty": "Tidak boleh kosong atau ruang putih sahaja",
+      "minLength": "Mesti sekurang-kurangnya ${minLength} aksara",
+      "maxLength": "Mesti tidak melebihi ${maxLength} aksara",
+      "startsWith": "Mesti bermula dengan ${startsWith}",
+      "endsWith": "Mesti berakhir dengan ${endsWith}",
+      "includes": "Mesti mengandungi ${includes}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "invalid": "Format tidak sah"
+    },
+    "date": {
+      "required": "Wajib diisi",
+      "invalid": "Tarikh tidak sah",
+      "format": "Mesti dalam format ${format}",
+      "min": "Tarikh mesti pada atau selepas ${min}",
+      "max": "Tarikh mesti pada atau sebelum ${max}",
+      "includes": "Mesti mengandungi ${includes}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "past": "Tarikh mesti pada masa lalu",
+      "future": "Tarikh mesti pada masa hadapan",
+      "today": "Tarikh mesti hari ini",
+      "notToday": "Tarikh tidak boleh hari ini",
+      "weekday": "Tarikh mesti hari bekerja (Isnin-Jumaat)",
+      "weekend": "Tarikh mesti hujung minggu (Sabtu-Ahad)"
+    },
+    "time": {
+      "required": "Wajib diisi",
+      "invalid": "Format masa tidak sah",
+      "format": "Mesti dalam format ${format}",
+      "min": "Masa mesti selepas ${min}",
+      "max": "Masa mesti sebelum ${max}",
+      "hour": "Jam mesti antara ${minHour} dan ${maxHour}",
+      "minute": "Minit mesti dalam selang ${minuteStep} minit",
+      "second": "Saat mesti dalam selang ${secondStep} saat",
+      "includes": "Mesti mengandungi ${includes}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "customRegex": "Format masa tidak sah",
+      "notInWhitelist": "Masa tiada dalam senarai yang dibenarkan"
+    },
+    "datetime": {
+      "required": "Wajib diisi",
+      "invalid": "Format tarikh masa tidak sah",
+      "format": "Mesti dalam format ${format}",
+      "min": "Tarikh masa mesti selepas ${min}",
+      "max": "Tarikh masa mesti sebelum ${max}",
+      "hour": "Jam mesti antara ${minHour} dan ${maxHour}",
+      "minute": "Minit mesti dalam selang ${minuteStep} minit",
+      "includes": "Mesti mengandungi ${includes}",
+      "excludes": "Tidak boleh mengandungi ${excludes}",
+      "past": "Tarikh masa mesti pada masa lalu",
+      "future": "Tarikh masa mesti pada masa hadapan",
+      "today": "Tarikh masa mesti hari ini",
+      "notToday": "Tarikh masa tidak boleh hari ini",
+      "weekday": "Tarikh masa mesti hari bekerja (Isnin-Jumaat)",
+      "weekend": "Tarikh masa mesti hujung minggu (Sabtu-Ahad)",
+      "customRegex": "Format tarikh masa tidak sah",
+      "notInWhitelist": "Tarikh masa tiada dalam senarai yang dibenarkan"
+    },
+    "file": {
+      "required": "Wajib diisi",
+      "invalid": "Format fail tidak sah",
+      "size": "Saiz fail tidak boleh melebihi ${size}",
+      "minSize": "Saiz fail mesti sekurang-kurangnya ${minSize}",
+      "maxSize": "Saiz fail tidak boleh melebihi ${maxSize}",
+      "type": "Jenis fail mesti salah satu daripada: ${type}",
+      "extension": "Sambungan fail mesti salah satu daripada: ${extension}",
+      "extensionBlacklist": "Sambungan fail ${extension} tidak dibenarkan",
+      "name": "Nama fail mesti sepadan dengan corak ${pattern}",
+      "nameBlacklist": "Nama fail tidak boleh sepadan dengan corak ${pattern}",
+      "imageOnly": "Hanya fail imej dibenarkan",
+      "documentOnly": "Hanya fail dokumen dibenarkan",
+      "videoOnly": "Hanya fail video dibenarkan",
+      "audioOnly": "Hanya fail audio dibenarkan",
+      "archiveOnly": "Hanya fail arkib dibenarkan"
+    }
+  },
+  "taiwan": {
+    "businessId": {
+      "required": "Wajib diisi",
+      "invalid": "ID Perniagaan Taiwan tidak sah"
+    },
+    "nationalId": {
+      "required": "Wajib diisi",
+      "invalid": "ID Kebangsaan Taiwan tidak sah"
+    },
+    "mobile": {
+      "required": "Wajib diisi",
+      "invalid": "Format telefon bimbit Taiwan tidak sah",
+      "notInWhitelist": "Tiada dalam senarai telefon bimbit yang dibenarkan"
+    },
+    "tel": {
+      "required": "Wajib diisi",
+      "invalid": "Format telefon talian tetap Taiwan tidak sah",
+      "notInWhitelist": "Tiada dalam senarai telefon talian tetap yang dibenarkan"
+    },
+    "fax": {
+      "required": "Wajib diisi",
+      "invalid": "Format faks Taiwan tidak sah",
+      "notInWhitelist": "Tiada dalam senarai faks yang dibenarkan"
+    },
+    "postalCode": {
+      "required": "Wajib diisi",
+      "invalid": "Poskod Taiwan tidak sah",
+      "invalidFormat": "Format poskod tidak sah",
+      "invalidRange": "Poskod di luar julat yang sah",
+      "legacy5DigitWarning": "Poskod 5 digit adalah format lama, pertimbangkan untuk menggunakan format 6 digit",
+      "format3Only": "Hanya poskod 3 digit dibenarkan",
+      "format5Only": "Hanya poskod 5 digit dibenarkan",
+      "format6Only": "Hanya poskod 6 digit dibenarkan",
+      "invalidSuffix": "Akhiran poskod tidak sah - mesti 01-99 untuk 5 digit atau 001-999 untuk 6 digit",
+      "deprecated5Digit": "Poskod 5 digit telah ditamatkan dan tidak lagi disokong"
+    }
+  }
+}
