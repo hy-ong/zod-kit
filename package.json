@@ -1,6 +1,6 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A comprehensive TypeScript library providing pre-built Zod validation schemas with full internationalization support for common data types and Taiwan-specific formats",
   "keywords": [
     "zod",
@@ -36,13 +36,139 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "default": "./dist/index.js"
+    },
+    "./common/boolean": {
+      "types": "./dist/common/boolean.d.ts",
+      "import": "./dist/common/boolean.js",
+      "require": "./dist/common/boolean.cjs"
+    },
+    "./common/color": {
+      "types": "./dist/common/color.d.ts",
+      "import": "./dist/common/color.js",
+      "require": "./dist/common/color.cjs"
+    },
+    "./common/coordinate": {
+      "types": "./dist/common/coordinate.d.ts",
+      "import": "./dist/common/coordinate.js",
+      "require": "./dist/common/coordinate.cjs"
+    },
+    "./common/credit-card": {
+      "types": "./dist/common/credit-card.d.ts",
+      "import": "./dist/common/credit-card.js",
+      "require": "./dist/common/credit-card.cjs"
+    },
+    "./common/date": {
+      "types": "./dist/common/date.d.ts",
+      "import": "./dist/common/date.js",
+      "require": "./dist/common/date.cjs"
+    },
+    "./common/datetime": {
+      "types": "./dist/common/datetime.d.ts",
+      "import": "./dist/common/datetime.js",
+      "require": "./dist/common/datetime.cjs"
+    },
+    "./common/email": {
+      "types": "./dist/common/email.d.ts",
+      "import": "./dist/common/email.js",
+      "require": "./dist/common/email.cjs"
+    },
+    "./common/file": {
+      "types": "./dist/common/file.d.ts",
+      "import": "./dist/common/file.js",
+      "require": "./dist/common/file.cjs"
+    },
+    "./common/id": {
+      "types": "./dist/common/id.d.ts",
+      "import": "./dist/common/id.js",
+      "require": "./dist/common/id.cjs"
+    },
+    "./common/ip": {
+      "types": "./dist/common/ip.d.ts",
+      "import": "./dist/common/ip.js",
+      "require": "./dist/common/ip.cjs"
+    },
+    "./common/number": {
+      "types": "./dist/common/number.d.ts",
+      "import": "./dist/common/number.js",
+      "require": "./dist/common/number.cjs"
+    },
+    "./common/password": {
+      "types": "./dist/common/password.d.ts",
+      "import": "./dist/common/password.js",
+      "require": "./dist/common/password.cjs"
+    },
+    "./common/text": {
+      "types": "./dist/common/text.d.ts",
+      "import": "./dist/common/text.js",
+      "require": "./dist/common/text.cjs"
+    },
+    "./common/time": {
+      "types": "./dist/common/time.d.ts",
+      "import": "./dist/common/time.js",
+      "require": "./dist/common/time.cjs"
+    },
+    "./common/url": {
+      "types": "./dist/common/url.d.ts",
+      "import": "./dist/common/url.js",
+      "require": "./dist/common/url.cjs"
+    },
+    "./taiwan/bank-account": {
+      "types": "./dist/taiwan/bank-account.d.ts",
+      "import": "./dist/taiwan/bank-account.js",
+      "require": "./dist/taiwan/bank-account.cjs"
+    },
+    "./taiwan/business-id": {
+      "types": "./dist/taiwan/business-id.d.ts",
+      "import": "./dist/taiwan/business-id.js",
+      "require": "./dist/taiwan/business-id.cjs"
+    },
+    "./taiwan/fax": {
+      "types": "./dist/taiwan/fax.d.ts",
+      "import": "./dist/taiwan/fax.js",
+      "require": "./dist/taiwan/fax.cjs"
+    },
+    "./taiwan/invoice": {
+      "types": "./dist/taiwan/invoice.d.ts",
+      "import": "./dist/taiwan/invoice.js",
+      "require": "./dist/taiwan/invoice.cjs"
+    },
+    "./taiwan/license-plate": {
+      "types": "./dist/taiwan/license-plate.d.ts",
+      "import": "./dist/taiwan/license-plate.js",
+      "require": "./dist/taiwan/license-plate.cjs"
+    },
+    "./taiwan/mobile": {
+      "types": "./dist/taiwan/mobile.d.ts",
+      "import": "./dist/taiwan/mobile.js",
+      "require": "./dist/taiwan/mobile.cjs"
+    },
+    "./taiwan/national-id": {
+      "types": "./dist/taiwan/national-id.d.ts",
+      "import": "./dist/taiwan/national-id.js",
+      "require": "./dist/taiwan/national-id.cjs"
+    },
+    "./taiwan/passport": {
+      "types": "./dist/taiwan/passport.d.ts",
+      "import": "./dist/taiwan/passport.js",
+      "require": "./dist/taiwan/passport.cjs"
+    },
+    "./taiwan/postal-code": {
+      "types": "./dist/taiwan/postal-code.d.ts",
+      "import": "./dist/taiwan/postal-code.js",
+      "require": "./dist/taiwan/postal-code.cjs"
+    },
+    "./taiwan/tel": {
+      "types": "./dist/taiwan/tel.d.ts",
+      "import": "./dist/taiwan/tel.js",
+      "require": "./dist/taiwan/tel.cjs"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "build": "tsup",
     "test": "vitest",
     "prepublishOnly": "npm test -- --run && npm run build"
   },
