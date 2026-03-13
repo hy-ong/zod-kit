@@ -4,8 +4,10 @@
  * Provides multi-select validation that restricts input to an array of values
  * from a predefined set, with min/max selection, duplicate control, and transformation.
  *
+ * Avoids z.preprocess() to preserve z.input types for React Hook Form compatibility.
+ *
  * @author Ong Hoe Yuan
- * @version 0.2.2
+ * @version 0.2.5
  */
 
 import { z, ZodType } from "zod"
@@ -34,11 +36,11 @@ export type ManyOfMessages = {
  * Configuration options for manyOf validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @template T - The type of allowed values
+ * @template V - The tuple type of allowed values, preserving literal types
  *
  * @interface ManyOfOptions
- * @property {T[]} values - Array of allowed values
- * @property {T[] | null} [defaultValue] - Default value when input is empty
+ * @property {V} values - Array of allowed values
+ * @property {V[number][] | null} [defaultValue] - Default value when input is empty
  * @property {number} [min] - Minimum number of selections
  * @property {number} [max] - Maximum number of selections
  * @property {boolean} [allowDuplicates=false] - Whether to allow duplicate selections
@@ -61,18 +63,22 @@ export type ManyOfOptions<IsRequired extends boolean = true, V extends readonly 
  * Type alias for manyOf validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @template T - The type of allowed values
+ * @template V - The tuple type of allowed values
  */
-export type ManyOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true ? ZodType<V[number][]> : ZodType<V[number][] | null>
+export type ManyOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true
+  ? ZodType<V[number][], V[number][] | "" | null | undefined>
+  : ZodType<V[number][] | null, V[number][] | "" | null | undefined>
 
 /**
  * Creates a Zod schema for multi-select validation that restricts values to a predefined set
  *
+ * Avoids z.preprocess() to preserve z.input types for React Hook Form compatibility.
+ *
  * @template IsRequired - Whether the field is required (affects return type)
- * @template T - The type of allowed values (string | number)
+ * @template V - The tuple type of allowed values (inferred via const type parameter)
  * @param {IsRequired} [required=false] - Whether the field is required
- * @param {ManyOfOptions<IsRequired, T>} options - Configuration options (values is required)
- * @returns {ManyOfSchema<IsRequired, T>} Zod schema for manyOf validation
+ * @param {ManyOfOptions<IsRequired, V>} options - Configuration options (values is required)
+ * @returns {ManyOfSchema<IsRequired, V>} Zod schema for manyOf validation
  *
  * @example
  * ```typescript
@@ -117,6 +123,7 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
   const { values = [] as unknown as V, defaultValue = null, min, max, allowDuplicates = false, caseSensitive = true, transform, i18n } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)
+  const valuesArr = values as readonly (string | number)[]
 
   const getMessage = (key: keyof ManyOfMessages, params?: Record<string, any>) => {
     if (i18n) {
@@ -132,15 +139,15 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
 
   const normalizeItem = (item: unknown): unknown => {
     // Coerce number strings to numbers when values contains numbers
-    const hasNumbers = values.some((v) => typeof v === "number")
+    const hasNumbers = valuesArr.some((v) => typeof v === "number")
     if (hasNumbers && typeof item === "string" && !isNaN(Number(item)) && item.trim() !== "") {
       const numVal = Number(item)
-      if ((values as readonly number[]).includes(numVal)) return numVal
+      if ((valuesArr as readonly number[]).includes(numVal)) return numVal
     }
 
     // Case-insensitive normalization
     if (!caseSensitive && typeof item === "string") {
-      const match = values.find((v) => typeof v === "string" && v.toLowerCase() === item.toLowerCase())
+      const match = valuesArr.find((v) => typeof v === "string" && v.toLowerCase() === item.toLowerCase())
       if (match !== undefined) return match
       return item
     }
@@ -148,72 +155,70 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
     return item
   }
 
-  const preprocessFn = (val: unknown) => {
-    if (val === null || val === undefined || val === "") {
-      return defaultValue
-    }
-
-    if (!Array.isArray(val)) {
-      // Accept single value and wrap in array
-      return [normalizeItem(val)]
-    }
-
-    return val.map(normalizeItem)
-  }
-
-  const baseSchema = z.preprocess(preprocessFn, z.any())
-
-  const schema = baseSchema.superRefine((val, ctx) => {
-    if (val === null) {
-      if (isRequired) {
-        ctx.addIssue({ code: "custom", message: getMessage("required") })
-      }
-      return
-    }
-
-    if (!Array.isArray(val)) {
-      ctx.addIssue({ code: "custom", message: getMessage("invalid", { values: values.join(", ") }) })
-      return
-    }
-
-    // Check each item is in the allowed values
-    for (const item of val) {
-      if (!(values as readonly (string | number)[]).includes(item as V[number])) {
-        ctx.addIssue({
-          code: "custom",
-          message: getMessage("invalid", { values: values.join(", ") }),
-        })
-        return
-      }
-    }
-
-    // Duplicate check
-    if (!allowDuplicates) {
-      const seen = new Set()
+  // Build an array schema that validates + normalizes items, then applies superRefine for constraints
+  const arraySchema = z
+    .array(z.any())
+    .transform((arr) => arr.map(normalizeItem))
+    .superRefine((val, ctx) => {
+      // Check each item is in the allowed values
       for (const item of val) {
-        if (seen.has(item)) {
-          ctx.addIssue({ code: "custom", message: getMessage("duplicate") })
+        if (!(valuesArr as readonly (string | number)[]).includes(item as string | number)) {
+          ctx.addIssue({
+            code: "custom",
+            message: getMessage("invalid", { values: valuesArr.join(", ") }),
+          })
           return
         }
-        seen.add(item)
       }
-    }
 
-    // Min/max selection count
-    if (min !== undefined && val.length < min) {
-      ctx.addIssue({ code: "custom", message: getMessage("minSelect", { min }) })
-      return
-    }
+      // Duplicate check
+      if (!allowDuplicates) {
+        const seen = new Set()
+        for (const item of val) {
+          if (seen.has(item)) {
+            ctx.addIssue({ code: "custom", message: getMessage("duplicate") })
+            return
+          }
+          seen.add(item)
+        }
+      }
 
-    if (max !== undefined && val.length > max) {
-      ctx.addIssue({ code: "custom", message: getMessage("maxSelect", { max }) })
-      return
-    }
-  })
-  .transform((val) => {
-    if (val === null || !Array.isArray(val) || !transform) return val
-    return transform(val as V[number][])
-  })
+      // Min/max selection count
+      if (min !== undefined && val.length < min) {
+        ctx.addIssue({ code: "custom", message: getMessage("minSelect", { min }) })
+        return
+      }
 
-  return schema as unknown as ManyOfSchema<IsRequired, V>
+      if (max !== undefined && val.length > max) {
+        ctx.addIssue({ code: "custom", message: getMessage("maxSelect", { max }) })
+        return
+      }
+    })
+    .transform((val) => {
+      if (!transform) return val as V[number][]
+      return transform(val as V[number][])
+    })
+
+  // Single value → wrap in array
+  const singleToArray = z.union([z.string(), z.number()]).transform((v) => [normalizeItem(v)])
+    .pipe(arraySchema)
+
+  // Handle required vs optional
+  const fallback = defaultValue as V[number][] | null
+
+  if (isRequired && fallback === null) {
+    // Required, no default: empty values should fail with "required" message
+    const emptyRejectSchema = z
+      .union([z.literal("" as const), z.null(), z.undefined()])
+      .refine(() => false, { message: getMessage("required") })
+
+    return z.union([arraySchema, singleToArray, emptyRejectSchema]) as unknown as ManyOfSchema<IsRequired, V>
+  }
+
+  // Optional or has default: empty values → fallback
+  const emptySchema = z
+    .union([z.literal("" as const), z.null(), z.undefined()])
+    .transform(() => fallback)
+
+  return z.union([arraySchema, singleToArray, emptySchema]) as unknown as ManyOfSchema<IsRequired, V>
 }

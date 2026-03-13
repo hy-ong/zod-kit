@@ -4,8 +4,11 @@
  * Provides single-select validation that restricts input to a predefined set of allowed values,
  * with support for case-insensitive matching, default values, and transformation.
  *
+ * Uses z.enum() internally to preserve literal type inference for both z.input and z.output,
+ * making it compatible with React Hook Form resolvers and other type-aware form libraries.
+ *
  * @author Ong Hoe Yuan
- * @version 0.2.2
+ * @version 0.2.5
  */
 
 import { z, ZodType } from "zod"
@@ -28,11 +31,11 @@ export type OneOfMessages = {
  * Configuration options for oneOf validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
- * @template T - The type of allowed values
+ * @template V - The tuple type of allowed values, preserving literal types
  *
  * @interface OneOfOptions
- * @property {T[]} values - Array of allowed values
- * @property {T | null} [defaultValue] - Default value when input is empty
+ * @property {V} values - Array of allowed values
+ * @property {V[number] | null} [defaultValue] - Default value when input is empty
  * @property {boolean} [caseSensitive=true] - Whether string matching is case-sensitive
  * @property {Function} [transform] - Custom transformation function applied after validation
  * @property {Record<Locale, OneOfMessages>} [i18n] - Custom error messages for different locales
@@ -49,18 +52,23 @@ export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (
  * Type alias for oneOf validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
- * @template T - The type of allowed values
+ * @template V - The tuple type of allowed values
  */
-export type OneOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true ? ZodType<V[number]> : ZodType<V[number] | null>
+export type OneOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true
+  ? ZodType<V[number], V[number] | "" | null | undefined>
+  : ZodType<V[number] | null, V[number] | "" | null | undefined>
 
 /**
  * Creates a Zod schema for single-select validation that restricts values to a predefined set
  *
+ * Uses z.enum() internally to preserve both z.input and z.output literal types,
+ * ensuring compatibility with React Hook Form and other type-aware form libraries.
+ *
  * @template IsRequired - Whether the field is required (affects return type)
- * @template T - The type of allowed values (string | number)
+ * @template V - The tuple type of allowed values (inferred via const type parameter)
  * @param {IsRequired} [required=false] - Whether the field is required
- * @param {OneOfOptions<IsRequired, T>} options - Configuration options (values is required)
- * @returns {OneOfSchema<IsRequired, T>} Zod schema for oneOf validation
+ * @param {OneOfOptions<IsRequired, V>} options - Configuration options (values is required)
+ * @returns {OneOfSchema<IsRequired, V>} Zod schema for oneOf validation
  *
  * @example
  * ```typescript
@@ -69,7 +77,7 @@ export type OneOfSchema<IsRequired extends boolean, V extends readonly (string |
  * roleSchema.parse("admin") // ✓ "admin"
  * roleSchema.parse(null)    // ✓ null
  *
- * // Required
+ * // Required — z.input and z.output are both "active" | "inactive" | "pending"
  * const statusSchema = oneOf(true, { values: ["active", "inactive", "pending"] })
  * statusSchema.parse("active") // ✓ "active"
  * statusSchema.parse(null)     // ✗ Required
@@ -110,6 +118,8 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
   const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)
+  const valuesArr = values as readonly (string | number)[]
+  const isAllStrings = valuesArr.every((v) => typeof v === "string")
 
   const getMessage = (key: keyof OneOfMessages, params?: Record<string, any>) => {
     if (i18n) {
@@ -123,50 +133,82 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
     return t(`common.oneOf.${key}`, params)
   }
 
-  const preprocessFn = (val: unknown) => {
-    if (val === "" || val === null || val === undefined) {
-      return defaultValue
-    }
+  const isEmpty = (v: unknown) => v === "" || v === null || v === undefined
 
-    // Coerce number strings to numbers when values contains numbers
-    const hasNumbers = values.some((v) => typeof v === "number")
-    if (hasNumbers && typeof val === "string" && !isNaN(Number(val)) && val.trim() !== "") {
-      const numVal = Number(val)
-      if ((values as readonly number[]).includes(numVal)) return numVal
-    }
-
-    // Case-insensitive normalization for string values
-    if (!caseSensitive && typeof val === "string") {
-      const match = values.find((v) => typeof v === "string" && v.toLowerCase() === val.toLowerCase())
-      if (match !== undefined) return match
-      return val
-    }
-
-    return val
+  // Build the value-matching schema using z.enum() or z.union(z.literal())
+  let valueSchema: ZodType
+  if (isAllStrings && valuesArr.length > 0) {
+    valueSchema = z.enum(valuesArr as unknown as readonly [string, ...string[]], {
+      error: (issue) => {
+        if (isEmpty(issue.input)) return getMessage("required")
+        return getMessage("invalid", { values: valuesArr.join(", ") })
+      },
+    })
+  } else if (valuesArr.length >= 2) {
+    const literals = valuesArr.map((v) => z.literal(v))
+    valueSchema = z.union(literals as unknown as readonly [ZodType, ZodType, ...ZodType[]], {
+      error: () => getMessage("invalid", { values: valuesArr.join(", ") }),
+    })
+  } else if (valuesArr.length === 1) {
+    valueSchema = z.literal(valuesArr[0])
+  } else {
+    valueSchema = z.never()
   }
 
-  const baseSchema = z.preprocess(preprocessFn, z.any())
+  // Case-insensitive: pipe through a string normalizer
+  if (!caseSensitive) {
+    valueSchema = z
+      .string()
+      .transform((v) => {
+        const match = valuesArr.find((val) => typeof val === "string" && val.toLowerCase() === v.toLowerCase())
+        return (match ?? v) as string
+      })
+      .pipe(valueSchema as ZodType<any, any>)
+  }
 
-  const schema = baseSchema
-    .superRefine((val, ctx) => {
-      if (val === null) {
-        if (isRequired) {
-          ctx.addIssue({ code: "custom", message: getMessage("required") })
-        }
-        return
-      }
+  // User transform (applied after validation)
+  if (transform) {
+    valueSchema = valueSchema.transform((v) => transform(v as V[number]))
+  }
 
-      if (!(values as readonly (string | number)[]).includes(val as V[number])) {
-        ctx.addIssue({
-          code: "custom",
-          message: getMessage("invalid", { values: values.join(", ") }),
+  // Handle required vs optional
+  const fallback = defaultValue as V[number] | null
+  const emptySchema = z
+    .union([z.literal("" as const), z.null(), z.undefined()])
+    .transform(() => fallback)
+
+  if (isRequired && fallback === null) {
+    // Required, no default: empty values should fail with "required" message
+    const emptyRejectSchema = z
+      .union([z.literal("" as const), z.null(), z.undefined()])
+      .refine(() => false, { message: getMessage("required") })
+
+    // For numeric values from forms (string "3" → number 3)
+    if (!isAllStrings) {
+      const numCoerceSchema = z
+        .string()
+        .transform((v) => {
+          const n = Number(v)
+          return isNaN(n) ? v : n
         })
-      }
-    })
-    .transform((val) => {
-      if (val === null || !transform) return val
-      return transform(val as V[number])
-    })
+        .pipe(valueSchema as ZodType<any, any>)
+      return z.union([valueSchema, numCoerceSchema, emptyRejectSchema]) as unknown as OneOfSchema<IsRequired, V>
+    }
 
-  return schema as unknown as OneOfSchema<IsRequired, V>
+    return z.union([valueSchema, emptyRejectSchema]) as unknown as OneOfSchema<IsRequired, V>
+  }
+
+  // Required with default or optional: empty values → fallback
+  if (!isAllStrings) {
+    const numCoerceSchema = z
+      .string()
+      .transform((v) => {
+        const n = Number(v)
+        return isNaN(n) ? v : n
+      })
+      .pipe(valueSchema as ZodType<any, any>)
+    return z.union([valueSchema, numCoerceSchema, emptySchema]) as unknown as OneOfSchema<IsRequired, V>
+  }
+
+  return z.union([valueSchema, emptySchema]) as unknown as OneOfSchema<IsRequired, V>
 }
