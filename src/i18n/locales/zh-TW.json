@@ -17,6 +17,13 @@
       "businessOnly": "僅允許企業郵箱地址",
       "noDisposable": "不允許使用臨時郵箱地址"
     },
+    "manyOf": {
+      "required": "必填",
+      "invalid": "必須為以下值之一：${values}",
+      "minSelect": "至少需選擇 ${min} 項",
+      "maxSelect": "最多只能選擇 ${max} 項",
+      "duplicate": "不允許重複的值"
+    },
     "url": {
       "required": "必填",
       "invalid": "無效的 URL 格式",
@@ -67,6 +74,10 @@
       "multipleOf": "必須為 ${multipleOf} 的倍數",
       "finite": "必須為有限數字",
       "precision": "小數位數不可超過 ${precision} 位"
+    },
+    "oneOf": {
+      "required": "必填",
+      "invalid": "必須為以下其中一個值：${values}"
     },
     "id": {
       "required": "必填",

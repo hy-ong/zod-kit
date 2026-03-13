@@ -17,6 +17,13 @@
       "businessOnly": "ビジネスメールアドレスのみ使用可能です",
       "noDisposable": "使い捨てメールアドレスは使用できません"
     },
+    "manyOf": {
+      "required": "必須項目です",
+      "invalid": "次のいずれかである必要があります：${values}",
+      "minSelect": "${min}個以上選択してください",
+      "maxSelect": "${max}個以下で選択してください",
+      "duplicate": "重複した値は許可されていません"
+    },
     "url": {
       "required": "必須項目です",
       "invalid": "無効なURL形式です",
@@ -67,6 +74,10 @@
       "multipleOf": "${multipleOf} の倍数である必要があります",
       "finite": "有限の数である必要があります",
       "precision": "小数点以下は ${precision} 桁以内である必要があります"
+    },
+    "oneOf": {
+      "required": "必須項目です",
+      "invalid": "次のいずれかである必要があります：${values}"
     },
     "id": {
       "required": "必須項目です",

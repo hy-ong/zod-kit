@@ -17,6 +17,13 @@
       "businessOnly": "Hanya alamat e-mel perniagaan dibenarkan",
       "noDisposable": "Alamat e-mel pakai buang tidak dibenarkan"
     },
+    "manyOf": {
+      "required": "Diperlukan",
+      "invalid": "Mesti daripada: ${values}",
+      "minSelect": "Mesti pilih sekurang-kurangnya ${min} item",
+      "maxSelect": "Mesti pilih paling banyak ${max} item",
+      "duplicate": "Nilai pendua tidak dibenarkan"
+    },
     "url": {
       "required": "Wajib diisi",
       "invalid": "Format URL tidak sah",
@@ -67,6 +74,10 @@
       "multipleOf": "Mesti gandaan ${multipleOf}",
       "finite": "Mesti nombor terhingga",
       "precision": "Mesti tidak melebihi ${precision} tempat perpuluhan"
+    },
+    "oneOf": {
+      "required": "Diperlukan",
+      "invalid": "Mesti salah satu daripada: ${values}"
     },
     "id": {
       "required": "Wajib diisi",

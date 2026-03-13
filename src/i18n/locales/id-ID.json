@@ -17,6 +17,13 @@
       "businessOnly": "Hanya alamat email bisnis yang diizinkan",
       "noDisposable": "Alamat email sekali pakai tidak diizinkan"
     },
+    "manyOf": {
+      "required": "Wajib diisi",
+      "invalid": "Harus dari: ${values}",
+      "minSelect": "Harus memilih minimal ${min} item",
+      "maxSelect": "Harus memilih maksimal ${max} item",
+      "duplicate": "Nilai duplikat tidak diperbolehkan"
+    },
     "url": {
       "required": "Wajib diisi",
       "invalid": "Format URL tidak valid",
@@ -67,6 +74,10 @@
       "multipleOf": "Harus kelipatan dari ${multipleOf}",
       "finite": "Harus berupa angka terhingga",
       "precision": "Harus memiliki maksimal ${precision} tempat desimal"
+    },
+    "oneOf": {
+      "required": "Wajib diisi",
+      "invalid": "Harus salah satu dari: ${values}"
     },
     "id": {
       "required": "Wajib diisi",

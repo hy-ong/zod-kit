@@ -17,6 +17,13 @@
       "businessOnly": "Chỉ cho phép địa chỉ email doanh nghiệp",
       "noDisposable": "Không cho phép địa chỉ email dùng một lần"
     },
+    "manyOf": {
+      "required": "Bắt buộc",
+      "invalid": "Phải thuộc: ${values}",
+      "minSelect": "Phải chọn ít nhất ${min} mục",
+      "maxSelect": "Chỉ được chọn tối đa ${max} mục",
+      "duplicate": "Không được phép có giá trị trùng lặp"
+    },
     "url": {
       "required": "Bắt buộc",
       "invalid": "Định dạng URL không hợp lệ",
@@ -67,6 +74,10 @@
       "multipleOf": "Phải là bội số của ${multipleOf}",
       "finite": "Phải là số hữu hạn",
       "precision": "Phải có tối đa ${precision} chữ số thập phân"
+    },
+    "oneOf": {
+      "required": "Bắt buộc",
+      "invalid": "Phải là một trong: ${values}"
     },
     "id": {
       "required": "Bắt buộc",

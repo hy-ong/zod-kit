@@ -17,6 +17,13 @@
       "businessOnly": "Only business email addresses are allowed",
       "noDisposable": "Disposable email addresses are not allowed"
     },
+    "manyOf": {
+      "required": "Required",
+      "invalid": "Must be from: ${values}",
+      "minSelect": "Must select at least ${min} item(s)",
+      "maxSelect": "Must select at most ${max} item(s)",
+      "duplicate": "Duplicate values are not allowed"
+    },
     "url": {
       "required": "Required",
       "invalid": "Invalid URL format",
@@ -67,6 +74,10 @@
       "multipleOf": "Must be a multiple of ${multipleOf}",
       "finite": "Must be a finite number",
       "precision": "Must have at most ${precision} decimal places"
+    },
+    "oneOf": {
+      "required": "Required",
+      "invalid": "Must be one of: ${values}"
     },
     "id": {
       "required": "Required",

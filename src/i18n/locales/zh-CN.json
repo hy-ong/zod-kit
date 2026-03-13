@@ -17,6 +17,13 @@
       "businessOnly": "仅允许企业邮箱地址",
       "noDisposable": "不允许使用临时邮箱地址"
     },
+    "manyOf": {
+      "required": "必填",
+      "invalid": "必须为以下值之一：${values}",
+      "minSelect": "至少需选择 ${min} 项",
+      "maxSelect": "最多只能选择 ${max} 项",
+      "duplicate": "不允许重复的值"
+    },
     "url": {
       "required": "必填",
       "invalid": "无效的 URL 格式",
@@ -67,6 +74,10 @@
       "multipleOf": "必须为 ${multipleOf} 的倍数",
       "finite": "必须为有限数字",
       "precision": "小数位数不可超过 ${precision} 位"
+    },
+    "oneOf": {
+      "required": "必填",
+      "invalid": "必须为以下其中一个值：${values}"
     },
     "id": {
       "required": "必填",
