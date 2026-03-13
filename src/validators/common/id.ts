@@ -22,6 +22,14 @@ import { getLocale, type Locale } from "../../config"
  * @property {string} [maxLength] - Message when ID is too long
  * @property {string} [numeric] - Message when numeric ID format is invalid
  * @property {string} [uuid] - Message when UUID format is invalid
+ * @property {string} [uuidv1] - Message when UUID v1 format is invalid
+ * @property {string} [uuidv2] - Message when UUID v2 format is invalid
+ * @property {string} [uuidv3] - Message when UUID v3 format is invalid
+ * @property {string} [uuidv4] - Message when UUID v4 format is invalid
+ * @property {string} [uuidv5] - Message when UUID v5 format is invalid
+ * @property {string} [uuidv6] - Message when UUID v6 format is invalid
+ * @property {string} [uuidv7] - Message when UUID v7 format is invalid
+ * @property {string} [uuidv8] - Message when UUID v8 format is invalid
  * @property {string} [objectId] - Message when MongoDB ObjectId format is invalid
  * @property {string} [nanoid] - Message when Nano ID format is invalid
  * @property {string} [snowflake] - Message when Snowflake ID format is invalid
@@ -41,6 +49,14 @@ export type IdMessages = {
   maxLength?: string
   numeric?: string
   uuid?: string
+  uuidv1?: string
+  uuidv2?: string
+  uuidv3?: string
+  uuidv4?: string
+  uuidv5?: string
+  uuidv6?: string
+  uuidv7?: string
+  uuidv8?: string
   objectId?: string
   nanoid?: string
   snowflake?: string
@@ -61,7 +77,15 @@ export type IdMessages = {
  *
  * Available types:
  * - numeric: Pure numeric IDs (1, 123, 999999)
- * - uuid: UUID v4 format (xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx)
+ * - uuid: UUID any version (v1–v8)
+ * - uuidv1: UUID v1 (timestamp-based)
+ * - uuidv2: UUID v2 (DCE security)
+ * - uuidv3: UUID v3 (MD5 name-based)
+ * - uuidv4: UUID v4 (random)
+ * - uuidv5: UUID v5 (SHA-1 name-based)
+ * - uuidv6: UUID v6 (reordered timestamp, RFC 9562)
+ * - uuidv7: UUID v7 (Unix timestamp, sortable, RFC 9562)
+ * - uuidv8: UUID v8 (custom, RFC 9562)
  * - objectId: MongoDB ObjectId (24-character hexadecimal)
  * - nanoid: Nano ID format (21-character URL-safe)
  * - snowflake: Twitter Snowflake (19-digit number)
@@ -72,7 +96,15 @@ export type IdMessages = {
  */
 export type IdType =
   | "numeric" // Pure numeric IDs (1, 123, 999999)
-  | "uuid" // UUID v4 format
+  | "uuid" // UUID any version (v1–v8)
+  | "uuidv1" // UUID v1 (timestamp-based)
+  | "uuidv2" // UUID v2 (DCE security)
+  | "uuidv3" // UUID v3 (MD5 name-based)
+  | "uuidv4" // UUID v4 (random)
+  | "uuidv5" // UUID v5 (SHA-1 name-based)
+  | "uuidv6" // UUID v6 (reordered timestamp, RFC 9562)
+  | "uuidv7" // UUID v7 (Unix timestamp, sortable, RFC 9562)
+  | "uuidv8" // UUID v8 (custom, RFC 9562)
   | "objectId" // MongoDB ObjectId (24-character hexadecimal)
   | "nanoid" // Nano ID
   | "snowflake" // Twitter Snowflake (19-digit number)
@@ -143,9 +175,19 @@ export type IdSchema<IsRequired extends boolean, Type extends IdType | undefined
  * @constant {Record<string, RegExp>} ID_PATTERNS
  * @description Maps each ID type to its corresponding regex pattern
  */
+const UUID_BASE = (version: string) => new RegExp(`^[0-9a-f]{8}-[0-9a-f]{4}-${version}[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`, "i")
+
 const ID_PATTERNS = {
   numeric: /^\d+$/,
-  uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  uuid: /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+  uuidv1: UUID_BASE("1"),
+  uuidv2: UUID_BASE("2"),
+  uuidv3: UUID_BASE("3"),
+  uuidv4: UUID_BASE("4"),
+  uuidv5: UUID_BASE("5"),
+  uuidv6: UUID_BASE("6"),
+  uuidv7: UUID_BASE("7"),
+  uuidv8: UUID_BASE("8"),
   objectId: /^[0-9a-f]{24}$/i,
   nanoid: /^[A-Za-z0-9_-]{21}$/,
   snowflake: /^\d{19}$/,

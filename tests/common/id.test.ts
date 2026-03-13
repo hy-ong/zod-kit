@@ -11,6 +11,9 @@ const locales = [
       maxLength: "Must be at most 10 characters",
       numeric: "Must be a numeric ID",
       uuid: "Must be a valid UUID",
+      uuidv1: "Must be a valid UUID v1",
+      uuidv4: "Must be a valid UUID v4",
+      uuidv7: "Must be a valid UUID v7",
       objectId: "Must be a valid MongoDB ObjectId",
       nanoid: "Must be a valid Nano ID",
       snowflake: "Must be a valid Snowflake ID",
@@ -33,6 +36,9 @@ const locales = [
       maxLength: "長度最多 10 字元",
       numeric: "必須為數字 ID",
       uuid: "必須為有效的 UUID",
+      uuidv1: "必須為有效的 UUID v1",
+      uuidv4: "必須為有效的 UUID v4",
+      uuidv7: "必須為有效的 UUID v7",
       objectId: "必須為有效的 MongoDB ObjectId",
       nanoid: "必須為有效的 Nano ID",
       snowflake: "必須為有效的 Snowflake ID",
@@ -51,7 +57,20 @@ const locales = [
 // Valid test IDs for different formats
 const validIds = {
   numeric: ["1", "123", "999999", "0"],
-  uuid: ["550e8400-e29b-41d4-a716-446655440000", "6ba7b810-9dad-11d1-80b4-00c04fd430c8", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+  uuid: [
+    "550e8400-e29b-41d4-a716-446655440000", // v4
+    "6ba7b810-9dad-11d1-80b4-00c04fd430c8", // v1
+    "f47ac10b-58cc-4372-a567-0e02b2c3d479", // v4
+    "01939fee-4b0b-7da3-a9e4-79fb4c267eb8", // v7
+    "320c3d4d-cc00-875b-8ec9-32d5f69181c0", // v8
+  ],
+  uuidv1: ["6ba7b810-9dad-11d1-80b4-00c04fd430c8", "f47ac10b-58cc-1372-a567-0e02b2c3d479"],
+  uuidv3: ["a3bb189e-8bf9-3888-9912-ace4e6543002"],
+  uuidv4: ["550e8400-e29b-41d4-a716-446655440000", "f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+  uuidv5: ["886313e1-3b8a-5372-9b90-0c9aee199e5d"],
+  uuidv6: ["1ef21d2f-1207-6b90-8b50-a2e4100c5480"],
+  uuidv7: ["01939fee-4b0b-7da3-a9e4-79fb4c267eb8", "018fce07-42dc-7dc0-ba2c-9f7e777caee3"],
+  uuidv8: ["320c3d4d-cc00-875b-8ec9-32d5f69181c0"],
   objectId: ["507f1f77bcf86cd799439011", "507f191e810c19729de860ea", "5a9427648b0beebeb69579cc"],
   nanoid: ["V1StGXR8_Z5jdHi6B-myT", "3IBBoOd_b1YSlnKdvQ8fK", "9_xnJ2QZt8vKl3_Kj5f7N"],
   snowflake: ["1234567890123456789", "9876543210987654321", "5555555555555555555"],
@@ -65,10 +84,18 @@ const invalidIds = {
   numeric: ["abc", "12a", ""],
   uuid: [
     "550e8400-e29b-41d4-a716-44665544000", // too short
-    "550e8400-e29b-41d4-a716-44665544000g", // too long
-    "550e8400-e29b-61d4-a716-446655440000", // wrong version (6 instead of 1-5)
+    "550e8400-e29b-41d4-a716-44665544000g", // invalid character
+    "550e8400-e29b-91d4-a716-446655440000", // wrong version (9)
     "550e8400-e29b-41d4-c716-446655440000", // wrong variant (c instead of 8,9,a,b)
     "not-a-uuid-at-all",
+  ],
+  uuidv4: [
+    "6ba7b810-9dad-11d1-80b4-00c04fd430c8", // v1, not v4
+    "01939fee-4b0b-7da3-a9e4-79fb4c267eb8", // v7, not v4
+  ],
+  uuidv7: [
+    "550e8400-e29b-41d4-a716-446655440000", // v4, not v7
+    "6ba7b810-9dad-11d1-80b4-00c04fd430c8", // v1, not v7
   ],
   objectId: [
     "507f1f77bcf86cd79943901", // too short
@@ -189,6 +216,44 @@ describe.each(locales)("id(true) locale: $locale", ({ locale, messages }) => {
         invalidIds.uuid.forEach((invalidUuid) => {
           expect(() => schema.parse(invalidUuid)).toThrow(messages.uuid)
         })
+      })
+    })
+
+    describe("UUID version-specific validation", () => {
+      it("should accept valid UUIDv4 and reject other versions", () => {
+        const schema = id(true, { type: "uuidv4" })
+        validIds.uuidv4.forEach((v) => expect(schema.parse(v)).toBe(v))
+        invalidIds.uuidv4.forEach((v) => expect(() => schema.parse(v)).toThrow(messages.uuidv4))
+      })
+
+      it("should accept valid UUIDv7 and reject other versions", () => {
+        const schema = id(true, { type: "uuidv7" })
+        validIds.uuidv7.forEach((v) => expect(schema.parse(v)).toBe(v))
+        invalidIds.uuidv7.forEach((v) => expect(() => schema.parse(v)).toThrow(messages.uuidv7))
+      })
+
+      it("should accept valid UUIDv1", () => {
+        const schema = id(true, { type: "uuidv1" })
+        validIds.uuidv1.forEach((v) => expect(schema.parse(v)).toBe(v))
+      })
+
+      it("should accept valid UUIDv6", () => {
+        const schema = id(true, { type: "uuidv6" })
+        validIds.uuidv6.forEach((v) => expect(schema.parse(v)).toBe(v))
+      })
+
+      it("should accept any version with generic uuid type", () => {
+        const schema = id(true, { type: "uuid" })
+        // All version-specific IDs should pass generic uuid validation
+        ;[...validIds.uuidv1, ...validIds.uuidv4, ...validIds.uuidv7, ...validIds.uuidv8].forEach((v) => expect(schema.parse(v)).toBe(v))
+      })
+
+      it("should work with allowedTypes for specific versions", () => {
+        const schema = id(true, { allowedTypes: ["uuidv4", "uuidv7"] })
+        validIds.uuidv4.forEach((v) => expect(schema.parse(v)).toBe(v))
+        validIds.uuidv7.forEach((v) => expect(schema.parse(v)).toBe(v))
+        // v1 should be rejected
+        expect(() => schema.parse("6ba7b810-9dad-11d1-80b4-00c04fd430c8")).toThrow()
       })
     })
 
