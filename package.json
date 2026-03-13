@@ -1,6 +1,6 @@
 {
   "name": "@hy_ong/zod-kit",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A comprehensive TypeScript library providing pre-built Zod validation schemas with full internationalization support for common data types and Taiwan-specific formats",
   "keywords": [
     "zod",
@@ -91,10 +91,20 @@
       "import": "./dist/common/ip.js",
       "require": "./dist/common/ip.cjs"
     },
+    "./common/many-of": {
+      "types": "./dist/common/many-of.d.ts",
+      "import": "./dist/common/many-of.js",
+      "require": "./dist/common/many-of.cjs"
+    },
     "./common/number": {
       "types": "./dist/common/number.d.ts",
       "import": "./dist/common/number.js",
       "require": "./dist/common/number.cjs"
+    },
+    "./common/one-of": {
+      "types": "./dist/common/one-of.d.ts",
+      "import": "./dist/common/one-of.js",
+      "require": "./dist/common/one-of.cjs"
     },
     "./common/password": {
       "types": "./dist/common/password.d.ts",
