@@ -7,7 +7,7 @@
  * Avoids z.preprocess() to preserve z.input types for React Hook Form compatibility.
  *
  * @author Ong Hoe Yuan
- * @version 0.2.5
+ * @version 0.2.6
  */
 
 import { z, ZodType } from "zod"
@@ -66,7 +66,7 @@ export type ManyOfOptions<IsRequired extends boolean = true, V extends readonly 
  * @template V - The tuple type of allowed values
  */
 export type ManyOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true
-  ? ZodType<V[number][], V[number][] | "" | null | undefined>
+  ? ZodType<V[number][], V[number][]>
   : ZodType<V[number][] | null, V[number][] | "" | null | undefined>
 
 /**

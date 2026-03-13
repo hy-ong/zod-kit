@@ -4,11 +4,11 @@
  * Provides single-select validation that restricts input to a predefined set of allowed values,
  * with support for case-insensitive matching, default values, and transformation.
  *
- * Uses z.enum() internally to preserve literal type inference for both z.input and z.output,
- * making it compatible with React Hook Form resolvers and other type-aware form libraries.
+ * When required=true, z.input is narrowed to V[number] (no empty/null/undefined),
+ * making it fully compatible with React Hook Form resolvers and type-aware form libraries.
  *
  * @author Ong Hoe Yuan
- * @version 0.2.5
+ * @version 0.2.6
  */
 
 import { z, ZodType } from "zod"
@@ -55,14 +55,14 @@ export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (
  * @template V - The tuple type of allowed values
  */
 export type OneOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true
-  ? ZodType<V[number], V[number] | "" | null | undefined>
+  ? ZodType<V[number], V[number]>
   : ZodType<V[number] | null, V[number] | "" | null | undefined>
 
 /**
  * Creates a Zod schema for single-select validation that restricts values to a predefined set
  *
- * Uses z.enum() internally to preserve both z.input and z.output literal types,
- * ensuring compatibility with React Hook Form and other type-aware form libraries.
+ * When required=true, z.input is narrowed to V[number] only (no empty/null/undefined),
+ * ensuring full compatibility with React Hook Form and other type-aware form libraries.
  *
  * @template IsRequired - Whether the field is required (affects return type)
  * @template V - The tuple type of allowed values (inferred via const type parameter)
