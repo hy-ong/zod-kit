@@ -46,14 +46,14 @@ export type ManyOfMessages = {
  * @property {Function} [transform] - Custom transformation function applied to each value
  * @property {Record<Locale, ManyOfMessages>} [i18n] - Custom error messages for different locales
  */
-export type ManyOfOptions<IsRequired extends boolean = true, T extends string | number = string | number> = {
-  values: T[]
-  defaultValue?: IsRequired extends true ? T[] : T[] | null
+export type ManyOfOptions<IsRequired extends boolean = true, V extends readonly (string | number)[] = readonly (string | number)[]> = {
+  values: V
+  defaultValue?: IsRequired extends true ? V[number][] : V[number][] | null
   min?: number
   max?: number
   allowDuplicates?: boolean
   caseSensitive?: boolean
-  transform?: (value: T[]) => T[]
+  transform?: (value: V[number][]) => V[number][]
   i18n?: Partial<Record<Locale, Partial<ManyOfMessages>>>
 }
 
@@ -63,7 +63,7 @@ export type ManyOfOptions<IsRequired extends boolean = true, T extends string | 
  * @template IsRequired - Whether the field is required
  * @template T - The type of allowed values
  */
-export type ManyOfSchema<IsRequired extends boolean, T> = IsRequired extends true ? ZodType<T[]> : ZodType<T[] | null>
+export type ManyOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true ? ZodType<V[number][]> : ZodType<V[number][] | null>
 
 /**
  * Creates a Zod schema for multi-select validation that restricts values to a predefined set
@@ -110,11 +110,11 @@ export type ManyOfSchema<IsRequired extends boolean, T> = IsRequired extends tru
  * itemsSchema.parse([1, 1, 2]) // ✓ [1, 1, 2]
  * ```
  */
-export function manyOf<IsRequired extends boolean = false, T extends string | number = string | number>(
+export function manyOf<IsRequired extends boolean = false, const V extends readonly (string | number)[] = readonly (string | number)[]>(
   required?: IsRequired,
-  options?: Omit<ManyOfOptions<IsRequired, T>, "required">,
-): ManyOfSchema<IsRequired, T> {
-  const { values = [] as unknown as T[], defaultValue = null, min, max, allowDuplicates = false, caseSensitive = true, transform, i18n } = options ?? {}
+  options?: Omit<ManyOfOptions<IsRequired, V>, "required">,
+): ManyOfSchema<IsRequired, V> {
+  const { values = [] as unknown as V, defaultValue = null, min, max, allowDuplicates = false, caseSensitive = true, transform, i18n } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)
 
@@ -135,7 +135,7 @@ export function manyOf<IsRequired extends boolean = false, T extends string | nu
     const hasNumbers = values.some((v) => typeof v === "number")
     if (hasNumbers && typeof item === "string" && !isNaN(Number(item)) && item.trim() !== "") {
       const numVal = Number(item)
-      if ((values as number[]).includes(numVal)) return numVal
+      if ((values as readonly number[]).includes(numVal)) return numVal
     }
 
     // Case-insensitive normalization
@@ -178,7 +178,7 @@ export function manyOf<IsRequired extends boolean = false, T extends string | nu
 
     // Check each item is in the allowed values
     for (const item of val) {
-      if (!values.includes(item as T)) {
+      if (!(values as readonly (string | number)[]).includes(item as V[number])) {
         ctx.addIssue({
           code: "custom",
           message: getMessage("invalid", { values: values.join(", ") }),
@@ -212,8 +212,8 @@ export function manyOf<IsRequired extends boolean = false, T extends string | nu
   })
   .transform((val) => {
     if (val === null || !Array.isArray(val) || !transform) return val
-    return transform(val as T[])
+    return transform(val as V[number][])
   })
 
-  return schema as unknown as ManyOfSchema<IsRequired, T>
+  return schema as unknown as ManyOfSchema<IsRequired, V>
 }

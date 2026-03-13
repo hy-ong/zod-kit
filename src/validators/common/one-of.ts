@@ -37,11 +37,11 @@ export type OneOfMessages = {
  * @property {Function} [transform] - Custom transformation function applied after validation
  * @property {Record<Locale, OneOfMessages>} [i18n] - Custom error messages for different locales
  */
-export type OneOfOptions<IsRequired extends boolean = true, T extends string | number = string | number> = {
-  values: T[]
-  defaultValue?: IsRequired extends true ? T : T | null
+export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (string | number)[] = readonly (string | number)[]> = {
+  values: V
+  defaultValue?: IsRequired extends true ? V[number] : V[number] | null
   caseSensitive?: boolean
-  transform?: (value: T) => T
+  transform?: (value: V[number]) => V[number]
   i18n?: Partial<Record<Locale, Partial<OneOfMessages>>>
 }
 
@@ -51,7 +51,7 @@ export type OneOfOptions<IsRequired extends boolean = true, T extends string | n
  * @template IsRequired - Whether the field is required
  * @template T - The type of allowed values
  */
-export type OneOfSchema<IsRequired extends boolean, T> = IsRequired extends true ? ZodType<T> : ZodType<T | null>
+export type OneOfSchema<IsRequired extends boolean, V extends readonly (string | number)[]> = IsRequired extends true ? ZodType<V[number]> : ZodType<V[number] | null>
 
 /**
  * Creates a Zod schema for single-select validation that restricts values to a predefined set
@@ -103,11 +103,11 @@ export type OneOfSchema<IsRequired extends boolean, T> = IsRequired extends true
  * sizeSchema.parse("m") // ✓ "M"
  * ```
  */
-export function oneOf<IsRequired extends boolean = false, T extends string | number = string | number>(
+export function oneOf<IsRequired extends boolean = false, const V extends readonly (string | number)[] = readonly (string | number)[]>(
   required?: IsRequired,
-  options?: Omit<OneOfOptions<IsRequired, T>, "required">,
-): OneOfSchema<IsRequired, T> {
-  const { values = [] as unknown as T[], defaultValue = null, caseSensitive = true, transform, i18n } = options ?? {}
+  options?: Omit<OneOfOptions<IsRequired, V>, "required">,
+): OneOfSchema<IsRequired, V> {
+  const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)
 
@@ -132,7 +132,7 @@ export function oneOf<IsRequired extends boolean = false, T extends string | num
     const hasNumbers = values.some((v) => typeof v === "number")
     if (hasNumbers && typeof val === "string" && !isNaN(Number(val)) && val.trim() !== "") {
       const numVal = Number(val)
-      if ((values as number[]).includes(numVal)) return numVal
+      if ((values as readonly number[]).includes(numVal)) return numVal
     }
 
     // Case-insensitive normalization for string values
@@ -156,7 +156,7 @@ export function oneOf<IsRequired extends boolean = false, T extends string | num
         return
       }
 
-      if (!values.includes(val as T)) {
+      if (!(values as readonly (string | number)[]).includes(val as V[number])) {
         ctx.addIssue({
           code: "custom",
           message: getMessage("invalid", { values: values.join(", ") }),
@@ -165,8 +165,8 @@ export function oneOf<IsRequired extends boolean = false, T extends string | num
     })
     .transform((val) => {
       if (val === null || !transform) return val
-      return transform(val as T)
+      return transform(val as V[number])
     })
 
-  return schema as unknown as OneOfSchema<IsRequired, T>
+  return schema as unknown as OneOfSchema<IsRequired, V>
 }
