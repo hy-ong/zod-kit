@@ -75,7 +75,7 @@ export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * - 06: Tainan - 7 digits
  * - 07: Kaohsiung - 7-8 digits
  * - 08: Pingtung - 7 digits
- * - 0700: Premium rate (付費語音資訊) - 6 digits
+ * - 070: VoIP / Internet Telephony (網路電話) - 8 digits (11 total)
  * - 0800: Toll-free - 6 digits
  * - 0809: Toll-free - 6 digits
  * - 082: Kinmen - 6 digits
@@ -102,7 +102,7 @@ const validateTaiwanTel = (value: string): boolean => {
   // 06: Tainan - 7 digits
   // 07: Kaohsiung - 7-8 digits
   // 08: Pingtung - 7 digits
-  // 0700: Premium rate (付費語音資訊) - 6 digits
+  // 070: VoIP / Internet Telephony (網路電話) - 8 digits (11 total)
   // 0800/0809: Toll-free - 6 digits
   // 082: Kinmen - 6 digits
   // 0836: Matsu - 5-6 digits
@@ -118,10 +118,6 @@ const validateTaiwanTel = (value: string): boolean => {
 
   // Check 4-digit area codes first
   const areaCode4 = cleanValue.substring(0, 4)
-  if (areaCode4 === "0700") {
-    // Premium rate (付費語音資訊): 0700 + 6 digits, total 10 digits
-    return cleanValue.length === 10 && /^0700\d{6}$/.test(cleanValue)
-  }
   if (areaCode4 === "0800" || areaCode4 === "0809") {
     // Toll-free: 0800/0809 + 6 digits, total 10 digits
     return cleanValue.length === 10 && /^080[09]\d{6}$/.test(cleanValue)
@@ -133,6 +129,10 @@ const validateTaiwanTel = (value: string): boolean => {
 
   // Check 3-digit area codes
   const areaCode3 = cleanValue.substring(0, 3)
+  if (areaCode3 === "070") {
+    // VoIP / Internet Telephony (網路電話): 070 + 8 digits, total 11 digits
+    return cleanValue.length === 11 && /^070\d{8}$/.test(cleanValue)
+  }
   if (areaCode3 === "037") {
     // Miaoli: 037 + 6-7 digits, total 9-10 digits
     // User number must start with 2-9 (not 0 or 1)
