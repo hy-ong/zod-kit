@@ -43,12 +43,12 @@ v0.2.9
 - README, examples, usage notes, migration notes, or API documentation updates.
 
 ### Verification
-- `npm test -- --run` — result.
-- `npx eslint src/` — result.
-- `npx tsc --noEmit` — result.
-- `npm run build` — result.
-- `npm audit` — result.
-- `npm outdated` — result.
+- `npm test -- --run` - result.
+- `npx eslint src/` - result.
+- `npx tsc --noEmit` - result.
+- `npm run build` - result.
+- `npm audit` - result.
+- `npm outdated` - result.
 ```
 
 ## Writing Rules
@@ -95,10 +95,10 @@ v0.2.9
 - Corrected README password option documentation to match the implemented API.
 
 ### Verification
-- `npm test -- --run` — 1137 tests passed.
-- `npx eslint src/` — passed.
-- `npx tsc --noEmit` — passed.
-- `npm run build` — passed.
-- `npm audit` — 0 vulnerabilities.
-- `npm outdated` — no outdated dependencies reported.
+- `npm test -- --run` - 1137 tests passed.
+- `npx eslint src/` - passed.
+- `npx tsc --noEmit` - passed.
+- `npm run build` - passed.
+- `npm audit` - 0 vulnerabilities.
+- `npm outdated` - no outdated dependencies reported.
 ```
