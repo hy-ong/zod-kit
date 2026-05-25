@@ -49,6 +49,26 @@ describe("file(true) features", () => {
       expect(schema.parse(undefined)).toBe(null)
       expect(schema.parse("")).toBe(null)
     })
+
+    it("should not throw while creating a schema when File is unavailable", () => {
+      const originalFile = globalThis.File
+
+      try {
+        Object.defineProperty(globalThis, "File", {
+          value: undefined,
+          configurable: true,
+        })
+
+        const schema = file(false)
+        expect(schema.parse(null)).toBe(null)
+        expect(() => schema.parse("not a file")).toThrow("Invalid file")
+      } finally {
+        Object.defineProperty(globalThis, "File", {
+          value: originalFile,
+          configurable: true,
+        })
+      }
+    })
   })
 
   describe("file size validation", () => {

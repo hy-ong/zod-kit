@@ -1,8 +1,8 @@
 /**
- * @fileoverview Taiwan Landline Telephone Number validator for Zod Kit
+ * @fileoverview Taiwan Telephone Number validator for Zod Kit
  *
- * Provides validation for Taiwan landline telephone numbers according to the
- * official 2024 telecom numbering plan with comprehensive area code support.
+ * Provides validation for Taiwan telephone numbers according to the official
+ * 2024 telecom numbering plan with area code and service code support.
  *
  * @author Ong Hoe Yuan
  * @version 0.0.5
@@ -27,19 +27,21 @@ export type TwTelMessages = {
 }
 
 /**
- * Configuration options for Taiwan landline telephone validation
+ * Configuration options for Taiwan telephone validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
  *
  * @interface TwTelOptions
  * @property {IsRequired} [required=true] - Whether the field is required
  * @property {string[]} [whitelist] - Array of specific telephone numbers that are always allowed
+ * @property {boolean} [allowITFS=false] - Whether to allow 008 international toll-free numbers
  * @property {Function} [transform] - Custom transformation function for telephone number
  * @property {string | null} [defaultValue] - Default value when input is empty
  * @property {Record<Locale, TwTelMessages>} [i18n] - Custom error messages for different locales
  */
 export type TwTelOptions<IsRequired extends boolean = true> = {
   whitelist?: string[]
+  allowITFS?: boolean
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
   i18n?: Partial<Record<Locale, Partial<TwTelMessages>>>
@@ -54,16 +56,39 @@ export type TwTelOptions<IsRequired extends boolean = true> = {
  */
 export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
+export type ValidateTaiwanTelOptions = {
+  allowITFS?: boolean
+}
+
+const normalizeTaiwanTel = (value: string): string => value.replace(/[-\s]/g, "")
+
 /**
- * Validates Taiwan landline telephone number format (Official 2024 rules)
+ * Validates Taiwan-dialed international toll-free number format.
+ *
+ * Supported formats:
+ * - 00800 + 8-digit Global Subscriber Number (UIFN)
+ * - 00801~00809 + 1-12 digit carrier-defined subscriber number (ITFS)
+ */
+const validateTaiwanInternationalTollFree = (value: string): boolean => {
+  const cleanValue = normalizeTaiwanTel(value)
+
+  if (/^00800\d{8}$/.test(cleanValue)) {
+    return true
+  }
+
+  return /^0080[1-9]\d{1,12}$/.test(cleanValue)
+}
+
+/**
+ * Validates Taiwan telephone number format (Official 2024 rules)
  *
  * @param {string} value - The telephone number to validate
+ * @param {ValidateTaiwanTelOptions} [options] - Optional validation settings
  * @returns {boolean} True if the telephone number is valid
  *
  * @description
- * Validates Taiwan landline telephone numbers according to the official 2024
- * telecom numbering plan. Supports all Taiwan area codes and their specific
- * number patterns.
+ * Validates Taiwan telephone numbers according to the official 2024 telecom
+ * numbering plan. Supports Taiwan area codes and selected service codes.
  *
  * Supported area codes and formats:
  * - 02: Taipei, New Taipei, Keelung - 8 digits
@@ -76,8 +101,10 @@ export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * - 07: Kaohsiung - 7-8 digits
  * - 08: Pingtung - 7 digits
  * - 070: VoIP / Internet Telephony (網路電話) - 8 digits (11 total)
- * - 0800: Toll-free - 6 digits
- * - 0809: Toll-free - 6 digits
+ * - 0800: Domestic recipient-paid/toll-free - 6 digits
+ * - 0809: Domestic recipient-paid/toll-free - 6 digits
+ * - 00800: Universal International Freephone Number (UIFN) when allowITFS is true
+ * - 00801~00809: International Toll-Free Service (ITFS) when allowITFS is true
  * - 082: Kinmen - 6 digits
  * - 0836: Matsu - 5-6 digits
  * - 089: Taitung - 6 digits
@@ -89,9 +116,12 @@ export type TwTelSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * validateTaiwanTel("037234567") // true (Miaoli area)
  * validateTaiwanTel("082234567") // true (Kinmen area)
  * validateTaiwanTel("02-2345-6789") // true (with separators)
+ * validateTaiwanTel("00801-852-747", { allowITFS: true }) // true (ITFS)
  * ```
  */
-const validateTaiwanTel = (value: string): boolean => {
+const validateTaiwanTel = (value: string, options: ValidateTaiwanTelOptions = {}): boolean => {
+  const { allowITFS = false } = options
+
   // Official Taiwan landline formats according to telecom numbering plan:
   // 02: Taipei, New Taipei, Keelung - 8 digits
   // 03: Taoyuan, Hsinchu, Yilan, Hualien - 7-8 digits
@@ -103,13 +133,17 @@ const validateTaiwanTel = (value: string): boolean => {
   // 07: Kaohsiung - 7-8 digits
   // 08: Pingtung - 7 digits
   // 070: VoIP / Internet Telephony (網路電話) - 8 digits (11 total)
-  // 0800/0809: Toll-free - 6 digits
+  // 0800/0809: Domestic recipient-paid/toll-free - 6 digits
   // 082: Kinmen - 6 digits
   // 0836: Matsu - 5-6 digits
   // 089: Taitung - 6 digits
 
   // Remove common separators for validation
-  const cleanValue = value.replace(/[-\s]/g, "")
+  const cleanValue = normalizeTaiwanTel(value)
+
+  if (allowITFS && validateTaiwanInternationalTollFree(cleanValue)) {
+    return true
+  }
 
   // Basic format: starts with 0, then area code, then number
   if (!/^0\d{7,10}$/.test(cleanValue)) {
@@ -119,7 +153,7 @@ const validateTaiwanTel = (value: string): boolean => {
   // Check 4-digit area codes first
   const areaCode4 = cleanValue.substring(0, 4)
   if (areaCode4 === "0800" || areaCode4 === "0809") {
-    // Toll-free: 0800/0809 + 6 digits, total 10 digits
+    // Domestic recipient-paid/toll-free: 0800/0809 + 6 digits, total 10 digits
     return cleanValue.length === 10 && /^080[09]\d{6}$/.test(cleanValue)
   }
   if (areaCode4 === "0836") {
@@ -206,7 +240,7 @@ const validateTaiwanTel = (value: string): boolean => {
 }
 
 /**
- * Creates a Zod schema for Taiwan landline telephone number validation
+ * Creates a Zod schema for Taiwan telephone number validation
  *
  * @template IsRequired - Whether the field is required (affects return type)
  * @param {IsRequired} [required=false] - Whether the field is required
@@ -214,11 +248,13 @@ const validateTaiwanTel = (value: string): boolean => {
  * @returns {TwTelSchema<IsRequired>} Zod schema for telephone number validation
  *
  * @description
- * Creates a comprehensive Taiwan landline telephone number validator with support for
- * all Taiwan area codes according to the official 2024 telecom numbering plan.
+ * Creates a comprehensive Taiwan telephone number validator with support for
+ * Taiwan area codes and selected service codes according to the official 2024
+ * telecom numbering plan.
  *
  * Features:
  * - Complete Taiwan area code support (02, 03, 037, 04, 049, 05, 06, 07, 08, 082, 0826, 0836, 089)
+ * - Optional 008 international toll-free support (UIFN/ITFS)
  * - Automatic separator handling (hyphens and spaces)
  * - Area-specific number length and pattern validation
  * - Whitelist functionality for specific allowed numbers
@@ -262,6 +298,13 @@ const validateTaiwanTel = (value: string): boolean => {
  * transformSchema.parse("02-2345-6789") // ✓ Valid (separators removed)
  * transformSchema.parse("02 2345 6789") // ✓ Valid (spaces removed)
  *
+ * // With Taiwan-dialed international toll-free support
+ * const itfsSchema = twTel(false, {
+ *   allowITFS: true
+ * })
+ * itfsSchema.parse("00800-2468-1668") // ✓ Valid (UIFN)
+ * itfsSchema.parse("00801-852-747") // ✓ Valid (ITFS)
+ *
  * // With custom error messages
  * const customSchema = twTel(false, {
  *   i18n: {
@@ -276,7 +319,7 @@ const validateTaiwanTel = (value: string): boolean => {
  * @see {@link validateTaiwanTel} for validation logic details
  */
 export function twTel<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwTelOptions<IsRequired>, 'required'>): TwTelSchema<IsRequired> {
-  const { whitelist, transform, defaultValue, i18n } = options ?? {}
+  const { whitelist, allowITFS = false, transform, defaultValue, i18n } = options ?? {}
 
   const isRequired = required ?? false as IsRequired
 
@@ -345,7 +388,7 @@ export function twTel<IsRequired extends boolean = false>(required?: IsRequired,
     }
 
     // Taiwan telephone format validation
-    if (!validateTaiwanTel(val)) {
+    if (!validateTaiwanTel(val, { allowITFS })) {
       ctx.addIssue({ code: "custom", message: getMessage("invalid") })
       return
     }
@@ -369,4 +412,4 @@ export function twTel<IsRequired extends boolean = false>(required?: IsRequired,
  * const isValid = validateTaiwanTel("0223456789") // boolean
  * ```
  */
-export { validateTaiwanTel }
+export { validateTaiwanTel, validateTaiwanInternationalTollFree }

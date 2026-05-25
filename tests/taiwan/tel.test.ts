@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { twTel, setLocale, validateTaiwanTel } from "../../src"
+import { twTel, setLocale, validateTaiwanTel, validateTaiwanInternationalTollFree } from "../../src"
 
 describe("Taiwan twTel(true) validator", () => {
   beforeEach(() => setLocale("en-US"))
@@ -45,7 +45,7 @@ describe("Taiwan twTel(true) validator", () => {
       expect(schema.parse("07012345678")).toBe("07012345678") // 070-1234-5678 (11 digits)
       expect(schema.parse("070-1234-5678")).toBe("070-1234-5678") // with separators
 
-      // Toll-free numbers
+      // Domestic recipient-paid/toll-free numbers
       expect(schema.parse("0800123456")).toBe("0800123456") // 0800-123-456 (10 digits)
       expect(schema.parse("0809123456")).toBe("0809123456") // 0809-123-456 (10 digits)
       expect(schema.parse("0800-012-345")).toBe("0800-012-345") // with separators
@@ -68,6 +68,40 @@ describe("Taiwan twTel(true) validator", () => {
       // Mixed separators
       expect(schema.parse("02-2345 6789")).toBe("02-2345 6789")
       expect(schema.parse("07 234-5678")).toBe("07 234-5678")
+    })
+
+    it("should validate Taiwan international toll-free numbers when ITFS is allowed", () => {
+      const schema = twTel(true, { allowITFS: true })
+
+      expect(schema.parse("00800-2468-1668")).toBe("00800-2468-1668")
+      expect(schema.parse("00801128000")).toBe("00801128000")
+      expect(schema.parse("00801-852-747")).toBe("00801-852-747")
+      expect(schema.parse("00809 123456789012")).toBe("00809 123456789012")
+
+      expect(validateTaiwanTel("00800-2468-1668", { allowITFS: true })).toBe(true)
+      expect(validateTaiwanTel("00801-852-747", { allowITFS: true })).toBe(true)
+    })
+
+    it("should reject Taiwan international toll-free numbers unless ITFS is allowed", () => {
+      const schema = twTel(true)
+
+      expect(() => schema.parse("00800-2468-1668")).toThrow("Invalid Taiwan telephone format")
+      expect(() => schema.parse("00801-852-747")).toThrow("Invalid Taiwan telephone format")
+      expect(validateTaiwanTel("00801-852-747")).toBe(false)
+    })
+
+    it("should reject invalid Taiwan international toll-free number lengths", () => {
+      const schema = twTel(true, { allowITFS: true })
+
+      expect(() => schema.parse("00800-1234-567")).toThrow("Invalid Taiwan telephone format")
+      expect(() => schema.parse("00800-1234-56789")).toThrow("Invalid Taiwan telephone format")
+      expect(() => schema.parse("00801")).toThrow("Invalid Taiwan telephone format")
+      expect(() => schema.parse("00801-1234567890123")).toThrow("Invalid Taiwan telephone format")
+
+      expect(validateTaiwanInternationalTollFree("00800-1234-5678")).toBe(true)
+      expect(validateTaiwanInternationalTollFree("00800-1234-567")).toBe(false)
+      expect(validateTaiwanInternationalTollFree("00801-123456789012")).toBe(true)
+      expect(validateTaiwanInternationalTollFree("00801-1234567890123")).toBe(false)
     })
 
     it("should reject invalid Taiwan telephone numbers", () => {
@@ -265,7 +299,7 @@ describe("Taiwan twTel(true) validator", () => {
         expect(validateTaiwanTel("070-1234-5678")).toBe(true) // 070 with separators
         expect(validateTaiwanTel("07001234567")).toBe(true) // 070 starting with 0 (valid VoIP)
 
-        // Toll-free numbers
+        // Domestic recipient-paid/toll-free numbers
         expect(validateTaiwanTel("0800123456")).toBe(true) // 0800
         expect(validateTaiwanTel("0809123456")).toBe(true) // 0809
         expect(validateTaiwanTel("0800-123-456")).toBe(true) // with separators
@@ -393,8 +427,8 @@ describe("Taiwan twTel(true) validator", () => {
         { code: "082", numbers: ["082234567"] }, // Kinmen (9 digits, first digit 2) - from utility test ✓
         { code: "089", numbers: ["089234567"] }, // Taitung (9 digits, first digit 2) - from utility test ✓
         { code: "070", numbers: ["07012345678"] }, // VoIP (11 digits)
-        { code: "0800", numbers: ["0800123456"] }, // Toll-free (10 digits)
-        { code: "0809", numbers: ["0809123456"] }, // Toll-free (10 digits)
+        { code: "0800", numbers: ["0800123456"] }, // Domestic recipient-paid/toll-free (10 digits)
+        { code: "0809", numbers: ["0809123456"] }, // Domestic recipient-paid/toll-free (10 digits)
         { code: "0826", numbers: ["082661234"] }, // Wuqiu (9 digits, first digit 6) - from utility test ✓
         { code: "0836", numbers: ["083621234"] }, // Matsu (9 digits, first digit 2) - from utility test ✓
       ]

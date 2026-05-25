@@ -37,7 +37,7 @@ pnpm add @hy_ong/zod-kit zod
 ## 🚀 Quick Start
 
 ```typescript
-import { email, password, text, mobile, datetime, time, postalCode } from '@hy_ong/zod-kit'
+import { email, password, text, twMobile, datetime, time, twPostalCode } from '@hy_ong/zod-kit'
 
 // Simple email validation (required by default)
 const emailSchema = email(true)
@@ -56,7 +56,7 @@ const passwordSchema = password(true, {
 })
 
 // Taiwan mobile phone validation
-const phoneSchema = mobile(true)
+const phoneSchema = twMobile(true)
 phoneSchema.parse('0912345678') // ✅ "0912345678"
 
 // DateTime validation
@@ -68,7 +68,7 @@ const timeSchema = time(true)
 timeSchema.parse('14:30') // ✅ "14:30"
 
 // Taiwan postal code validation
-const postalSchema = postalCode(true)
+const postalSchema = twPostalCode(true)
 postalSchema.parse('100001') // ✅ "100001"
 ```
 
@@ -121,15 +121,13 @@ import { password } from '@hy_ong/zod-kit'
 
 // Required password with complexity rules
 const passwordSchema = password(true, {
-  minLength: 8,             // Minimum length
-  maxLength: 128,           // Maximum length
-  requireUppercase: true,   // Require A-Z
-  requireLowercase: true,   // Require a-z
-  requireDigits: true,      // Require 0-9
-  requireSpecialChars: true,// Require !@#$%^&*
-  customPatterns: [
-    { pattern: /[A-Z]/, message: 'Need uppercase' }
-  ]
+  min: 8,             // Minimum length
+  max: 128,           // Maximum length
+  uppercase: true,    // Require A-Z
+  lowercase: true,    // Require a-z
+  digits: true,       // Require 0-9
+  special: true,      // Require !@#$%^&*
+  regex: /[A-Z]/      // Custom pattern
 })
 
 // Optional password
@@ -340,116 +338,117 @@ const optionalId = id(false)
 
 ### Taiwan-Specific Validators
 
-#### `nationalId(required?, options?)`
+#### `twNationalId(required?, options?)`
 
 Validates Taiwan National ID (身份證字號).
 
 ```typescript
-import { nationalId } from '@hy_ong/zod-kit'
+import { twNationalId } from '@hy_ong/zod-kit'
 
-const idSchema = nationalId(true, {
-  normalize: true,  // Convert to uppercase
-  whitelist: ['A123456789'] // Allow specific IDs
+const idSchema = twNationalId(true, {
+  type: 'both',
+  allowOldResident: true
 })
 
 idSchema.parse('A123456789') // ✅ Valid Taiwan National ID
 
-const optionalId = nationalId(false)
+const optionalId = twNationalId(false)
 ```
 
-#### `businessId(required?, options?)`
+#### `twBusinessId(required?, options?)`
 
 Validates Taiwan Business ID (統一編號).
 
 ```typescript
-import { businessId } from '@hy_ong/zod-kit'
+import { twBusinessId } from '@hy_ong/zod-kit'
 
-const bizSchema = businessId(true)
+const bizSchema = twBusinessId(true)
 bizSchema.parse('12345675') // ✅ Valid business ID with checksum
 
-const optionalBizId = businessId(false)
+const optionalBizId = twBusinessId(false)
 ```
 
-#### `mobile(required?, options?)`
+#### `twMobile(required?, options?)`
 
 Validates Taiwan mobile phone numbers.
 
 ```typescript
-import { mobile } from '@hy_ong/zod-kit'
+import { twMobile } from '@hy_ong/zod-kit'
 
-const phoneSchema = mobile(true, {
-  allowInternational: true,  // Allow +886 prefix
-  allowSeparators: true,     // Allow 0912-345-678
-  operators: ['09']          // Restrict to specific operators
+const phoneSchema = twMobile(true, {
+  transform: (value) => value.replace(/[-\s]/g, '')
 })
+phoneSchema.parse('0912-345-678') // ✅ "0912345678"
 
-const optionalMobile = mobile(false)
+const optionalMobile = twMobile(false)
 ```
 
-#### `tel(required?, options?)`
+#### `twTel(required?, options?)`
 
-Validates Taiwan landline telephone numbers.
+Validates Taiwan telephone numbers, including landline, 070 VoIP, domestic 0800/0809 recipient-paid numbers, and optional 008 ITFS/UIFN numbers.
 
 ```typescript
-import { tel } from '@hy_ong/zod-kit'
+import { twTel } from '@hy_ong/zod-kit'
 
-const landlineSchema = tel(true, {
-  allowSeparators: true,     // Allow 02-1234-5678
-  areaCodes: ['02', '03']    // Restrict to specific areas
-})
+const landlineSchema = twTel(true)
+landlineSchema.parse('02-2345-6789') // ✅ Valid landline number
 
-const optionalTel = tel(false)
+const itfsSchema = twTel(true, { allowITFS: true })
+itfsSchema.parse('00800-2468-1668') // ✅ Valid UIFN number
+itfsSchema.parse('00801-852-747')   // ✅ Valid ITFS number
+
+const optionalTel = twTel(false)
 ```
 
-#### `fax(required?, options?)`
+#### `twFax(required?, options?)`
 
 Validates Taiwan fax numbers (same format as landline).
 
 ```typescript
-import { fax } from '@hy_ong/zod-kit'
+import { twFax } from '@hy_ong/zod-kit'
 
-const faxSchema = fax(true)
+const faxSchema = twFax(true)
 faxSchema.parse('02-2345-6789') // ✅ Valid fax number
 
-const optionalFax = fax(false)
+const optionalFax = twFax(false)
 ```
 
-#### `postalCode(required?, options?)`
+#### `twPostalCode(required?, options?)`
 
 Validates Taiwan postal codes with support for 3-digit, 5-digit, and 6-digit formats.
 
 ```typescript
-import { postalCode } from '@hy_ong/zod-kit'
+import { twPostalCode } from '@hy_ong/zod-kit'
 
 // Accept 3-digit or 6-digit formats (recommended)
-const modernSchema = postalCode(true)
+const modernSchema = twPostalCode(true)
 modernSchema.parse('100')     // ✅ Valid 3-digit
 modernSchema.parse('100001')  // ✅ Valid 6-digit
 
 // Accept all formats
-const flexibleSchema = postalCode(true, { format: 'all' })
+const flexibleSchema = twPostalCode(true, { format: 'all' })
 flexibleSchema.parse('100')     // ✅ Valid
 flexibleSchema.parse('10001')   // ✅ Valid (5-digit legacy)
 flexibleSchema.parse('100001')  // ✅ Valid
 
 // Only 6-digit format (current standard)
-const modernOnlySchema = postalCode(true, { format: '6' })
+const modernOnlySchema = twPostalCode(true, { format: '6' })
 modernOnlySchema.parse('100001') // ✅ Valid
 modernOnlySchema.parse('100')    // ❌ Invalid
 
 // With dashes allowed
-const dashSchema = postalCode(true, { allowDashes: true })
+const dashSchema = twPostalCode(true, { allowDashes: true })
 dashSchema.parse('100-001')  // ✅ Valid (normalized to '100001')
 
 // Specific areas only
-const taipeiSchema = postalCode(true, {
+const taipeiSchema = twPostalCode(true, {
   allowedPrefixes: ['100', '103', '104', '105', '106']
 })
 taipeiSchema.parse('100001') // ✅ Valid (Taipei area)
 taipeiSchema.parse('200001') // ❌ Invalid (not in allowlist)
 
 // Optional postal code
-const optionalPostal = postalCode(false)
+const optionalPostal = twPostalCode(false)
 ```
 
 ## 🌐 Internationalization
@@ -542,7 +541,7 @@ import { email, password } from '@hy_ong/zod-kit'
 
 const userSchema = z.object({
   email: email(true),
-  password: password(true, { minLength: 8 }),
+  password: password(true, { min: 8 }),
   confirmPassword: z.string()
 }).refine(data => data.password === data.confirmPassword, {
   message: "Passwords don't match"

@@ -12,11 +12,11 @@ import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 import dayjs from "dayjs"
-import customParseFormat from "dayjs/plugin/customParseFormat"
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore"
-import isToday from "dayjs/plugin/isToday"
-import weekday from "dayjs/plugin/weekday"
+import customParseFormat from "dayjs/plugin/customParseFormat.js"
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js"
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore.js"
+import isToday from "dayjs/plugin/isToday.js"
+import weekday from "dayjs/plugin/weekday.js"
 
 // Initialize dayjs plugins for extended date functionality
 dayjs.extend(isSameOrAfter)

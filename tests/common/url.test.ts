@@ -267,6 +267,15 @@ describe("url", () => {
       expect(() => schema.parse("http://192.168.1.1")).toThrow()
     })
 
+    it("should block all loopback and unspecified hosts when blockLocalhost is true", () => {
+      const schema = url(true, { blockLocalhost: true })
+
+      expect(() => schema.parse("http://127.0.0.2")).toThrow()
+      expect(() => schema.parse("http://0.0.0.0")).toThrow()
+      expect(() => schema.parse("http://[::1]")).toThrow()
+      expect(() => schema.parse("http://[::]")).toThrow()
+    })
+
     it("should block localhost when allowLocalhost is false", () => {
       const schema = url(true, { allowLocalhost: false })
       expect(() => schema.parse("http://localhost:3000")).toThrow()
@@ -456,7 +465,16 @@ describe("url", () => {
       expect(() => schema.parse("http://10.0.0.1")).toThrow()
       expect(() => schema.parse("http://172.16.0.1")).toThrow()
       expect(() => schema.parse("http://192.168.0.1")).toThrow()
+      expect(() => schema.parse("http://169.254.0.1")).toThrow()
+      expect(() => schema.parse("http://[fc00::1]")).toThrow()
+      expect(() => schema.parse("http://[fe80::1]")).toThrow()
+      expect(() => schema.parse("http://[fe81::1]")).toThrow()
+      expect(() => schema.parse("http://[febf::1]")).toThrow()
+      expect(() => schema.parse("http://[::ffff:127.0.0.1]")).toThrow()
+      expect(() => schema.parse("http://[::ffff:10.0.0.1]")).toThrow()
       expect(schema.parse("https://8.8.8.8")).toBe("https://8.8.8.8") // Public IP
+      expect(schema.parse("http://[::ffff:8.8.8.8]")).toBe("http://[::ffff:8.8.8.8]") // IPv4-mapped public IP
+      expect(schema.parse("https://fc.example.com")).toBe("https://fc.example.com")
     })
 
     it("should handle edge cases with ports", () => {

@@ -116,6 +116,81 @@ export type UrlOptions<IsRequired extends boolean = true> = {
  */
 export type UrlSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
 
+const getNormalizedHostname = (hostname: string): string => hostname.toLowerCase().replace(/^\[(.*)]$/, "$1")
+
+const parseIPv4 = (hostname: string): number[] | null => {
+  const parts = hostname.split(".")
+  if (parts.length !== 4) return null
+
+  const octets = parts.map((part) => {
+    if (!/^\d+$/.test(part)) return null
+    const value = Number(part)
+    return Number.isInteger(value) && value >= 0 && value <= 255 ? value : null
+  })
+
+  return octets.every((part) => part !== null) ? octets as number[] : null
+}
+
+const isLocalIPv4 = ([first, second]: number[]): boolean => (
+  first === 0 ||
+  first === 10 ||
+  first === 127 ||
+  (first === 169 && second === 254) ||
+  (first === 172 && second >= 16 && second <= 31) ||
+  (first === 192 && second === 168)
+)
+
+const parseHextet = (value: string): number | null => {
+  if (!/^[0-9a-f]{1,4}$/i.test(value)) return null
+
+  const parsed = Number.parseInt(value, 16)
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 0xffff ? parsed : null
+}
+
+const parseIPv4MappedIPv6 = (hostname: string): number[] | null => {
+  if (!hostname.startsWith("::ffff:")) return null
+
+  const mappedValue = hostname.slice("::ffff:".length)
+  const dottedIPv4 = parseIPv4(mappedValue)
+  if (dottedIPv4) return dottedIPv4
+
+  const hextets = mappedValue.split(":")
+  if (hextets.length !== 2) return null
+
+  const high = parseHextet(hextets[0])
+  const low = parseHextet(hextets[1])
+  if (high === null || low === null) return null
+
+  return [(high >> 8) & 0xff, high & 0xff, (low >> 8) & 0xff, low & 0xff]
+}
+
+const isLocalNetworkHostname = (hostname: string): boolean => {
+  const normalizedHostname = getNormalizedHostname(hostname)
+
+  if (normalizedHostname === "localhost") return true
+
+  const ipv4 = parseIPv4(normalizedHostname)
+  if (ipv4) {
+    return isLocalIPv4(ipv4)
+  }
+
+  if (!normalizedHostname.includes(":")) return false
+
+  const mappedIPv4 = parseIPv4MappedIPv6(normalizedHostname)
+  if (mappedIPv4) return isLocalIPv4(mappedIPv4)
+
+  const firstHextet = parseHextet(normalizedHostname.split(":")[0])
+
+  return (
+    normalizedHostname === "::" ||
+    normalizedHostname === "::1" ||
+    (firstHextet !== null && (
+      (firstHextet & 0xfe00) === 0xfc00 ||
+      (firstHextet & 0xffc0) === 0xfe80
+    ))
+  )
+}
+
 /**
  * Creates a Zod schema for URL validation with comprehensive constraints
  *
@@ -356,7 +431,7 @@ export function url<IsRequired extends boolean = false>(required?: IsRequired, o
     }
 
     // Localhost validation
-    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)
+    const isLocalhost = isLocalNetworkHostname(hostname)
     if (blockLocalhost && isLocalhost) {
       ctx.addIssue({ code: "custom", message: getMessage("noLocalhost") })
       return

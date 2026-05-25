@@ -103,6 +103,22 @@ export type FileOptions<IsRequired extends boolean = true> = {
  */
 export type FileSchema<IsRequired extends boolean> = IsRequired extends true ? ZodType<File, File | null> : ZodType<File | null, File | null>
 
+function getFileConstructor(): typeof File | undefined {
+  return typeof globalThis.File === "function" ? globalThis.File : undefined
+}
+
+function isFileLike(value: unknown): value is File {
+  if (value === null || typeof value !== "object") return false
+
+  const candidate = value as Partial<File>
+  return typeof candidate.name === "string" && typeof candidate.size === "number" && typeof candidate.type === "string"
+}
+
+function isFileValue(value: unknown): value is File {
+  const FileConstructor = getFileConstructor()
+  return FileConstructor ? value instanceof FileConstructor : isFileLike(value)
+}
+
 /**
  * Creates a Zod schema for file validation with comprehensive filtering options
  *
@@ -233,14 +249,14 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
   const actualDefaultValue = defaultValue ?? null
 
   // Create properly typed base schema for File | null
-  const fileOrNullSchema = z.union([z.instanceof(File), z.null()])
+  const fileOrNullSchema = z.union([z.custom<File>(isFileValue, { message: getMessage("invalid") }), z.null()])
 
   const baseSchema = z.preprocess((val): File | null => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
 
-    if (!(val instanceof File)) {
+    if (!isFileValue(val)) {
       return val as File | null
     }
 
@@ -257,7 +273,7 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
     .refine((val) => !isRequired || val !== null, {
       message: getMessage("required"),
     })
-    .refine((val) => val === null || val instanceof File, {
+    .refine((val) => val === null || isFileValue(val), {
       message: getMessage("invalid"),
     })
     .refine((val) => val === null || minSize === undefined || val.size >= minSize, {
