@@ -39,6 +39,9 @@ export type OneOfMessages = {
  * @property {boolean} [caseSensitive=true] - Whether string matching is case-sensitive
  * @property {Function} [transform] - Custom transformation function applied after validation
  * @property {Record<Locale, OneOfMessages>} [i18n] - Custom error messages for different locales
+ * @property {boolean} [directIssue=false] - When true, a non-empty invalid value reports the `invalid` message
+ *   directly as the top-level issue (`issues[0].message`), instead of a generic union issue with the real
+ *   message nested inside. Empty values keep the same behavior (required → `required`, optional → null/default).
  */
 export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (string | number)[] = readonly (string | number)[]> = {
   values: V
@@ -46,6 +49,7 @@ export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (
   caseSensitive?: boolean
   transform?: (value: V[number]) => V[number]
   i18n?: Partial<Record<Locale, Partial<OneOfMessages>>>
+  directIssue?: boolean
 }
 
 /**
@@ -109,13 +113,17 @@ export type OneOfSchema<IsRequired extends boolean, V extends readonly (string |
  *   transform: (val) => val.toUpperCase() as any
  * })
  * sizeSchema.parse("m") // ✓ "M"
+ *
+ * // Top-level invalid message for safeParse (opt-in)
+ * const planSchema = oneOf(true, { values: ["basic", "pro"], directIssue: true })
+ * planSchema.safeParse("gold").error?.issues[0].message // "Must be one of: basic, pro"
  * ```
  */
 export function oneOf<IsRequired extends boolean = false, const V extends readonly (string | number)[] = readonly (string | number)[]>(
   required?: IsRequired,
   options?: Omit<OneOfOptions<IsRequired, V>, "required">,
 ): OneOfSchema<IsRequired, V> {
-  const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n } = options ?? {}
+  const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n, directIssue = false } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)
   const valuesArr = values as readonly (string | number)[]
@@ -173,6 +181,40 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
 
   // Handle required vs optional
   const fallback = defaultValue as V[number] | null
+
+  // Opt-in: dispatch manually so a non-empty invalid value yields the "invalid" message as the top-level issue
+  if (directIssue) {
+    const candidates: ZodType[] = [valueSchema]
+    if (!isAllStrings) {
+      candidates.push(
+        z
+          .string()
+          .transform((v) => {
+            const n = Number(v)
+            return isNaN(n) ? v : n
+          })
+          .pipe(valueSchema as ZodType<any, any>)
+      )
+    }
+
+    return z.unknown().transform((input, ctx) => {
+      if (isEmpty(input)) {
+        if (isRequired && fallback === null) {
+          ctx.addIssue({ code: "custom", message: getMessage("required") })
+          return z.NEVER
+        }
+        return fallback
+      }
+
+      for (const candidate of candidates) {
+        const result = candidate.safeParse(input)
+        if (result.success) return result.data
+      }
+
+      ctx.addIssue({ code: "custom", message: getMessage("invalid", { values: valuesArr.join(", ") }) })
+      return z.NEVER
+    }) as unknown as OneOfSchema<IsRequired, V>
+  }
   const emptySchema = z
     .union([z.literal("" as const), z.null(), z.undefined()])
     .transform(() => fallback)
