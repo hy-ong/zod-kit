@@ -144,12 +144,24 @@ import { text } from '@hy_ong/zod-kit'
 const nameSchema = text(true, {
   minLength: 2,
   maxLength: 50,
-  pattern: /^[a-zA-Z\s]+$/,
-  transform: (val) => val.trim()
+  regex: /^[a-zA-Z\s]+$/,
+  trimMode: 'trim',           // 'trim' | 'trimStart' | 'trimEnd' | 'none'
+  casing: 'none',             // 'upper' | 'lower' | 'title' | 'none'
+  transform: (val) => val.toLowerCase()
 })
 
 const optionalText = text(false)
+
+// Strict: reject non-string input instead of converting it with String()
+const strictText = text(true, { strict: true })
+strictText.parse(123) // ❌ "Must be a string" (i18n key: common.text.notString)
+
+// Treat whitespace-only input as empty (checked after trimming, works with any trimMode)
+const blankAsEmpty = text(false, { trimMode: 'none', whitespaceAsEmpty: true })
+blankAsEmpty.parse('   ') // ✅ null
 ```
+
+Other options: `startsWith`, `endsWith`, `includes`, `excludes`, `notEmpty`, `defaultValue`, `i18n`. `strict` and `whitespaceAsEmpty` default to `false` (by default non-string input is coerced with `String()`, and whitespace-only input is trimmed to `""` rather than treated as empty).
 
 #### `number(required?, options?)`
 
@@ -161,12 +173,23 @@ import { number } from '@hy_ong/zod-kit'
 const ageSchema = number(true, {
   min: 0,
   max: 150,
-  integer: true,
+  type: 'integer',     // 'integer' | 'float' | 'both'
   positive: true
 })
 
 const optionalNumber = number(false)
+optionalNumber.parse('') // ✅ null
+
+// Choose what empty input becomes when optional: null (default) | undefined | ''
+const undefinedWhenEmpty = number(false, { emptyValue: undefined }) // z.output: number | undefined
+undefinedWhenEmpty.parse('') // ✅ undefined
+
+// Treat whitespace-only strings as empty instead of parsing them as 0
+const wsAsEmpty = number(true, { whitespaceAsEmpty: true })
+wsAsEmpty.parse('  ') // ❌ Required
 ```
+
+Other options: `negative`, `nonNegative`, `nonPositive`, `multipleOf`, `precision`, `finite` (default `true`), `parseCommas` (parse `"1,234"` as `1234`), `transform`, `defaultValue`, `i18n`. `defaultValue` takes priority over `emptyValue`; `emptyValue` only applies to optional fields (required fields still fail with the required message).
 
 #### `url(required?, options?)`
 
@@ -192,12 +215,42 @@ Boolean validation with flexible input handling.
 import { boolean } from '@hy_ong/zod-kit'
 
 const consentSchema = boolean(true, {
-  trueValues: ['yes', '1', 'true'],  // Custom truthy values
-  falseValues: ['no', '0', 'false'] // Custom falsy values
+  truthyValues: ['yes', '1', 'true'], // Custom truthy values
+  falsyValues: ['no', '0', 'false'],  // Custom falsy values
+  shouldBe: true                      // Must be true (e.g. accept terms)
 })
 
 const optionalBoolean = boolean(false)
+optionalBoolean.parse('') // ✅ null
+
+// Choose what empty input becomes when optional: null (default) | undefined | ''
+const undefinedWhenEmpty = boolean(false, { emptyValue: undefined }) // z.output: boolean | undefined
 ```
+
+Other options: `strict` (only accept actual booleans), `transform`, `defaultValue`, `i18n`. `defaultValue` takes priority over `emptyValue`.
+
+#### `oneOf(required?, options)`
+
+Validates that a value is one of an allowed list of strings or numbers. Numeric strings are matched against numeric values (e.g. `'1'` → `1`).
+
+```typescript
+import { oneOf } from '@hy_ong/zod-kit'
+
+const planSchema = oneOf(true, {
+  values: ['basic', 'pro'] as const,
+  caseSensitive: false // Default: true
+})
+planSchema.parse('PRO') // ✅ "pro"
+
+const optionalPlan = oneOf(false, { values: ['basic', 'pro'] as const })
+optionalPlan.parse('') // ✅ null
+
+// Report the "invalid" message as the top-level issue instead of the generic union error
+const directPlan = oneOf(true, { values: ['basic', 'pro'], directIssue: true })
+directPlan.safeParse('gold').error?.issues[0].message // "Must be one of: basic, pro"
+```
+
+Other options: `defaultValue`, `transform`, `i18n`. `directIssue` defaults to `false`; it only changes non-empty invalid values (empty values still yield the required message or `null`/`defaultValue`).
 
 #### `datetime(required?, options?)`
 
@@ -375,13 +428,18 @@ Validates Taiwan mobile phone numbers.
 ```typescript
 import { twMobile } from '@hy_ong/zod-kit'
 
-const phoneSchema = twMobile(true, {
-  transform: (value) => value.replace(/[-\s]/g, '')
-})
-phoneSchema.parse('0912-345-678') // ✅ "0912345678"
+const phoneSchema = twMobile(true)
+phoneSchema.parse('0912-345-678') // ✅ "0912-345-678" (separators are ignored during validation)
+
+// Output digits only by stripping "-" and whitespace
+const normalizedSchema = twMobile(true, { normalize: true })
+normalizedSchema.parse('0912-345-678') // ✅ "0912345678"
+normalizedSchema.parse('0912 345 678') // ✅ "0912345678"
 
 const optionalMobile = twMobile(false)
 ```
+
+Other options: `whitelist`, `transform`, `defaultValue`, `i18n`. `normalize` defaults to `false`; when enabled it runs after `transform`, and whitelist entries are also compared in normalized form.
 
 #### `twTel(required?, options?)`
 
@@ -547,6 +605,40 @@ const userSchema = z.object({
   message: "Passwords don't match"
 })
 ```
+
+### Form Input Types
+
+`number`, `boolean` and `text` are typed as `ZodType<Output, Input>`, so `z.input` reflects the raw form values they accept (such as `''`), while `z.output` reflects the parsed result:
+
+| Validator | `z.input` | `z.output` (required / optional) |
+|-----------|-----------|----------------------------------|
+| `number` | `string \| number \| null \| undefined` | `number` / `number \| EmptyValue` |
+| `boolean` | `boolean \| string \| number \| null \| undefined` | `boolean` / `boolean \| EmptyValue` |
+| `text` | `string \| null \| undefined` | `string` / `string \| null` |
+
+`EmptyValue` is inferred from the `emptyValue` option (default `null`).
+
+This lets form libraries keep raw input values and parsed values separate, e.g. with react-hook-form:
+
+```typescript
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { number, text } from '@hy_ong/zod-kit'
+
+const schema = z.object({
+  name: text(true),
+  age: number(false, { emptyValue: undefined })
+})
+
+const form = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
+  resolver: zodResolver(schema),
+  defaultValues: { name: '', age: '' } // '' is a valid input value
+})
+// handleSubmit receives { name: string; age: number | undefined }
+```
+
+> **Note:** If you previously annotated these validators' return values as `z.ZodNumber`, `z.ZodString` or `z.ZodBoolean`, change the annotation to `z.ZodType` (e.g. `z.ZodType<number>`).
 
 ## 🛠️ Development
 
