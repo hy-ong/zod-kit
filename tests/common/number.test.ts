@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, expectTypeOf, beforeEach } from "vitest"
+import { z } from "zod"
 import { number, setLocale } from "../../src"
 
 describe("number(true) features", () => {
@@ -242,5 +243,145 @@ describe("number(true) features", () => {
       expect(schema.parse("1,234")).toBe(1200)
       expect(schema.parse("5,678.90")).toBe(5600)
     })
+  })
+})
+
+describe("number emptyValue option", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should default to null for empty input (backward compatible)", () => {
+    const schema = number(false)
+    expect(schema.parse("")).toBe(null)
+    expect(schema.parse(null)).toBe(null)
+    expect(schema.parse(undefined)).toBe(null)
+  })
+
+  it("should output null when emptyValue is null", () => {
+    const schema = number(false, { emptyValue: null })
+    expect(schema.parse("")).toBe(null)
+    expect(schema.parse(null)).toBe(null)
+    expect(schema.parse(undefined)).toBe(null)
+    expect(schema.parse("5")).toBe(5)
+  })
+
+  it("should output undefined when emptyValue is undefined", () => {
+    const schema = number(false, { emptyValue: undefined })
+    expect(schema.parse("")).toBe(undefined)
+    expect(schema.parse(null)).toBe(undefined)
+    expect(schema.parse(undefined)).toBe(undefined)
+    expect(schema.parse(5)).toBe(5)
+  })
+
+  it('should output "" when emptyValue is ""', () => {
+    const schema = number(false, { emptyValue: "" })
+    expect(schema.parse("")).toBe("")
+    expect(schema.parse(null)).toBe("")
+    expect(schema.parse(undefined)).toBe("")
+    expect(schema.parse("1.5")).toBe(1.5)
+  })
+
+  it("should give defaultValue priority over emptyValue", () => {
+    const schema = number(false, { emptyValue: undefined, defaultValue: 10 })
+    expect(schema.parse("")).toBe(10)
+    expect(schema.parse(undefined)).toBe(10)
+    expect(schema.parse(3)).toBe(3)
+  })
+
+  it("should fall back to emptyValue when defaultValue is null", () => {
+    const schema = number(false, { emptyValue: undefined, defaultValue: null })
+    expect(schema.parse("")).toBe(undefined)
+  })
+
+  it("should skip other validations for empty values", () => {
+    const schema = number(false, { emptyValue: undefined, min: 5, positive: true, type: "integer" })
+    expect(schema.parse("")).toBe(undefined)
+    expect(() => schema.parse(1)).toThrow("Must be at least 5")
+  })
+
+  it("should still report required for empty input when required", () => {
+    for (const emptyValue of [null, undefined, ""] as const) {
+      const schema = number(true, { emptyValue })
+      expect(() => schema.parse("")).toThrow("Required")
+      expect(() => schema.parse(null)).toThrow("Required")
+      expect(() => schema.parse(undefined)).toThrow("Required")
+      expect(schema.parse(1)).toBe(1)
+    }
+  })
+
+  it("should work inside z.object", () => {
+    const schema = z.object({ amount: number(false, { emptyValue: undefined }) })
+    expect(schema.parse({ amount: "" })).toEqual({ amount: undefined })
+    expect(schema.parse({})).toEqual({})
+    expect(schema.parse({ amount: "12" })).toEqual({ amount: 12 })
+  })
+})
+
+describe("number whitespaceAsEmpty option", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should keep parsing whitespace-only strings as 0 by default (backward compatible)", () => {
+    expect(number(false).parse("  ")).toBe(0)
+    expect(number(true).parse("  ")).toBe(0)
+  })
+
+  it("should report required for whitespace-only strings when required", () => {
+    const schema = number(true, { whitespaceAsEmpty: true })
+    expect(() => schema.parse("  ")).toThrow("Required")
+    expect(() => schema.parse("\t\n")).toThrow("Required")
+    expect(schema.parse(" 12 ")).toBe(12)
+  })
+
+  it("should output emptyValue for whitespace-only strings when optional", () => {
+    expect(number(false, { whitespaceAsEmpty: true }).parse("  ")).toBe(null)
+    expect(number(false, { whitespaceAsEmpty: true, emptyValue: undefined }).parse("  ")).toBe(undefined)
+    expect(number(false, { whitespaceAsEmpty: true, emptyValue: "" }).parse("  ")).toBe("")
+  })
+
+  it("should output defaultValue for whitespace-only strings when set", () => {
+    expect(number(false, { whitespaceAsEmpty: true, defaultValue: 7 }).parse("   ")).toBe(7)
+    expect(number(true, { whitespaceAsEmpty: true, defaultValue: 7 }).parse("   ")).toBe(7)
+  })
+
+  it("should not apply transform to whitespace-only strings", () => {
+    const schema = number(false, { whitespaceAsEmpty: true, transform: (v) => v + 1 })
+    expect(schema.parse("  ")).toBe(null)
+    expect(schema.parse("1")).toBe(2)
+  })
+})
+
+describe("number type inference", () => {
+  it("should infer output types", () => {
+    expectTypeOf<z.output<ReturnType<typeof number<true>>>>().toEqualTypeOf<number>()
+
+    const optional = number(false)
+    expectTypeOf<z.output<typeof optional>>().toEqualTypeOf<number | null>()
+
+    const defaultOptional = number()
+    expectTypeOf<z.output<typeof defaultOptional>>().toEqualTypeOf<number | null>()
+
+    const required = number(true)
+    expectTypeOf<z.output<typeof required>>().toEqualTypeOf<number>()
+
+    const requiredUndefined = number(true, { emptyValue: undefined })
+    expectTypeOf<z.output<typeof requiredUndefined>>().toEqualTypeOf<number>()
+
+    const nullEmpty = number(false, { emptyValue: null })
+    expectTypeOf<z.output<typeof nullEmpty>>().toEqualTypeOf<number | null>()
+
+    const undefinedEmpty = number(false, { emptyValue: undefined })
+    expectTypeOf<z.output<typeof undefinedEmpty>>().toEqualTypeOf<number | undefined>()
+
+    const stringEmpty = number(false, { emptyValue: "" })
+    expectTypeOf<z.output<typeof stringEmpty>>().toEqualTypeOf<number | "">()
+  })
+
+  it("should infer input types that accept preprocessed values", () => {
+    const schema = number(false, { emptyValue: undefined })
+    expectTypeOf<z.input<typeof schema>>().toEqualTypeOf<string | number | null | undefined>()
+    expectTypeOf<z.input<ReturnType<typeof number<true>>>>().toEqualTypeOf<string | number | null | undefined>()
+
+    const form = z.object({ amount: number(true) })
+    expectTypeOf<{ amount: "" }>().toExtend<z.input<typeof form>>()
+    expectTypeOf<z.output<typeof form>>().toEqualTypeOf<{ amount: number }>()
   })
 })

@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, expectTypeOf, beforeEach } from "vitest"
+import { z } from "zod"
 import { boolean, setLocale } from "../../src"
 
 describe("boolean", () => {
@@ -362,5 +363,105 @@ describe("boolean", () => {
       expect(() => schema.parse("NO")).toThrow("Must be True")
       expect(() => schema.parse("N")).toThrow("Must be True")
     })
+  })
+})
+
+describe("boolean emptyValue option", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should default to null for empty input (backward compatible)", () => {
+    const schema = boolean(false)
+    expect(schema.parse("")).toBe(null)
+    expect(schema.parse(null)).toBe(null)
+    expect(schema.parse(undefined)).toBe(null)
+  })
+
+  it("should output null when emptyValue is null", () => {
+    const schema = boolean(false, { emptyValue: null })
+    expect(schema.parse("")).toBe(null)
+    expect(schema.parse(undefined)).toBe(null)
+    expect(schema.parse("yes")).toBe(true)
+  })
+
+  it("should output undefined when emptyValue is undefined", () => {
+    const schema = boolean(false, { emptyValue: undefined })
+    expect(schema.parse("")).toBe(undefined)
+    expect(schema.parse(null)).toBe(undefined)
+    expect(schema.parse(undefined)).toBe(undefined)
+    expect(schema.parse("false")).toBe(false)
+  })
+
+  it('should output "" when emptyValue is ""', () => {
+    const schema = boolean(false, { emptyValue: "" })
+    expect(schema.parse("")).toBe("")
+    expect(schema.parse(null)).toBe("")
+    expect(schema.parse(undefined)).toBe("")
+    expect(schema.parse(1)).toBe(true)
+  })
+
+  it("should give defaultValue priority over emptyValue", () => {
+    const schema = boolean(false, { emptyValue: undefined, defaultValue: false })
+    expect(schema.parse("")).toBe(false)
+    expect(schema.parse(undefined)).toBe(false)
+  })
+
+  it("should still report required for empty input when required", () => {
+    for (const emptyValue of [null, undefined, ""] as const) {
+      const schema = boolean(true, { emptyValue })
+      expect(() => schema.parse("")).toThrow("Required")
+      expect(() => schema.parse(null)).toThrow("Required")
+      expect(() => schema.parse(undefined)).toThrow("Required")
+      expect(schema.parse(true)).toBe(true)
+    }
+  })
+
+  it("should work with strict mode", () => {
+    const schema = boolean(false, { strict: true, emptyValue: undefined })
+    expect(schema.parse("")).toBe(undefined)
+    expect(schema.parse(true)).toBe(true)
+    expect(() => schema.parse("true")).toThrow()
+  })
+
+  it("should fail shouldBe for empty values (same as null)", () => {
+    const schema = boolean(false, { shouldBe: true, emptyValue: undefined })
+    expect(() => schema.parse("")).toThrow("Must be True")
+    expect(boolean(false, { shouldBe: true }).safeParse("").success).toBe(false)
+  })
+
+  it("should work inside z.object", () => {
+    const schema = z.object({ agree: boolean(false, { emptyValue: undefined }) })
+    expect(schema.parse({ agree: "" })).toEqual({ agree: undefined })
+    expect(schema.parse({ agree: "on" })).toEqual({ agree: true })
+  })
+})
+
+describe("boolean type inference", () => {
+  it("should infer output types", () => {
+    const optional = boolean(false)
+    expectTypeOf<z.output<typeof optional>>().toEqualTypeOf<boolean | null>()
+
+    const defaultOptional = boolean()
+    expectTypeOf<z.output<typeof defaultOptional>>().toEqualTypeOf<boolean | null>()
+
+    const required = boolean(true)
+    expectTypeOf<z.output<typeof required>>().toEqualTypeOf<boolean>()
+
+    const nullEmpty = boolean(false, { emptyValue: null })
+    expectTypeOf<z.output<typeof nullEmpty>>().toEqualTypeOf<boolean | null>()
+
+    const undefinedEmpty = boolean(false, { emptyValue: undefined })
+    expectTypeOf<z.output<typeof undefinedEmpty>>().toEqualTypeOf<boolean | undefined>()
+
+    const stringEmpty = boolean(false, { emptyValue: "" })
+    expectTypeOf<z.output<typeof stringEmpty>>().toEqualTypeOf<boolean | "">()
+  })
+
+  it("should infer input types that accept preprocessed values", () => {
+    const schema = boolean(true)
+    expectTypeOf<z.input<typeof schema>>().toEqualTypeOf<boolean | string | number | null | undefined>()
+
+    const form = z.object({ agree: boolean(false) })
+    expectTypeOf<{ agree: "" }>().toExtend<z.input<typeof form>>()
+    expectTypeOf<z.output<typeof form>>().toEqualTypeOf<{ agree: boolean | null }>()
   })
 })

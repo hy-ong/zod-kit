@@ -8,7 +8,7 @@
  * @version 0.0.5
  */
 
-import { z, ZodBoolean, ZodNullable, ZodType } from "zod"
+import { z, ZodType } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
@@ -40,26 +40,40 @@ export type BooleanMessages = {
  * @property {unknown[]} [falsyValues] - Array of values that should be treated as false
  * @property {boolean} [strict=false] - If true, only accepts actual boolean values
  * @property {Function} [transform] - Custom transformation function for boolean values
+ * @property {null | undefined | ""} [emptyValue=null] - Value output for empty input when the field is optional and no defaultValue is set
  * @property {Record<Locale, BooleanMessages>} [i18n] - Custom error messages for different locales
  */
-export type BooleanOptions<IsRequired extends boolean = true> = {
+export type BooleanOptions<IsRequired extends boolean = true, EmptyValue extends BooleanEmptyValue = null> = {
   defaultValue?: IsRequired extends true ? boolean : boolean | null
   shouldBe?: boolean
   truthyValues?: unknown[]
   falsyValues?: unknown[]
   strict?: boolean
   transform?: (value: boolean) => boolean
+  emptyValue?: EmptyValue
   i18n?: Partial<Record<Locale, Partial<BooleanMessages>>>
 }
+
+/**
+ * Allowed values for the `emptyValue` option
+ */
+export type BooleanEmptyValue = null | undefined | ""
+
+/**
+ * Input accepted by the boolean schema (before preprocessing).
+ * Covers the default truthy/falsy values (booleans, "true"/"false"/"yes"/"no"/"on"/"off"/"1"/"0", 1/0) and empty values.
+ */
+export type BooleanInput = boolean | string | number | null | undefined
 
 /**
  * Type alias for boolean validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
+ * @template EmptyValue - Output value for empty input when optional (default null)
  * @typedef BooleanSchema
- * @description Returns ZodBoolean if required, ZodNullable<ZodBoolean> if optional
+ * @description Output is `boolean` if required, `boolean | EmptyValue` if optional; input is {@link BooleanInput}
  */
-export type BooleanSchema<IsRequired extends boolean> = IsRequired extends true ? ZodBoolean : ZodNullable<ZodBoolean>
+export type BooleanSchema<IsRequired extends boolean, EmptyValue extends BooleanEmptyValue = null> = ZodType<IsRequired extends true ? boolean : boolean | EmptyValue, BooleanInput>
 
 /**
  * Creates a Zod schema for boolean validation with flexible value interpretation
@@ -113,23 +127,26 @@ export type BooleanSchema<IsRequired extends boolean> = IsRequired extends true 
  *
  * // Optional with default
  * const optionalSchema = boolean(false, { defaultValue: false })
+ *
+ * // Optional, empty input becomes undefined instead of null
+ * const undefinedSchema = boolean(false, { emptyValue: undefined }) // z.output: boolean | undefined
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link BooleanOptions} for all available configuration options
  */
-export function boolean<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<BooleanOptions<IsRequired>, 'required'>): BooleanSchema<IsRequired> {
-  const {
-    defaultValue = null,
-    shouldBe,
-    truthyValues = [true, "true", 1, "1", "yes", "on"],
-    falsyValues = [false, "false", 0, "0", "no", "off"],
-    strict = false,
-    transform,
-    i18n,
-  } = options ?? {}
+export function boolean<IsRequired extends boolean = false, EmptyValue extends BooleanEmptyValue = null>(
+  required?: IsRequired,
+  options?: Omit<BooleanOptions<IsRequired, EmptyValue>, "required">
+): BooleanSchema<IsRequired, EmptyValue> {
+  const { defaultValue, shouldBe, truthyValues = [true, "true", 1, "1", "yes", "on"], falsyValues = [false, "false", 0, "0", "no", "off"], strict = false, transform, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
+
+  // Distinguish "emptyValue not provided" (default null) from an explicit `emptyValue: undefined`
+  const emptyValue: BooleanEmptyValue = options && "emptyValue" in options ? options.emptyValue : null
+  const actualDefaultValue = defaultValue ?? emptyValue
+  const isEmpty = (val: unknown): val is null | undefined | "" => val === null || val === undefined || val === ""
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof BooleanMessages, params?: Record<string, any>) => {
@@ -146,7 +163,7 @@ export function boolean<IsRequired extends boolean = false>(required?: IsRequire
 
   let result: ZodType = z.preprocess(
     (val) => {
-      if (val === "" || val === undefined || val === null) return defaultValue
+      if (val === "" || val === undefined || val === null) return actualDefaultValue
 
       if (strict && typeof val !== "boolean" && val !== null) {
         return val // Let it fail in validation
@@ -168,11 +185,11 @@ export function boolean<IsRequired extends boolean = false>(required?: IsRequire
 
       return val
     },
-    z.union([z.literal(true), z.literal(false), z.literal(null)])
+    z.union([z.literal(true), z.literal(false), z.literal(null), z.undefined(), z.literal("")])
   )
 
-  if (isRequired && defaultValue === null) {
-    result = result.refine((val) => val !== null, { message: getMessage("required") })
+  if (isRequired && isEmpty(actualDefaultValue)) {
+    result = result.refine((val) => !isEmpty(val), { message: getMessage("required") })
   }
 
   if (shouldBe === true) {
@@ -184,11 +201,11 @@ export function boolean<IsRequired extends boolean = false>(required?: IsRequire
   if (strict) {
     result = result.refine(
       (val) => {
-        return val === null || typeof val === "boolean"
+        return isEmpty(val) || typeof val === "boolean"
       },
       { message: getMessage("invalid") }
     )
   }
 
-  return result as IsRequired extends true ? ZodBoolean : ZodNullable<ZodBoolean>
+  return result as unknown as BooleanSchema<IsRequired, EmptyValue>
 }

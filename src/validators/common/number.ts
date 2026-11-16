@@ -8,7 +8,7 @@
  * @version 0.0.5
  */
 
-import { z, ZodNullable, ZodNumber } from "zod"
+import { z, ZodType } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
@@ -66,9 +66,11 @@ export type NumberMessages = {
  * @property {boolean} [finite=true] - Whether to reject Infinity and -Infinity
  * @property {Function} [transform] - Custom transformation function for number values
  * @property {boolean} [parseCommas=false] - Whether to parse comma-separated numbers (e.g., "1,234")
+ * @property {null | undefined | ""} [emptyValue=null] - Value output for empty input when the field is optional and no defaultValue is set
+ * @property {boolean} [whitespaceAsEmpty=false] - Treat whitespace-only strings as empty (required error / emptyValue) instead of parsing them as 0
  * @property {Record<Locale, NumberMessages>} [i18n] - Custom error messages for different locales
  */
-export type NumberOptions<IsRequired extends boolean = true> = {
+export type NumberOptions<IsRequired extends boolean = true, EmptyValue extends NumberEmptyValue = null> = {
   min?: number
   max?: number
   defaultValue?: IsRequired extends true ? number : number | null
@@ -82,17 +84,30 @@ export type NumberOptions<IsRequired extends boolean = true> = {
   finite?: boolean
   transform?: (value: number) => number
   parseCommas?: boolean // Parse "1,234" as 1234
+  emptyValue?: EmptyValue
+  whitespaceAsEmpty?: boolean
   i18n?: Partial<Record<Locale, Partial<NumberMessages>>>
 }
+
+/**
+ * Allowed values for the `emptyValue` option
+ */
+export type NumberEmptyValue = null | undefined | ""
+
+/**
+ * Input accepted by the number schema (before preprocessing)
+ */
+export type NumberInput = string | number | null | undefined
 
 /**
  * Type alias for number validation schema based on required flag
  *
  * @template IsRequired - Whether the field is required
+ * @template EmptyValue - Output value for empty input when optional (default null)
  * @typedef NumberSchema
- * @description Returns ZodNumber if required, ZodNullable<ZodNumber> if optional
+ * @description Output is `number` if required, `number | EmptyValue` if optional; input is {@link NumberInput}
  */
-export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ? ZodNumber : ZodNullable<ZodNumber>
+export type NumberSchema<IsRequired extends boolean, EmptyValue extends NumberEmptyValue = null> = ZodType<IsRequired extends true ? number : number | EmptyValue, NumberInput>
 
 /**
  * Creates a Zod schema for number validation with comprehensive constraints
@@ -161,13 +176,42 @@ export type NumberSchema<IsRequired extends boolean> = IsRequired extends true ?
  *
  * // Optional with default
  * const optionalSchema = number(false, { defaultValue: 0 })
+ *
+ * // Optional, empty input becomes undefined instead of null
+ * const undefinedSchema = number(false, { emptyValue: undefined }) // z.output: number | undefined
+ *
+ * // Treat whitespace-only strings as empty
+ * const wsSchema = number(true, { whitespaceAsEmpty: true })
+ * wsSchema.parse("  ") // ✗ Invalid (required)
  * ```
  *
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link NumberOptions} for all available configuration options
  */
-export function number<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<NumberOptions<IsRequired>, "required">): NumberSchema<IsRequired> {
-  const { min, max, defaultValue, type = "both", positive, negative, nonNegative, nonPositive, multipleOf, precision, finite = true, transform, parseCommas = false, i18n } = options ?? {}
+export function number<IsRequired extends boolean = false, EmptyValue extends NumberEmptyValue = null>(
+  required?: IsRequired,
+  options?: Omit<NumberOptions<IsRequired, EmptyValue>, "required">
+): NumberSchema<IsRequired, EmptyValue> {
+  const {
+    min,
+    max,
+    defaultValue,
+    type = "both",
+    positive,
+    negative,
+    nonNegative,
+    nonPositive,
+    multipleOf,
+    precision,
+    finite = true,
+    transform,
+    parseCommas = false,
+    whitespaceAsEmpty = false,
+    i18n,
+  } = options ?? {}
+
+  // Distinguish "emptyValue not provided" (default null) from an explicit `emptyValue: undefined`
+  const emptyValue: NumberEmptyValue = options && "emptyValue" in options ? options.emptyValue : null
 
   const isRequired = required ?? (false as IsRequired)
 
@@ -185,7 +229,8 @@ export function number<IsRequired extends boolean = false>(required?: IsRequired
   }
 
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? null
+  const actualDefaultValue = defaultValue ?? emptyValue
+  const isEmpty = (val: unknown): val is null | undefined | "" => val === null || val === undefined || val === ""
 
   const schema = z
     .preprocess(
@@ -197,6 +242,10 @@ export function number<IsRequired extends boolean = false>(required?: IsRequired
         // Handle string input
         if (typeof val === "string") {
           let processedVal = val.trim()
+
+          if (whitespaceAsEmpty && processedVal === "") {
+            return actualDefaultValue
+          }
 
           // Parse comma-separated numbers like "1,234.56"
           if (parseCommas) {
@@ -227,11 +276,11 @@ export function number<IsRequired extends boolean = false>(required?: IsRequired
 
         return val
       },
-      z.union([z.number(), z.null(), z.nan(), z.custom<number>((val) => val === Infinity || val === -Infinity)])
+      z.union([z.number(), z.null(), z.undefined(), z.literal(""), z.nan(), z.custom<number>((val) => val === Infinity || val === -Infinity)])
     )
     .superRefine((val, ctx) => {
       // Required check first
-      if (isRequired && val === null) {
+      if (isRequired && isEmpty(val)) {
         ctx.addIssue({
           code: "custom",
           message: getMessage("required"),
@@ -239,7 +288,7 @@ export function number<IsRequired extends boolean = false>(required?: IsRequired
         return
       }
 
-      if (val === null) return
+      if (isEmpty(val)) return
 
       // Type validation for invalid inputs (NaN)
       if (isNaN(val)) {
@@ -355,5 +404,5 @@ export function number<IsRequired extends boolean = false>(required?: IsRequired
       }
     })
 
-  return schema as unknown as NumberSchema<IsRequired>
+  return schema as unknown as NumberSchema<IsRequired, EmptyValue>
 }
