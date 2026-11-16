@@ -37,12 +37,16 @@ export type TwMobileMessages = {
  * @property {Function} [transform] - Custom transformation function for mobile number
  * @property {string | null} [defaultValue] - Default value when input is empty
  * @property {Record<Locale, TwMobileMessages>} [i18n] - Custom error messages for different locales
+ * @property {boolean} [normalize=false] - When true, strips `-` and whitespace separators from the output
+ *   (e.g. "0912-345-678" → "0912345678"). Applied after `transform`; whitelist entries are compared in
+ *   normalized form as well. When false (default), the trimmed input is returned unchanged.
  */
 export type TwMobileOptions<IsRequired extends boolean = true> = {
   whitelist?: string[]
   transform?: (value: string) => string
   defaultValue?: IsRequired extends true ? string : string | null
   i18n?: Partial<Record<Locale, Partial<TwMobileMessages>>>
+  normalize?: boolean
 }
 
 /**
@@ -53,6 +57,11 @@ export type TwMobileOptions<IsRequired extends boolean = true> = {
  * @description Returns ZodString if required, ZodNullable<ZodString> if optional
  */
 export type TwMobileSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+
+/**
+ * Removes `-` and whitespace separators from a mobile number
+ */
+const stripSeparators = (value: string): string => value.replace(/[-\s]/g, "")
 
 /**
  * Validates Taiwan mobile phone number format
@@ -81,7 +90,7 @@ const validateTaiwanMobile = (value: string): boolean => {
   // Valid prefixes: 090, 091, 092, 093, 094, 095, 096, 097, 098, 099
 
   // Remove common separators for validation
-  const cleanValue = value.replace(/[-\s]/g, "")
+  const cleanValue = stripSeparators(value)
 
   return /^09[0-9]\d{7}$/.test(cleanValue)
 }
@@ -141,6 +150,11 @@ const validateTaiwanMobile = (value: string): boolean => {
  * transformSchema.parse("091-234-5678") // ✓ Valid (formatted input)
  * transformSchema.parse("091 234 5678") // ✓ Valid (spaced input)
  *
+ * // Output digits only
+ * const normalizedSchema = twMobile(true, { normalize: true })
+ * normalizedSchema.parse("0912-345-678") // ✓ "0912345678"
+ * normalizedSchema.parse("0912 345 678") // ✓ "0912345678"
+ *
  * // With custom error messages
  * const customSchema = twMobile(false, {
  *   i18n: {
@@ -155,7 +169,7 @@ const validateTaiwanMobile = (value: string): boolean => {
  * @see {@link validateTaiwanMobile} for validation logic details
  */
 export function twMobile<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwMobileOptions<IsRequired>, 'required'>): TwMobileSchema<IsRequired> {
-  const { whitelist, transform, defaultValue, i18n } = options ?? {}
+  const { whitelist, transform, defaultValue, i18n, normalize = false } = options ?? {}
 
   const isRequired = required ?? false as IsRequired
 
@@ -201,6 +215,12 @@ export function twMobile<IsRequired extends boolean = false>(required?: IsRequir
       processed = transform(processed)
     }
 
+    if (normalize) {
+      const stripped = stripSeparators(processed)
+      // Keep separator-only input as-is so it still fails with "invalid" rather than "required"
+      if (stripped !== "") processed = stripped
+    }
+
     return processed
   }
 
@@ -219,7 +239,7 @@ export function twMobile<IsRequired extends boolean = false>(required?: IsRequir
     if (!isRequired && val === "") return
 
     // Allowlist check (if in allowlist, accept regardless of format)
-    if (whitelist && whitelist.length > 0 && whitelist.includes(val)) {
+    if (whitelist && whitelist.length > 0 && (whitelist.includes(val) || (normalize && whitelist.some((w) => stripSeparators(w) === val)))) {
       return
     }
 

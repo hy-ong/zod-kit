@@ -377,3 +377,53 @@ describe("Taiwan twMobile(true) validator", () => {
     })
   })
 })
+
+describe("Taiwan twMobile normalize option", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should keep separators by default (normalize: false)", () => {
+    const schema = twMobile(true)
+    expect(schema.parse("0912-345-678")).toBe("0912-345-678")
+    expect(schema.parse("0912 345 678")).toBe("0912 345 678")
+  })
+
+  it("should output digits only when normalize is true", () => {
+    const schema = twMobile(true, { normalize: true })
+    expect(schema.parse("0912-345-678")).toBe("0912345678")
+    expect(schema.parse("0912 345 678")).toBe("0912345678")
+    expect(schema.parse("  0912-345 678  ")).toBe("0912345678")
+    expect(schema.parse("0912345678")).toBe("0912345678")
+  })
+
+  it("should keep optional empty handling when normalize is true", () => {
+    const schema = twMobile(false, { normalize: true })
+    expect(schema.parse("")).toBe(null)
+    expect(schema.parse(null)).toBe(null)
+    expect(schema.parse("0912-345-678")).toBe("0912345678")
+  })
+
+  it("should still reject invalid numbers when normalize is true", () => {
+    const schema = twMobile(true, { normalize: true })
+    expect(() => schema.parse("0812-345-678")).toThrow("Invalid Taiwan mobile phone format")
+    expect(() => schema.parse("-")).toThrow("Invalid Taiwan mobile phone format")
+    expect(() => schema.parse("")).toThrow("Required")
+  })
+
+  it("should normalize after custom transform", () => {
+    const schema = twMobile(true, { normalize: true, transform: (v) => v.replace(/^\+886/, "0") })
+    expect(schema.parse("+886912-345-678")).toBe("0912345678")
+  })
+
+  it("should match whitelist entries in normalized form", () => {
+    const schema = twMobile(true, { normalize: true, whitelist: ["0800-000-000"] })
+    expect(schema.parse("0800 000 000")).toBe("0800000000")
+    expect(schema.parse("0800000000")).toBe("0800000000")
+  })
+
+  it("should use zh-TW messages when normalize is true", () => {
+    setLocale("zh-TW")
+    const schema = twMobile(true, { normalize: true })
+    expect(schema.parse("0912-345-678")).toBe("0912345678")
+    expect(() => schema.parse("0812-345-678")).toThrow("無效的手機號碼格式")
+  })
+})
