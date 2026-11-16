@@ -115,7 +115,8 @@
       "endsWith": "Phải kết thúc bằng ${endsWith}",
       "includes": "Phải bao gồm ${includes}",
       "excludes": "Không được chứa ${excludes}",
-      "invalid": "Định dạng không hợp lệ"
+      "invalid": "Định dạng không hợp lệ",
+      "notString": "Phải là chuỗi ký tự"
     },
     "date": {
       "required": "Bắt buộc",

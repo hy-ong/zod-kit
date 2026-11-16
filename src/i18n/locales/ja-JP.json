@@ -115,7 +115,8 @@
       "endsWith": "「${endsWith}」で終わる必要があります",
       "includes": "「${includes}」を含む必要があります",
       "excludes": "「${excludes}」を含めることはできません",
-      "invalid": "形式が無効です"
+      "invalid": "形式が無効です",
+      "notString": "文字列である必要があります"
     },
     "date": {
       "required": "必須項目です",

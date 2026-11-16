@@ -8,7 +8,7 @@
  * @version 0.0.5
  */
 
-import { z, ZodNullable, ZodString } from "zod"
+import { z, ZodType } from "zod"
 import { t } from "../../i18n"
 import { getLocale, type Locale } from "../../config"
 
@@ -25,6 +25,7 @@ import { getLocale, type Locale } from "../../config"
  * @property {string} [includes] - Message when text doesn't contain required string
  * @property {string} [excludes] - Message when text contains forbidden string
  * @property {string} [invalid] - Message when text doesn't match regex pattern
+ * @property {string} [notString] - Message when input is not a string (only with `strict: true`)
  */
 export type TextMessages = {
   required?: string
@@ -36,6 +37,7 @@ export type TextMessages = {
   includes?: string
   excludes?: string
   invalid?: string
+  notString?: string
 }
 
 /**
@@ -56,6 +58,8 @@ export type TextMessages = {
  * @property {"upper" | "lower" | "title" | "none"} [casing="none"] - Case transformation
  * @property {Function} [transform] - Custom transformation function for text
  * @property {boolean} [notEmpty] - Whether to reject whitespace-only strings
+ * @property {boolean} [strict=false] - Reject non-string input (numbers, Date, boolean, ...) instead of converting with String()
+ * @property {boolean} [whitespaceAsEmpty=false] - Treat whitespace-only input as empty (required → required error, optional → null / defaultValue), regardless of trimMode
  * @property {string | null} [defaultValue] - Default value when input is empty
  * @property {Record<Locale, TextMessages>} [i18n] - Custom error messages for different locales
  */
@@ -71,6 +75,8 @@ export type TextOptions<IsRequired extends boolean = true> = {
   casing?: "upper" | "lower" | "title" | "none"
   transform?: (value: string) => string
   notEmpty?: boolean
+  strict?: boolean
+  whitespaceAsEmpty?: boolean
   defaultValue?: IsRequired extends true ? string : string | null
   i18n?: Partial<Record<Locale, Partial<TextMessages>>>
 }
@@ -80,9 +86,12 @@ export type TextOptions<IsRequired extends boolean = true> = {
  *
  * @template IsRequired - Whether the field is required
  * @typedef TextSchema
- * @description Returns ZodString if required, ZodNullable<ZodString> if optional
+ * @description
+ * The actual schema is a preprocess pipe, so it is typed as `ZodType<Output, Input>`:
+ * - Input: `string | null | undefined` (what forms usually hold; non-strict mode also coerces other values at runtime)
+ * - Output: `string` if required, `string | null` if optional
  */
-export type TextSchema<IsRequired extends boolean> = IsRequired extends true ? ZodString : ZodNullable<ZodString>
+export type TextSchema<IsRequired extends boolean> = ZodType<IsRequired extends true ? string : string | null, string | null | undefined>
 
 /**
  * Creates a Zod schema for text validation with comprehensive string processing
@@ -148,6 +157,14 @@ export type TextSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * notEmptySchema.parse("hello") // ✓ Valid
  * notEmptySchema.parse("   ") // ✗ Invalid
  *
+ * // Whitespace-only treated as empty
+ * const blankSchema = text(false, { trimMode: "none", whitespaceAsEmpty: true })
+ * blankSchema.parse("   ") // ✓ Valid (result: null)
+ *
+ * // Strict: reject non-string input
+ * const strictSchema = text(true, { strict: true })
+ * strictSchema.parse(123) // ✗ Invalid (not a string)
+ *
  * // Optional with default
  * const optionalSchema = text(false, { defaultValue: "default text" })
  * ```
@@ -156,7 +173,7 @@ export type TextSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * @see {@link TextOptions} for all available configuration options
  */
 export function text<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TextOptions<IsRequired>, 'required'>): TextSchema<IsRequired> {
-  const { minLength, maxLength, startsWith, endsWith, includes, excludes, regex, trimMode = "trim", casing = "none", transform, notEmpty, defaultValue, i18n } = options ?? {}
+  const { minLength, maxLength, startsWith, endsWith, includes, excludes, regex, trimMode = "trim", casing = "none", transform, notEmpty, strict = false, whitespaceAsEmpty = false, defaultValue, i18n } = options ?? {}
 
   const isRequired = required ?? false as IsRequired
 
@@ -210,8 +227,18 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
       return actualDefaultValue
     }
 
-    let processed = String(val)
-    processed = applyTrim(processed)
+    // In strict mode, non-string input is passed through untouched so z.string() rejects it
+    if (typeof val !== "string" && strict) {
+      return val
+    }
+
+    let processed = applyTrim(String(val))
+
+    // Opt-in: whitespace-only input (checked after trimming, so it also works with trimMode "none") is treated as empty
+    if (whitespaceAsEmpty && processed.trim() === "") {
+      return actualDefaultValue
+    }
+
     processed = applyCasing(processed)
 
     if (transform) {
@@ -221,7 +248,8 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     return processed
   }
 
-  const baseSchema = isRequired ? z.preprocess(preprocessFn, z.string()) : z.preprocess(preprocessFn, z.string().nullable())
+  const stringSchema = z.string({ error: () => getMessage("notString") })
+  const baseSchema = isRequired ? z.preprocess(preprocessFn, stringSchema) : z.preprocess(preprocessFn, stringSchema.nullable())
 
   // Single superRefine with all validations for better performance
   const schema = baseSchema.superRefine((val, ctx) => {

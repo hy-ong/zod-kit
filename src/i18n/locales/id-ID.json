@@ -115,7 +115,8 @@
       "endsWith": "Harus diakhiri dengan ${endsWith}",
       "includes": "Harus mengandung ${includes}",
       "excludes": "Tidak boleh mengandung ${excludes}",
-      "invalid": "Format tidak valid"
+      "invalid": "Format tidak valid",
+      "notString": "Harus berupa string"
     },
     "date": {
       "required": "Wajib diisi",

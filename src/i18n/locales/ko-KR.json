@@ -115,7 +115,8 @@
       "endsWith": "「${endsWith}」으로 끝나야 합니다",
       "includes": "「${includes}」을(를) 포함해야 합니다",
       "excludes": "「${excludes}」을(를) 포함할 수 없습니다",
-      "invalid": "형식이 올바르지 않습니다"
+      "invalid": "형식이 올바르지 않습니다",
+      "notString": "문자열이어야 합니다"
     },
     "date": {
       "required": "필수 항목입니다",

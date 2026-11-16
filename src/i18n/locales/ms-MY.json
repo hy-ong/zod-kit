@@ -115,7 +115,8 @@
       "endsWith": "Mesti berakhir dengan ${endsWith}",
       "includes": "Mesti mengandungi ${includes}",
       "excludes": "Tidak boleh mengandungi ${excludes}",
-      "invalid": "Format tidak sah"
+      "invalid": "Format tidak sah",
+      "notString": "Mesti berupa rentetan"
     },
     "date": {
       "required": "Wajib diisi",

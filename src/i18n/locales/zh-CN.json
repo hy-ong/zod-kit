@@ -115,7 +115,8 @@
       "endsWith": "必须以「${endsWith}」结尾",
       "includes": "必须包含「${includes}」",
       "excludes": "不得包含「${excludes}」",
-      "invalid": "格式错误"
+      "invalid": "格式错误",
+      "notString": "必须为文本"
     },
     "date": {
       "required": "必填",

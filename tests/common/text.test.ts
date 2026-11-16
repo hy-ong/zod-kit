@@ -1,4 +1,5 @@
-import { describe, expect, it, beforeEach } from "vitest"
+import { describe, expect, expectTypeOf, it, beforeEach } from "vitest"
+import { z } from "zod"
 import { Locale, setLocale, text } from "../../src"
 
 const locales = [
@@ -281,5 +282,136 @@ describe("text(true) complex scenarios", () => {
     expect(schema.parse("")).toBe(null)
     expect(schema.parse(undefined)).toBe(null)
     expect(schema.parse("test12345")).toBe("test12345")
+  })
+})
+
+describe("text() default behavior is unchanged", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should keep whitespace-only optional input as empty string after trim (no whitespaceAsEmpty)", () => {
+    const schema = text(false)
+    expect(schema.parse("   ")).toBe("")
+    expect(schema.parse("")).toBe(null)
+  })
+
+  it("should report required for whitespace-only required input after trim", () => {
+    const schema = text(true)
+    expect(() => schema.parse("   ")).toThrow("Required")
+  })
+
+  it("should still coerce non-string input with String() when not strict", () => {
+    const schema = text(true)
+    expect(schema.parse(123)).toBe("123")
+    expect(schema.parse(true)).toBe("true")
+  })
+})
+
+describe("text() strict option", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should reject non-string input", () => {
+    const schema = text(true, { strict: true })
+    expect(() => schema.parse(123)).toThrow("Must be a string")
+    expect(() => schema.parse(true)).toThrow("Must be a string")
+    expect(() => schema.parse(new Date())).toThrow("Must be a string")
+    expect(() => schema.parse({})).toThrow("Must be a string")
+    expect(() => schema.parse([])).toThrow("Must be a string")
+  })
+
+  it("should reject non-string input when optional", () => {
+    const schema = text(false, { strict: true })
+    expect(() => schema.parse(0)).toThrow("Must be a string")
+    expect(() => schema.parse(false)).toThrow("Must be a string")
+  })
+
+  it("should still accept strings and apply processing", () => {
+    const schema = text(true, { strict: true, casing: "upper" })
+    expect(schema.parse("  abc  ")).toBe("ABC")
+  })
+
+  it("should keep empty-value logic for null / undefined / empty string", () => {
+    const required = text(true, { strict: true })
+    expect(() => required.parse(null)).toThrow("Required")
+    expect(() => required.parse(undefined)).toThrow("Required")
+    expect(() => required.parse("")).toThrow("Required")
+
+    const optional = text(false, { strict: true })
+    expect(optional.parse(null)).toBe(null)
+    expect(optional.parse(undefined)).toBe(null)
+    expect(optional.parse("")).toBe(null)
+  })
+
+  it("should translate the notString message", () => {
+    const schema = text(true, { strict: true })
+    setLocale("zh-TW")
+    expect(() => schema.parse(1)).toThrow("必須為文字")
+    setLocale("ja-JP")
+    expect(() => schema.parse(1)).toThrow("文字列である必要があります")
+  })
+
+  it("should support custom notString message", () => {
+    const schema = text(true, { strict: true, i18n: { "en-US": { notString: "Text only" } } })
+    expect(() => schema.parse(1)).toThrow("Text only")
+  })
+})
+
+describe("text() whitespaceAsEmpty option", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should output null for whitespace-only optional input (default trim)", () => {
+    const schema = text(false, { whitespaceAsEmpty: true })
+    expect(schema.parse("   ")).toBe(null)
+    expect(schema.parse("")).toBe(null)
+    expect(schema.parse(" a ")).toBe("a")
+  })
+
+  it("should output null for whitespace-only optional input with trimMode none", () => {
+    const schema = text(false, { whitespaceAsEmpty: true, trimMode: "none" })
+    expect(schema.parse("   ")).toBe(null)
+    expect(schema.parse("\t\n")).toBe(null)
+    expect(schema.parse(" a ")).toBe(" a ")
+  })
+
+  it("should work with trimStart / trimEnd", () => {
+    expect(text(false, { whitespaceAsEmpty: true, trimMode: "trimStart" }).parse("  ")).toBe(null)
+    expect(text(false, { whitespaceAsEmpty: true, trimMode: "trimEnd" }).parse("  ")).toBe(null)
+  })
+
+  it("should use defaultValue for whitespace-only input", () => {
+    const schema = text(false, { whitespaceAsEmpty: true, trimMode: "none", defaultValue: "" })
+    expect(schema.parse("   ")).toBe("")
+  })
+
+  it("should report required instead of notEmpty when required", () => {
+    const schema = text(true, { notEmpty: true, whitespaceAsEmpty: true, trimMode: "none" })
+    expect(() => schema.parse("   ")).toThrow("Required")
+    expect(() => schema.parse("   ")).not.toThrow("Cannot be empty or whitespace only")
+    expect(schema.parse(" a ")).toBe(" a ")
+  })
+
+  it("should report required for whitespace-only required input with default trim", () => {
+    const schema = text(true, { notEmpty: true, whitespaceAsEmpty: true })
+    expect(() => schema.parse("   ")).toThrow("Required")
+  })
+
+  it("should output null for optional notEmpty whitespace-only input", () => {
+    const schema = text(false, { notEmpty: true, whitespaceAsEmpty: true, trimMode: "none" })
+    expect(schema.parse("   ")).toBe(null)
+  })
+
+  it("should keep reporting notEmpty when whitespaceAsEmpty is off", () => {
+    const schema = text(false, { notEmpty: true, trimMode: "none" })
+    expect(() => schema.parse("   ")).toThrow("Cannot be empty or whitespace only")
+  })
+})
+
+describe("text() type inference", () => {
+  it("should infer input / output types", () => {
+    const required = text(true)
+    const optional = text(false)
+    expectTypeOf<z.output<typeof required>>().toEqualTypeOf<string>()
+    expectTypeOf<z.output<typeof optional>>().toEqualTypeOf<string | null>()
+    expectTypeOf<z.input<typeof required>>().toEqualTypeOf<string | null | undefined>()
+    expectTypeOf<z.input<typeof optional>>().toEqualTypeOf<string | null | undefined>()
   })
 })

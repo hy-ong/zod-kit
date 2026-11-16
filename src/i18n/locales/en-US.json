@@ -115,7 +115,8 @@
       "endsWith": "Must end with ${endsWith}",
       "includes": "Must include ${includes}",
       "excludes": "Must not contain ${excludes}",
-      "invalid": "Invalid format"
+      "invalid": "Invalid format",
+      "notString": "Must be a string"
     },
     "date": {
       "required": "Required",

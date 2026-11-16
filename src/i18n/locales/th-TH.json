@@ -115,7 +115,8 @@
       "endsWith": "ต้องลงท้ายด้วย ${endsWith}",
       "includes": "ต้องมี ${includes}",
       "excludes": "ต้องไม่มี ${excludes}",
-      "invalid": "รูปแบบไม่ถูกต้อง"
+      "invalid": "รูปแบบไม่ถูกต้อง",
+      "notString": "ต้องเป็นข้อความ"
     },
     "date": {
       "required": "จำเป็นต้องกรอก",
