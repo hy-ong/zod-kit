@@ -409,7 +409,7 @@ const normalizeDateTimeValue = (value: string, format: DateTimeFormat, timezone?
  * @see {@link DateTimeOptions} for all available configuration options
  * @see {@link DateTimeFormat} for supported datetime formats
  */
-export function datetime<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<DateTimeOptions<IsRequired>, 'required'>): DateTimeSchema<IsRequired> {
+export function datetime<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<DateTimeOptions<IsRequired>, "required">): DateTimeSchema<IsRequired> {
   const {
     format = "YYYY-MM-DD HH:mm",
     min,
@@ -437,7 +437,7 @@ export function datetime<IsRequired extends boolean = false>(required?: IsRequir
     i18n,
   } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

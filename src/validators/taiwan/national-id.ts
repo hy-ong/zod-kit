@@ -35,9 +35,9 @@ export type TwNationalIdMessages = {
  * - both: Accept both citizen and resident IDs
  */
 export type NationalIdType =
-  | "citizen"           // National ID card (身分證字號)
-  | "resident"          // Resident certificate (居留證號)
-  | "both"              // Both citizen and resident IDs accepted
+  | "citizen" // National ID card (身分證字號)
+  | "resident" // Resident certificate (居留證號)
+  | "both" // Both citizen and resident IDs accepted
 
 /**
  * Configuration options for Taiwan national ID validation
@@ -76,10 +76,32 @@ export type TwNationalIdSchema<IsRequired extends boolean> = IsRequired extends 
  * @description Maps the first letter of Taiwan ID to corresponding numeric code
  */
 const CITY_CODES: Record<string, number> = {
-  'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17,
-  'I': 34, 'J': 18, 'K': 19, 'L': 20, 'M': 21, 'N': 22, 'O': 35, 'P': 23,
-  'Q': 24, 'R': 25, 'S': 26, 'T': 27, 'U': 28, 'V': 29, 'W': 32, 'X': 30,
-  'Y': 31, 'Z': 33
+  A: 10,
+  B: 11,
+  C: 12,
+  D: 13,
+  E: 14,
+  F: 15,
+  G: 16,
+  H: 17,
+  I: 34,
+  J: 18,
+  K: 19,
+  L: 20,
+  M: 21,
+  N: 22,
+  O: 35,
+  P: 23,
+  Q: 24,
+  R: 25,
+  S: 26,
+  T: 27,
+  U: 28,
+  V: 29,
+  W: 32,
+  X: 30,
+  Y: 31,
+  Z: 33,
 }
 
 /**
@@ -110,7 +132,7 @@ const validateCitizenId = (value: string): boolean => {
   }
 
   const letter = value[0]
-  const digits = value.slice(1).split('').map(Number)
+  const digits = value.slice(1).split("").map(Number)
 
   // 獲取縣市代碼
   const cityCode = CITY_CODES[letter]
@@ -158,14 +180,14 @@ const validateOldResidentId = (value: string): boolean => {
 
   const letter = value[0]
   const genderCode = value[1]
-  const digits = value.slice(2).split('').map(Number)
+  const digits = value.slice(2).split("").map(Number)
 
   // 獲取縣市代碼
   const cityCode = CITY_CODES[letter]
   if (!cityCode) return false
 
   // 性別代碼轉換
-  const genderValue = genderCode === 'A' || genderCode === 'C' ? 1 : 0
+  const genderValue = genderCode === "A" || genderCode === "C" ? 1 : 0
 
   // 計算校驗碼
   const cityDigits = [Math.floor(cityCode / 10), cityCode % 10]
@@ -208,7 +230,7 @@ const validateNewResidentId = (value: string): boolean => {
   }
 
   const letter = value[0]
-  const digits = value.slice(1).split('').map(Number)
+  const digits = value.slice(1).split("").map(Number)
 
   // 獲取縣市代碼
   const cityCode = CITY_CODES[letter]
@@ -325,16 +347,10 @@ const validateTaiwanNationalId = (value: string, type: NationalIdType = "both", 
  * @see {@link NationalIdType} for supported ID types
  * @see {@link validateTaiwanNationalId} for validation logic details
  */
-export function twNationalId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwNationalIdOptions<IsRequired>, 'required'>): TwNationalIdSchema<IsRequired> {
-  const {
-    type = "both",
-    allowOldResident = true,
-    transform,
-    defaultValue,
-    i18n
-  } = options ?? {}
+export function twNationalId<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwNationalIdOptions<IsRequired>, "required">): TwNationalIdSchema<IsRequired> {
+  const { type = "both", allowOldResident = true, transform, defaultValue, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

@@ -318,10 +318,10 @@ const validateTaiwanTel = (value: string, options: ValidateTaiwanTelOptions = {}
  * @see {@link TwTelOptions} for all available configuration options
  * @see {@link validateTaiwanTel} for validation logic details
  */
-export function twTel<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwTelOptions<IsRequired>, 'required'>): TwTelSchema<IsRequired> {
+export function twTel<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwTelOptions<IsRequired>, "required">): TwTelSchema<IsRequired> {
   const { whitelist, allowITFS = false, transform, defaultValue, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

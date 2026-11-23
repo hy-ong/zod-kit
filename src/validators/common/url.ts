@@ -128,17 +128,11 @@ const parseIPv4 = (hostname: string): number[] | null => {
     return Number.isInteger(value) && value >= 0 && value <= 255 ? value : null
   })
 
-  return octets.every((part) => part !== null) ? octets as number[] : null
+  return octets.every((part) => part !== null) ? (octets as number[]) : null
 }
 
-const isLocalIPv4 = ([first, second]: number[]): boolean => (
-  first === 0 ||
-  first === 10 ||
-  first === 127 ||
-  (first === 169 && second === 254) ||
-  (first === 172 && second >= 16 && second <= 31) ||
-  (first === 192 && second === 168)
-)
+const isLocalIPv4 = ([first, second]: number[]): boolean =>
+  first === 0 || first === 10 || first === 127 || (first === 169 && second === 254) || (first === 172 && second >= 16 && second <= 31) || (first === 192 && second === 168)
 
 const parseHextet = (value: string): number | null => {
   if (!/^[0-9a-f]{1,4}$/i.test(value)) return null
@@ -181,14 +175,7 @@ const isLocalNetworkHostname = (hostname: string): boolean => {
 
   const firstHextet = parseHextet(normalizedHostname.split(":")[0])
 
-  return (
-    normalizedHostname === "::" ||
-    normalizedHostname === "::1" ||
-    (firstHextet !== null && (
-      (firstHextet & 0xfe00) === 0xfc00 ||
-      (firstHextet & 0xffc0) === 0xfe80
-    ))
-  )
+  return normalizedHostname === "::" || normalizedHostname === "::1" || (firstHextet !== null && ((firstHextet & 0xfe00) === 0xfc00 || (firstHextet & 0xffc0) === 0xfe80))
 }
 
 /**
@@ -270,7 +257,7 @@ const isLocalNetworkHostname = (hostname: string): boolean => {
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link UrlOptions} for all available configuration options
  */
-export function url<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<UrlOptions<IsRequired>, 'required'>): UrlSchema<IsRequired> {
+export function url<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<UrlOptions<IsRequired>, "required">): UrlSchema<IsRequired> {
   const {
     min,
     max,
@@ -294,7 +281,7 @@ export function url<IsRequired extends boolean = false>(required?: IsRequired, o
     i18n,
   } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 

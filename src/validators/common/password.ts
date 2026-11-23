@@ -266,27 +266,10 @@ const calculatePasswordStrength = (password: string): PasswordStrength => {
  * @see {@link PasswordStrength} for strength level definitions
  * @see {@link calculatePasswordStrength} for strength calculation logic
  */
-export function password<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<PasswordOptions<IsRequired>, 'required'>): PasswordSchema<IsRequired> {
-  const {
-    min,
-    max,
-    uppercase,
-    lowercase,
-    digits,
-    special,
-    noRepeating,
-    noSequential,
-    noCommonWords,
-    minStrength,
-    excludes,
-    includes,
-    regex,
-    transform,
-    defaultValue,
-    i18n,
-  } = options ?? {}
+export function password<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<PasswordOptions<IsRequired>, "required">): PasswordSchema<IsRequired> {
+  const { min, max, uppercase, lowercase, digits, special, noRepeating, noSequential, noCommonWords, minStrength, excludes, includes, regex, transform, defaultValue, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

@@ -58,12 +58,12 @@ export type TimeMessages = {
  * - h:mm A: 12-hour format without leading zeros (2:30 PM, 9:30 AM)
  */
 export type TimeFormat =
-  | "HH:mm"           // 24-hour format (14:30)
-  | "HH:mm:ss"        // 24-hour with seconds (14:30:45)
-  | "hh:mm A"         // 12-hour format (02:30 PM)
-  | "hh:mm:ss A"      // 12-hour with seconds (02:30:45 PM)
-  | "H:mm"            // 24-hour no leading zero (14:30, 9:30)
-  | "h:mm A"          // 12-hour no leading zero (2:30 PM, 9:30 AM)
+  | "HH:mm" // 24-hour format (14:30)
+  | "HH:mm:ss" // 24-hour with seconds (14:30:45)
+  | "hh:mm A" // 12-hour format (02:30 PM)
+  | "hh:mm:ss A" // 12-hour with seconds (02:30:45 PM)
+  | "H:mm" // 24-hour no leading zero (14:30, 9:30)
+  | "h:mm A" // 12-hour no leading zero (2:30 PM, 9:30 AM)
 
 /**
  * Configuration options for time validation
@@ -93,16 +93,16 @@ export type TimeFormat =
  */
 export type TimeOptions<IsRequired extends boolean = true> = {
   format?: TimeFormat
-  min?: string        // Minimum time (e.g., "09:00")
-  max?: string        // Maximum time (e.g., "17:00")
-  minHour?: number    // Minimum hour (0-23)
-  maxHour?: number    // Maximum hour (0-23)
-  allowedHours?: number[]  // Specific hours allowed
+  min?: string // Minimum time (e.g., "09:00")
+  max?: string // Maximum time (e.g., "17:00")
+  minHour?: number // Minimum hour (0-23)
+  maxHour?: number // Maximum hour (0-23)
+  allowedHours?: number[] // Specific hours allowed
   minuteStep?: number // Minute intervals (e.g., 15 for :00, :15, :30, :45)
   secondStep?: number // Second intervals
-  includes?: string   // Must include specific substring
+  includes?: string // Must include specific substring
   excludes?: string | string[] // Must not contain specific substring(s)
-  regex?: RegExp      // Custom regex validation (overrides format)
+  regex?: RegExp // Custom regex validation (overrides format)
   trimMode?: "trim" | "trimStart" | "trimEnd" | "none" // Whitespace handling
   casing?: "upper" | "lower" | "none" // Case transformation
   whitelist?: string[] // Allow specific time strings
@@ -365,7 +365,7 @@ const normalizeTime = (timeStr: string, format: TimeFormat): string | null => {
  * @see {@link TimeOptions} for all available configuration options
  * @see {@link TimeFormat} for supported time formats
  */
-export function time<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TimeOptions<IsRequired>, 'required'>): TimeSchema<IsRequired> {
+export function time<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TimeOptions<IsRequired>, "required">): TimeSchema<IsRequired> {
   const {
     format = "HH:mm",
     min,
@@ -387,7 +387,7 @@ export function time<IsRequired extends boolean = false>(required?: IsRequired, 
     i18n,
   } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

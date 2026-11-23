@@ -889,7 +889,7 @@ const validateTaiwanPostalCode = (
  * @see {@link TwPostalCodeFormatType} for supported formats
  * @see {@link validateTaiwanPostalCode} for validation logic details
  */
-export function twPostalCode<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwPostalCodeOptions<IsRequired>, 'required'>): TwPostalCodeSchema<IsRequired> {
+export function twPostalCode<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwPostalCodeOptions<IsRequired>, "required">): TwPostalCodeSchema<IsRequired> {
   const {
     format = "3+6",
     strictValidation = true,
@@ -904,7 +904,7 @@ export function twPostalCode<IsRequired extends boolean = false>(required?: IsRe
     deprecate5Digit = false,
   } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

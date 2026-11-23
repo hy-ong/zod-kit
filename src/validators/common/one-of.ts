@@ -130,7 +130,7 @@ export type OneOfSchema<IsRequired extends boolean, V extends readonly (string |
  */
 export function oneOf<IsRequired extends boolean = false, const V extends readonly (string | number)[] = readonly (string | number)[]>(
   required?: IsRequired,
-  options?: Omit<OneOfOptions<IsRequired, V>, "required">,
+  options?: Omit<OneOfOptions<IsRequired, V>, "required">
 ): OneOfSchema<IsRequired, V> {
   const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n, directIssue = false, whitespaceAsEmpty = false } = options ?? {}
 
@@ -231,15 +231,11 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
       })
     ) as unknown as OneOfSchema<IsRequired, V>
   }
-  const emptySchema = z
-    .union([z.literal("" as const), z.null(), z.undefined()])
-    .transform(() => fallback)
+  const emptySchema = z.union([z.literal("" as const), z.null(), z.undefined()]).transform(() => fallback)
 
   if (isRequired && fallback === null) {
     // Required, no default: empty values should fail with "required" message
-    const emptyRejectSchema = z
-      .union([z.literal("" as const), z.null(), z.undefined()])
-      .refine(() => false, { message: getMessage("required") })
+    const emptyRejectSchema = z.union([z.literal("" as const), z.null(), z.undefined()]).refine(() => false, { message: getMessage("required") })
 
     // For numeric values from forms (string "3" → number 3)
     if (!isAllStrings) {

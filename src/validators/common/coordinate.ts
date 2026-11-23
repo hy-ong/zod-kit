@@ -35,10 +35,7 @@ function validatePrecision(value: number, precision: number): boolean {
   return decimalPart.length <= precision
 }
 
-export function coordinate<IsRequired extends boolean = false>(
-  required?: IsRequired,
-  options?: Omit<CoordinateOptions<IsRequired>, "required">,
-): CoordinateSchema<IsRequired> {
+export function coordinate<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<CoordinateOptions<IsRequired>, "required">): CoordinateSchema<IsRequired> {
   const { type = "pair", precision, transform, defaultValue, i18n } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)

@@ -172,10 +172,26 @@ export type TextSchema<IsRequired extends boolean> = ZodType<IsRequired extends 
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link TextOptions} for all available configuration options
  */
-export function text<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TextOptions<IsRequired>, 'required'>): TextSchema<IsRequired> {
-  const { minLength, maxLength, startsWith, endsWith, includes, excludes, regex, trimMode = "trim", casing = "none", transform, notEmpty, strict = false, whitespaceAsEmpty = false, defaultValue, i18n } = options ?? {}
+export function text<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TextOptions<IsRequired>, "required">): TextSchema<IsRequired> {
+  const {
+    minLength,
+    maxLength,
+    startsWith,
+    endsWith,
+    includes,
+    excludes,
+    regex,
+    trimMode = "trim",
+    casing = "none",
+    transform,
+    notEmpty,
+    strict = false,
+    whitespaceAsEmpty = false,
+    defaultValue,
+    i18n,
+  } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
@@ -260,7 +276,7 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     if (isRequired && (val === "" || val === "null" || val === "undefined")) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("required")
+        message: getMessage("required"),
       })
       return
     }
@@ -270,7 +286,7 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     if (notEmpty && val !== null && val.trim() === "") {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("notEmpty")
+        message: getMessage("notEmpty"),
       })
       return
     }
@@ -279,14 +295,14 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     if (val !== null && minLength !== undefined && val.length < minLength) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("minLength", { minLength })
+        message: getMessage("minLength", { minLength }),
       })
       return
     }
     if (val !== null && maxLength !== undefined && val.length > maxLength) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("maxLength", { maxLength })
+        message: getMessage("maxLength", { maxLength }),
       })
       return
     }
@@ -295,21 +311,21 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     if (val !== null && startsWith !== undefined && !val.startsWith(startsWith)) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("startsWith", { startsWith })
+        message: getMessage("startsWith", { startsWith }),
       })
       return
     }
     if (val !== null && endsWith !== undefined && !val.endsWith(endsWith)) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("endsWith", { endsWith })
+        message: getMessage("endsWith", { endsWith }),
       })
       return
     }
     if (val !== null && includes !== undefined && !val.includes(includes)) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("includes", { includes })
+        message: getMessage("includes", { includes }),
       })
       return
     }
@@ -319,7 +335,7 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
         if (val.includes(exclude)) {
           ctx.addIssue({
             code: "custom",
-            message: getMessage("excludes", { excludes: exclude })
+            message: getMessage("excludes", { excludes: exclude }),
           })
           return
         }
@@ -328,7 +344,7 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     if (val !== null && regex !== undefined && !regex.test(val)) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("invalid", { regex })
+        message: getMessage("invalid", { regex }),
       })
       return
     }

@@ -148,7 +148,7 @@ export type EmailSchema<IsRequired extends boolean> = IsRequired extends true ? 
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link EmailOptions} for all available configuration options
  */
-export function email<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<EmailOptions<IsRequired>, 'required'>): EmailSchema<IsRequired> {
+export function email<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<EmailOptions<IsRequired>, "required">): EmailSchema<IsRequired> {
   const {
     domain,
     domainBlacklist,
@@ -165,7 +165,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     i18n,
   } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof EmailMessages, params?: Record<string, any>) => {
@@ -214,7 +214,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     if (isRequired && val === null) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("required")
+        message: getMessage("required"),
       })
       return
     }
@@ -225,7 +225,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     if (typeof val !== "string") {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("invalid")
+        message: getMessage("invalid"),
       })
       return
     }
@@ -234,14 +234,14 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     if (minLength !== undefined && val.length < minLength) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("minLength", { minLength })
+        message: getMessage("minLength", { minLength }),
       })
       return
     }
     if (maxLength !== undefined && val.length > maxLength) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("maxLength", { maxLength })
+        message: getMessage("maxLength", { maxLength }),
       })
       return
     }
@@ -250,7 +250,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     if (includes !== undefined && !val.includes(includes)) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("includes", { includes })
+        message: getMessage("includes", { includes }),
       })
       return
     }
@@ -261,7 +261,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
         if (val.includes(exclude)) {
           ctx.addIssue({
             code: "custom",
-            message: getMessage("includes", { includes: exclude })
+            message: getMessage("includes", { includes: exclude }),
           })
           return
         }
@@ -273,7 +273,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
     if (!emailDomain) {
       ctx.addIssue({
         code: "custom",
-        message: getMessage("invalid")
+        message: getMessage("invalid"),
       })
       return
     }
@@ -290,7 +290,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       if (isFreeProvider) {
         ctx.addIssue({
           code: "custom",
-          message: getMessage("businessOnly")
+          message: getMessage("businessOnly"),
         })
         return
       }
@@ -309,7 +309,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       if (isBlacklisted) {
         ctx.addIssue({
           code: "custom",
-          message: getMessage("domainBlacklist", { domain: emailDomain })
+          message: getMessage("domainBlacklist", { domain: emailDomain }),
         })
         return
       }
@@ -329,7 +329,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       if (!isAllowed) {
         ctx.addIssue({
           code: "custom",
-          message: getMessage("domain", { domain: Array.isArray(domain) ? domain.join(", ") : domain })
+          message: getMessage("domain", { domain: Array.isArray(domain) ? domain.join(", ") : domain }),
         })
         return
       }
@@ -347,7 +347,7 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
       if (isDisposable) {
         ctx.addIssue({
           code: "custom",
-          message: getMessage("noDisposable")
+          message: getMessage("noDisposable"),
         })
         return
       }

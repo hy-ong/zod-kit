@@ -186,25 +186,10 @@ export type DateSchema<IsRequired extends boolean> = IsRequired extends true ? Z
  * @throws {z.ZodError} When validation fails with specific error messages
  * @see {@link DateOptions} for all available configuration options
  */
-export function date<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<DateOptions<IsRequired>, 'required'>): DateSchema<IsRequired> {
-  const {
-    min,
-    max,
-    format = "YYYY-MM-DD",
-    includes,
-    excludes,
-    mustBePast,
-    mustBeFuture,
-    mustBeToday,
-    mustNotBeToday,
-    weekdaysOnly,
-    weekendsOnly,
-    transform,
-    defaultValue = null,
-    i18n,
-  } = options ?? {}
+export function date<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<DateOptions<IsRequired>, "required">): DateSchema<IsRequired> {
+  const { min, max, format = "YYYY-MM-DD", includes, excludes, mustBePast, mustBeFuture, mustBeToday, mustNotBeToday, weekdaysOnly, weekendsOnly, transform, defaultValue = null, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
 
@@ -281,8 +266,8 @@ export function date<IsRequired extends boolean = false>(required?: IsRequired, 
     }
 
     // Time-based validations
-    const today = dayjs().startOf('day')
-    const targetDate = dateObj.startOf('day')
+    const today = dayjs().startOf("day")
+    const targetDate = dateObj.startOf("day")
 
     if (val !== null && mustBePast && !targetDate.isBefore(today)) {
       ctx.addIssue({ code: "custom", message: getMessage("past") })

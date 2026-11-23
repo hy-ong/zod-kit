@@ -168,10 +168,10 @@ const validateTaiwanMobile = (value: string): boolean => {
  * @see {@link TwMobileOptions} for all available configuration options
  * @see {@link validateTaiwanMobile} for validation logic details
  */
-export function twMobile<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwMobileOptions<IsRequired>, 'required'>): TwMobileSchema<IsRequired> {
+export function twMobile<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwMobileOptions<IsRequired>, "required">): TwMobileSchema<IsRequired> {
   const { whitelist, transform, defaultValue, i18n, normalize = false } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const rawDefaultValue = defaultValue ?? (isRequired ? "" : null)

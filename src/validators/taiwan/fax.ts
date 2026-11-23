@@ -111,14 +111,14 @@ const validateTaiwanFax = (value: string): boolean => {
 
   // Check 4-digit area codes first
   const areaCode4 = cleanValue.substring(0, 4)
-  if (areaCode4 === '0836') {
+  if (areaCode4 === "0836") {
     // Matsu: 0836 + 5 digits, total 9 digits
     return cleanValue.length === 9 && /^0836\d{5}$/.test(cleanValue)
   }
 
   // Check 3-digit area codes
   const areaCode3 = cleanValue.substring(0, 3)
-  if (areaCode3 === '037') {
+  if (areaCode3 === "037") {
     // Miaoli: 037 + 6-7 digits, total 9-10 digits
     // User number must start with 2-9 (not 0 or 1)
     const firstDigit = cleanValue[3]
@@ -127,15 +127,15 @@ const validateTaiwanFax = (value: string): boolean => {
     }
     return (cleanValue.length === 9 || cleanValue.length === 10) && /^037[2-9]\d{5,6}$/.test(cleanValue)
   }
-  if (areaCode3 === '049') {
+  if (areaCode3 === "049") {
     // Nantou: 049 + 7 digits, total 10 digits
     return cleanValue.length === 10 && /^049\d{7}$/.test(cleanValue)
   }
-  if (areaCode3 === '082') {
+  if (areaCode3 === "082") {
     // Kinmen: 082 + 6 digits, total 9 digits
     return cleanValue.length === 9 && /^082\d{6}$/.test(cleanValue)
   }
-  if (areaCode3 === '089') {
+  if (areaCode3 === "089") {
     // Taitung: 089 + 6 digits, total 9 digits
     return cleanValue.length === 9 && /^089\d{6}$/.test(cleanValue)
   }
@@ -143,7 +143,7 @@ const validateTaiwanFax = (value: string): boolean => {
   // Check 2-digit area codes
   const areaCode2 = cleanValue.substring(0, 2)
 
-  if (areaCode2 === '02') {
+  if (areaCode2 === "02") {
     // Taipei, New Taipei, Keelung: 02 + 8 digits, total 10 digits
     // User number must start with 2-9 (not 0 or 1)
     const firstDigit = cleanValue[2]
@@ -152,23 +152,23 @@ const validateTaiwanFax = (value: string): boolean => {
     }
     return cleanValue.length === 10 && /^02[2-9]\d{7}$/.test(cleanValue)
   }
-  if (areaCode2 === '03') {
+  if (areaCode2 === "03") {
     // Taoyuan, Hsinchu, Yilan, Hualien: 03 + 7-8 digits, total 9-10 digits
     return (cleanValue.length === 9 || cleanValue.length === 10) && /^03\d{7,8}$/.test(cleanValue)
   }
-  if (areaCode2 === '04') {
+  if (areaCode2 === "04") {
     // Taichung, Changhua, Nantou: 04 + 7-8 digits, total 9-10 digits
     return (cleanValue.length === 9 || cleanValue.length === 10) && /^04\d{7,8}$/.test(cleanValue)
   }
-  if (areaCode2 === '05') {
+  if (areaCode2 === "05") {
     // Yunlin, Chiayi: 05 + 7 digits, total 9 digits
     return cleanValue.length === 9 && /^05\d{7}$/.test(cleanValue)
   }
-  if (areaCode2 === '06') {
+  if (areaCode2 === "06") {
     // Tainan: 06 + 7 digits, total 9 digits
     return cleanValue.length === 9 && /^06\d{7}$/.test(cleanValue)
   }
-  if (areaCode2 === '07') {
+  if (areaCode2 === "07") {
     // Kaohsiung: 07 + 7 digits, total 9 digits
     // User number must start with 2-9 (not 0 or 1)
     const firstDigit = cleanValue[2]
@@ -177,7 +177,7 @@ const validateTaiwanFax = (value: string): boolean => {
     }
     return cleanValue.length === 9 && /^07[2-9]\d{6}$/.test(cleanValue)
   }
-  if (areaCode2 === '08') {
+  if (areaCode2 === "08") {
     // Pingtung: 08 + 7 digits, total 9 digits
     // User number must start with 4, 7, or 8 (format: 4&7&8+6D)
     const firstDigit = cleanValue[2]
@@ -259,10 +259,10 @@ const validateTaiwanFax = (value: string): boolean => {
  * @see {@link TwFaxOptions} for all available configuration options
  * @see {@link validateTaiwanFax} for validation logic details
  */
-export function twFax<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwFaxOptions<IsRequired>, 'required'>): TwFaxSchema<IsRequired> {
+export function twFax<IsRequired extends boolean = false>(required?: IsRequired, options?: Omit<TwFaxOptions<IsRequired>, "required">): TwFaxSchema<IsRequired> {
   const { whitelist, transform, defaultValue, i18n } = options ?? {}
 
-  const isRequired = required ?? false as IsRequired
+  const isRequired = required ?? (false as IsRequired)
 
   // Set appropriate default value based on required flag
   const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)

@@ -118,7 +118,7 @@ export type ManyOfSchema<IsRequired extends boolean, V extends readonly (string 
  */
 export function manyOf<IsRequired extends boolean = false, const V extends readonly (string | number)[] = readonly (string | number)[]>(
   required?: IsRequired,
-  options?: Omit<ManyOfOptions<IsRequired, V>, "required">,
+  options?: Omit<ManyOfOptions<IsRequired, V>, "required">
 ): ManyOfSchema<IsRequired, V> {
   const { values = [] as unknown as V, defaultValue = null, min, max, allowDuplicates = false, caseSensitive = true, transform, i18n } = options ?? {}
 
@@ -200,7 +200,9 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
     })
 
   // Single value → wrap in array
-  const singleToArray = z.union([z.string(), z.number()]).transform((v) => [normalizeItem(v)])
+  const singleToArray = z
+    .union([z.string(), z.number()])
+    .transform((v) => [normalizeItem(v)])
     .pipe(arraySchema)
 
   // Handle required vs optional
@@ -212,17 +214,13 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
 
   if (isRequired && fallback === null) {
     // Required, no default: empty values should fail with "required" message
-    const emptyRejectSchema = z
-      .union([z.literal("" as const), z.null(), z.undefined()])
-      .refine(() => false, { message: getMessage("required") })
+    const emptyRejectSchema = z.union([z.literal("" as const), z.null(), z.undefined()]).refine(() => false, { message: getMessage("required") })
 
     return withOptionalIn(z.union([arraySchema, singleToArray, emptyRejectSchema])) as unknown as ManyOfSchema<IsRequired, V>
   }
 
   // Optional or has default: empty values → fallback
-  const emptySchema = z
-    .union([z.literal("" as const), z.null(), z.undefined()])
-    .transform(() => fallback)
+  const emptySchema = z.union([z.literal("" as const), z.null(), z.undefined()]).transform(() => fallback)
 
   return withOptionalIn(z.union([arraySchema, singleToArray, emptySchema])) as unknown as ManyOfSchema<IsRequired, V>
 }
