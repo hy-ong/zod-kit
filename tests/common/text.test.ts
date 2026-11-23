@@ -591,3 +591,50 @@ describe("text() type inference", () => {
     expectTypeOf<z.input<typeof optional>>().toEqualTypeOf<string | null | undefined>()
   })
 })
+
+describe("text() robustness against unconvertible input", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should reject a null-prototype object with the invalid message instead of throwing", () => {
+    for (const required of [false, true]) {
+      const result = text(required).safeParse(Object.create(null))
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Invalid format" })])
+    }
+    setLocale("zh-TW")
+    for (const required of [false, true]) {
+      expect(text(required).safeParse(Object.create(null)).error!.issues[0].message).toBe("格式錯誤")
+    }
+  })
+
+  it("should reject values whose string conversion throws", () => {
+    const inputs: unknown[] = [
+      {
+        toString() {
+          throw new Error("toString")
+        },
+      },
+      {
+        [Symbol.toPrimitive]() {
+          throw 1
+        },
+      },
+      [Symbol("s")],
+    ]
+    for (const input of inputs) {
+      const result = text(true).safeParse(input)
+      expect(result.success).toBe(false)
+      expect(result.error!.issues[0].message).toBe("Invalid format")
+    }
+  })
+
+  it("should reject a revoked Proxy in strict mode with the notString message instead of throwing", () => {
+    const { proxy, revoke } = Proxy.revocable({}, {})
+    revoke()
+    for (const required of [false, true]) {
+      const result = text(required, { strict: true }).safeParse(proxy)
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Must be a string" })])
+    }
+  })
+})

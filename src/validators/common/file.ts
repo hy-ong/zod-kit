@@ -10,6 +10,7 @@
 
 import { z, ZodType } from "zod"
 import { t } from "../../i18n"
+import { isDescribable, rejectInput } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -251,10 +252,13 @@ export function file<IsRequired extends boolean = false>(required?: IsRequired, 
   // Create properly typed base schema for File | null
   const fileOrNullSchema = z.union([z.custom<File>(isFileValue, { message: getMessage("invalid") }), z.null()])
 
-  const baseSchema = z.preprocess((val): File | null => {
+  const baseSchema = z.preprocess((val, ctx): File | null => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
+
+    // A value Zod cannot inspect or describe (e.g. a revoked Proxy) would make the File check / z.null() throw; reject it instead
+    if (!isDescribable(val)) return rejectInput(ctx, getMessage("invalid"))
 
     if (!isFileValue(val)) {
       return val as File | null

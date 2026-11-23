@@ -12,6 +12,7 @@
 
 import { z, ZodType } from "zod"
 import { t } from "../../i18n"
+import { isDescribable, rejectInput } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -210,7 +211,8 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
 
   // Identity preprocess gives the schema optin "optional" (like number/text), so a missing z.object key runs the
   // empty-value logic (null / defaultValue / required) instead of failing with "expected nonoptional".
-  const withOptionalIn = (inner: ZodType) => z.preprocess((input) => input, inner)
+  // A value Zod cannot inspect (e.g. a revoked Proxy) would make the inner schema throw; it is rejected with the "invalid" message instead.
+  const withOptionalIn = (inner: ZodType) => z.preprocess((input, ctx) => (isDescribable(input) ? input : rejectInput(ctx, getMessage("invalid", { values: valuesArr.join(", ") }))), inner)
 
   if (isRequired && fallback === null) {
     // Required, no default: empty values should fail with "required" message

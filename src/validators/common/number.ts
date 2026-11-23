@@ -10,6 +10,7 @@
 
 import { z, ZodType } from "zod"
 import { t } from "../../i18n"
+import { isDescribable, rejectInput } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -237,10 +238,13 @@ export function number<IsRequired extends boolean = false, EmptyValue extends Nu
 
   const schema = z
     .preprocess(
-      (val) => {
+      (val, ctx) => {
         if (val === "" || val === undefined || val === null) {
           return actualDefaultValue
         }
+
+        // A value Zod cannot inspect (e.g. a revoked Proxy) would make the union throw; reject it instead
+        if (!isDescribable(val)) return rejectInput(ctx, getMessage("invalid"))
 
         // Handle string input
         if (typeof val === "string") {

@@ -1,5 +1,6 @@
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
+import { rejectInput, safeString } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 export type TwInvoiceMessages = {
@@ -41,12 +42,15 @@ export function twInvoice<IsRequired extends boolean = false>(required?: IsRequi
     return t(`taiwan.invoice.${key}`, params)
   }
 
-  const preprocessFn = (val: unknown) => {
+  const preprocessFn = (val: unknown, ctx: z.core.$RefinementCtx) => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
 
-    let processed = String(val).trim().toUpperCase().replace(/-/g, "")
+    const str = safeString(val)
+    if (str === undefined) return rejectInput(ctx, getMessage("invalid"))
+
+    let processed = str.trim().toUpperCase().replace(/-/g, "")
 
     if (processed === "" && !required) {
       return null

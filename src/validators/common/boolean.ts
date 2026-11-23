@@ -10,6 +10,7 @@
 
 import { z, ZodType } from "zod"
 import { t } from "../../i18n"
+import { isDescribable, isInspectable, rejectInput } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -164,9 +165,15 @@ export function boolean<IsRequired extends boolean = false, EmptyValue extends B
     return t(`common.boolean.${key}`, params)
   }
 
+  // Only the z.undefined() branch (emptyValue: undefined) reports a default type message, which also has to describe the value
+  const canPassToUnion = actualDefaultValue === undefined ? isDescribable : isInspectable
+
   let result: ZodType = z.preprocess(
-    (val) => {
+    (val, ctx) => {
       if (val === "" || val === undefined || val === null) return actualDefaultValue
+
+      // A value Zod cannot inspect (e.g. a revoked Proxy) would make the union throw; reject it instead
+      if (!canPassToUnion(val)) return rejectInput(ctx, getMessage("invalid"))
 
       if (strict && typeof val !== "boolean" && val !== null) {
         return val // Let it fail in validation
@@ -188,15 +195,20 @@ export function boolean<IsRequired extends boolean = false, EmptyValue extends B
 
       return val
     },
-    z.union([
-      z.literal(true),
-      z.literal(false),
-      z.literal(null),
-      // Only accept undefined / "" when they can legitimately come from emptyValue, so the default schema
-      // (union members, nested invalid_union errors, JSON Schema) stays identical to the pre-emptyValue version
-      ...(actualDefaultValue === undefined ? [z.undefined()] : []),
-      ...(actualDefaultValue === "" ? [z.literal("")] : []),
-    ])
+    z.union(
+      [
+        z.literal(true),
+        z.literal(false),
+        z.literal(null),
+        // Only accept undefined / "" when they can legitimately come from emptyValue, so the default schema
+        // (union members, nested invalid_union errors, JSON Schema) stays identical to the pre-emptyValue version
+        ...(actualDefaultValue === undefined ? [z.undefined()] : []),
+        ...(actualDefaultValue === "" ? [z.literal("")] : []),
+      ],
+      // Strict mode passes non-boolean input through untouched, so the union is what rejects it: localize its message
+      // (code invalid_union and the nested branch errors stay the same). The default schema keeps Zod's message.
+      strict ? { error: () => getMessage("invalid") } : undefined
+    )
   )
 
   if (isRequired && isEmpty(actualDefaultValue)) {
@@ -207,15 +219,6 @@ export function boolean<IsRequired extends boolean = false, EmptyValue extends B
     result = result.refine((val) => val === true, { message: getMessage("shouldBeTrue") })
   } else if (shouldBe === false) {
     result = result.refine((val) => val === false, { message: getMessage("shouldBeFalse") })
-  }
-
-  if (strict) {
-    result = result.refine(
-      (val) => {
-        return isEmpty(val) || typeof val === "boolean"
-      },
-      { message: getMessage("invalid") }
-    )
   }
 
   return result as unknown as BooleanSchema<IsRequired, EmptyValue>

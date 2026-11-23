@@ -10,6 +10,7 @@
 
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
+import { rejectInput, safeString } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -369,12 +370,15 @@ export function twNationalId<IsRequired extends boolean = false>(required?: IsRe
   }
 
   // Preprocessing function
-  const preprocessFn = (val: unknown) => {
+  const preprocessFn = (val: unknown, ctx: z.core.$RefinementCtx) => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
 
-    let processed = String(val).trim().toUpperCase()
+    const str = safeString(val)
+    if (str === undefined) return rejectInput(ctx, getMessage("invalid"))
+
+    let processed = str.trim().toUpperCase()
 
     // If after trimming we have an empty string and the field is optional, return null
     if (processed === "" && !required) {

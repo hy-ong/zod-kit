@@ -376,3 +376,40 @@ describe("creditCard(true) validator", () => {
     })
   })
 })
+
+describe("creditCard() robustness against unconvertible input", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should reject a null-prototype object with the invalid message instead of throwing", () => {
+    for (const required of [false, true]) {
+      const result = creditCard(required).safeParse(Object.create(null))
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Invalid credit card number" })])
+    }
+    setLocale("zh-TW")
+    for (const required of [false, true]) {
+      expect(creditCard(required).safeParse(Object.create(null)).error!.issues[0].message).toBe("無效的信用卡號碼")
+    }
+  })
+
+  it("should reject values whose string conversion throws", () => {
+    const inputs: unknown[] = [
+      {
+        toString() {
+          throw new Error("toString")
+        },
+      },
+      {
+        [Symbol.toPrimitive]() {
+          throw 1
+        },
+      },
+      [Symbol("s")],
+    ]
+    for (const input of inputs) {
+      const result = creditCard(true).safeParse(input)
+      expect(result.success).toBe(false)
+      expect(result.error!.issues[0].message).toBe("Invalid credit card number")
+    }
+  })
+})

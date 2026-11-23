@@ -13,6 +13,7 @@
 
 import { z, ZodType } from "zod"
 import { t } from "../../i18n"
+import { isDescribable, rejectInput } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -155,7 +156,12 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
   // Outer preprocess gives the schema optin "optional" (like number/text), so a missing z.object key runs the
   // empty-value logic (null / defaultValue / required) instead of failing with "expected nonoptional".
   // Opt-in whitespaceAsEmpty: whitespace-only strings become empty here, before any matching against values.
-  const withOptionalIn = (inner: ZodType) => z.preprocess((input) => (whitespaceAsEmpty && typeof input === "string" && input.trim() === "" ? undefined : input), inner)
+  // A value Zod cannot inspect (e.g. a revoked Proxy) would make the inner schema throw; it is rejected with the "invalid" message instead.
+  const withOptionalIn = (inner: ZodType) =>
+    z.preprocess((input, ctx) => {
+      if (!isDescribable(input)) return rejectInput(ctx, getMessage("invalid", { values: valuesArr.join(", ") }))
+      return whitespaceAsEmpty && typeof input === "string" && input.trim() === "" ? undefined : input
+    }, inner)
 
   // Build the value-matching schema using z.enum() or z.union(z.literal())
   let valueSchema: ZodType

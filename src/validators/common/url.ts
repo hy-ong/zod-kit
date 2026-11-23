@@ -10,6 +10,7 @@
 
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
+import { rejectInput, safeString } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -299,12 +300,15 @@ export function url<IsRequired extends boolean = false>(required?: IsRequired, o
   }
 
   // Preprocessing function with transformations
-  const preprocessFn = (val: unknown) => {
+  const preprocessFn = (val: unknown, ctx: z.core.$RefinementCtx) => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
 
-    let processed = String(val).trim()
+    const str = safeString(val)
+    if (str === undefined) return rejectInput(ctx, getMessage("invalid"))
+
+    let processed = str.trim()
 
     if (transform) {
       processed = transform(processed)

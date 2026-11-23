@@ -10,6 +10,7 @@
 
 import { z, ZodType } from "zod"
 import { t } from "../../i18n"
+import { isInspectable, rejectInput, safeString } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -238,17 +239,22 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
   }
 
   // Preprocessing function with optimized transformations
-  const preprocessFn = (val: unknown) => {
+  const preprocessFn = (val: unknown, ctx: z.core.$RefinementCtx) => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
 
     // In strict mode, non-string input is passed through untouched so z.string() rejects it
     if (typeof val !== "string" && strict) {
+      // A value Zod cannot inspect (e.g. a revoked Proxy) would make z.string() throw; reject it like any other non-string
+      if (!isInspectable(val)) return rejectInput(ctx, getMessage("notString"))
       return val
     }
 
-    let processed = applyTrim(String(val))
+    const str = safeString(val)
+    if (str === undefined) return rejectInput(ctx, getMessage("invalid"))
+
+    let processed = applyTrim(str)
 
     // Opt-in: whitespace-only input (checked after trimming, so it also works with trimMode "none") is treated as empty
     if (whitespaceAsEmpty && processed.trim() === "") {

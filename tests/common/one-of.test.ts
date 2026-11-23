@@ -572,3 +572,32 @@ describe("oneOf whitespaceAsEmpty type inference", () => {
     expectTypeOf<z.input<typeof opt>>().toEqualTypeOf<"b2b" | "b2c" | "" | null | undefined>()
   })
 })
+
+describe("oneOf() robustness against uninspectable input", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  const revokedProxy = () => {
+    const { proxy, revoke } = Proxy.revocable({}, {})
+    revoke()
+    return proxy
+  }
+
+  it("should still reject a null-prototype object without throwing", () => {
+    for (const required of [false, true]) {
+      expect(() => oneOf(required, { values: ["a", "b"] }).safeParse(Object.create(null))).not.toThrow()
+      expect(oneOf(required, { values: ["a", "b"] }).safeParse(Object.create(null)).success).toBe(false)
+    }
+  })
+
+  it("should reject a revoked Proxy with the invalid message instead of throwing", () => {
+    for (const required of [false, true]) {
+      const result = oneOf(required, { values: ["a", "b"] }).safeParse(revokedProxy())
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Must be one of: a, b" })])
+    }
+    setLocale("zh-TW")
+    for (const required of [false, true]) {
+      expect(oneOf(required, { values: ["a", "b"] }).safeParse(revokedProxy()).error!.issues[0].message).toBe("必須為以下其中一個值：a, b")
+    }
+  })
+})

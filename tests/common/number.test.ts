@@ -558,3 +558,32 @@ describe("number options variable type inference", () => {
     expect(options).toBeDefined()
   })
 })
+
+describe("number() robustness against uninspectable input", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  const revokedProxy = () => {
+    const { proxy, revoke } = Proxy.revocable({}, {})
+    revoke()
+    return proxy
+  }
+
+  it("should still reject a null-prototype object without throwing", () => {
+    for (const required of [false, true]) {
+      expect(() => number(required).safeParse(Object.create(null))).not.toThrow()
+      expect(number(required).safeParse(Object.create(null)).success).toBe(false)
+    }
+  })
+
+  it("should reject a revoked Proxy with the invalid message instead of throwing", () => {
+    for (const required of [false, true]) {
+      const result = number(required).safeParse(revokedProxy())
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Must be a valid number" })])
+    }
+    setLocale("zh-TW")
+    for (const required of [false, true]) {
+      expect(number(required).safeParse(revokedProxy()).error!.issues[0].message).toBe("必須為有效數字")
+    }
+  })
+})

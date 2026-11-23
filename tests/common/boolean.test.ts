@@ -339,11 +339,11 @@ describe("boolean", () => {
       expect(() => schemaZh.parse("")).toThrow("繁體中文必填")
     })
 
-    it("should work with strict mode (note: uses Zod's built-in error messages)", () => {
+    it("should work with strict mode", () => {
       const schema = boolean(true, { strict: true })
 
-      expect(() => schema.parse("true")).toThrow() // Will throw Zod's union error
-      expect(() => schema.parse(1)).toThrow() // Will throw Zod's union error
+      expect(() => schema.parse("true")).toThrow() // invalid_union with the localized "invalid" message
+      expect(() => schema.parse(1)).toThrow() // invalid_union with the localized "invalid" message
     })
   })
 
@@ -618,5 +618,109 @@ describe("boolean options variable type inference", () => {
     // @ts-expect-error false is not an allowed emptyValue
     const options: BooleanOptions<false, BooleanEmptyValue> = { emptyValue: false }
     expect(options).toBeDefined()
+  })
+})
+
+describe("boolean() robustness against uninspectable input", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  const revokedProxy = () => {
+    const { proxy, revoke } = Proxy.revocable({}, {})
+    revoke()
+    return proxy
+  }
+
+  it("should still reject a null-prototype object without throwing", () => {
+    for (const required of [false, true]) {
+      expect(() => boolean(required).safeParse(Object.create(null))).not.toThrow()
+      expect(boolean(required).safeParse(Object.create(null)).success).toBe(false)
+    }
+  })
+
+  it("should reject a revoked Proxy with the invalid message instead of throwing", () => {
+    for (const required of [false, true]) {
+      const result = boolean(required).safeParse(revokedProxy())
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Must be a boolean value" })])
+    }
+    setLocale("zh-TW")
+    for (const required of [false, true]) {
+      expect(boolean(required).safeParse(revokedProxy()).error!.issues[0].message).toBe("必須為布林值")
+    }
+  })
+})
+
+describe("boolean strict mode localized invalid message", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  const nonBooleans: unknown[] = ["true", "false", 1, 0, "yes", "no", "on", "1", {}, [], "  ", "abc", NaN]
+  const messages = { "en-US": "Must be a boolean value", "zh-TW": "必須為布林值" } as const
+
+  for (const locale of ["en-US", "zh-TW"] as const) {
+    for (const required of [false, true]) {
+      it(`should report the localized invalid message as issues[0] (${locale}, required=${required})`, () => {
+        setLocale(locale)
+        const schema = boolean(required, { strict: true })
+        for (const input of nonBooleans) {
+          const result = schema.safeParse(input)
+          expect(result.success).toBe(false)
+          expect(result.error!.issues).toHaveLength(1)
+          expect(result.error!.issues[0].message).toBe(messages[locale])
+          // Only the message changes: still an invalid_union issue with the same nested branches
+          expect(result.error!.issues[0].code).toBe("invalid_union")
+          expect((result.error!.issues[0] as unknown as { errors: unknown[][] }).errors).toHaveLength(3)
+        }
+      })
+
+      it(`should keep success and data for booleans and empty values (${locale}, required=${required})`, () => {
+        setLocale(locale)
+        const schema = boolean(required, { strict: true })
+        expect(schema.safeParse(true)).toEqual({ success: true, data: true })
+        expect(schema.safeParse(false)).toEqual({ success: true, data: false })
+        for (const empty of [null, undefined, ""]) {
+          const result = schema.safeParse(empty)
+          if (required) {
+            expect(result.success).toBe(false)
+            expect(result.error!.issues[0].message).toBe(locale === "en-US" ? "Required" : "必填")
+          } else {
+            expect(result).toEqual({ success: true, data: null })
+          }
+        }
+      })
+    }
+  }
+
+  it("should use a custom i18n invalid message", () => {
+    const schema = boolean(true, { strict: true, i18n: { "en-US": { invalid: "Pick yes or no" }, "zh-TW": { invalid: "請選擇是或否" } } })
+    expect(schema.safeParse("true").error!.issues[0].message).toBe("Pick yes or no")
+    setLocale("zh-TW")
+    expect(schema.safeParse(1).error!.issues[0].message).toBe("請選擇是或否")
+  })
+
+  it("should follow the locale active at parse time", () => {
+    const schema = boolean(false, { strict: true })
+    expect(schema.safeParse("true").error!.issues[0].message).toBe("Must be a boolean value")
+    setLocale("zh-TW")
+    expect(schema.safeParse("true").error!.issues[0].message).toBe("必須為布林值")
+  })
+
+  it("should combine with shouldBe and emptyValue", () => {
+    const mustBeTrue = boolean(true, { strict: true, shouldBe: true })
+    expect(mustBeTrue.safeParse("yes").error!.issues[0].message).toBe("Must be a boolean value")
+    expect(mustBeTrue.safeParse(false).error!.issues[0].message).toBe("Must be True")
+    const undefinedEmpty = boolean(false, { strict: true, emptyValue: undefined })
+    expect(undefinedEmpty.safeParse("").data).toBe(undefined)
+    const result = undefinedEmpty.safeParse("true")
+    expect(result.error!.issues[0].message).toBe("Must be a boolean value")
+    expect((result.error!.issues[0] as unknown as { errors: unknown[][] }).errors).toHaveLength(4)
+  })
+
+  it("should leave the non-strict default schema untouched", () => {
+    expect(boolean(true).parse("true")).toBe(true)
+    expect(boolean(true).parse("yes")).toBe(true)
+    const result = boolean(true).safeParse({})
+    expect(result.error!.issues.map((i) => i.code)).toEqual(["invalid_union"])
+    expect(result.error!.issues[0].message).toBe("Invalid input")
+    expect(z.toJSONSchema(boolean(false, { strict: true }))).toEqual(z.toJSONSchema(boolean(false)))
   })
 })

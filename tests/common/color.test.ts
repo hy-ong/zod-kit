@@ -585,3 +585,40 @@ describe("color(true) validator", () => {
     })
   })
 })
+
+describe("color() robustness against unconvertible input", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should reject a null-prototype object with the invalid message instead of throwing", () => {
+    for (const required of [false, true]) {
+      const result = color(required).safeParse(Object.create(null))
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toEqual([expect.objectContaining({ code: "custom", message: "Invalid color format" })])
+    }
+    setLocale("zh-TW")
+    for (const required of [false, true]) {
+      expect(color(required).safeParse(Object.create(null)).error!.issues[0].message).toBe("無效的顏色格式")
+    }
+  })
+
+  it("should reject values whose string conversion throws", () => {
+    const inputs: unknown[] = [
+      {
+        toString() {
+          throw new Error("toString")
+        },
+      },
+      {
+        [Symbol.toPrimitive]() {
+          throw 1
+        },
+      },
+      [Symbol("s")],
+    ]
+    for (const input of inputs) {
+      const result = color(true).safeParse(input)
+      expect(result.success).toBe(false)
+      expect(result.error!.issues[0].message).toBe("Invalid color format")
+    }
+  })
+})

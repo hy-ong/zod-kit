@@ -10,6 +10,7 @@
 
 import { z, ZodNullable, ZodString, ZodNumber } from "zod"
 import { t } from "../../i18n"
+import { rejectInput, safeNumber, safeString } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -389,17 +390,21 @@ export function id<IsRequired extends boolean = false, Type extends IdType | und
       return actualDefaultValue
     }
 
-    // Try to convert to number and return (even if NaN) so it can be validated by the schema
-    return Number(val)
+    // Try to convert to number and return (even if NaN) so it can be validated by the schema;
+    // inputs Number() cannot convert (e.g. a Symbol) become NaN and fail like any other non-numeric input
+    return safeNumber(val)
   }
 
   // Preprocessing function for string type
-  const preprocessStringFn = (val: unknown) => {
+  const preprocessStringFn = (val: unknown, ctx: z.core.$RefinementCtx) => {
     if (val === "" || val === null || val === undefined) {
       return actualDefaultValue
     }
 
-    let processed = String(val)
+    const str = safeString(val)
+    if (str === undefined) return rejectInput(ctx, getMessage("invalid"))
+
+    let processed = str
 
     if (transform) {
       processed = transform(processed)

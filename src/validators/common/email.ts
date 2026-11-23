@@ -10,6 +10,7 @@
 
 import { z, ZodNullable, ZodString } from "zod"
 import { t } from "../../i18n"
+import { rejectInput, safeString } from "../../utils/safe-value"
 import { getLocale, type Locale } from "../../config"
 
 /**
@@ -189,12 +190,15 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
   const actualDefaultValue = defaultValue ?? null
 
   const baseSchema = z.preprocess(
-    (val) => {
+    (val, ctx) => {
       if (val === "" || val === null || val === undefined) {
         return actualDefaultValue
       }
 
-      let processed = String(val).trim()
+      const str = safeString(val)
+      if (str === undefined) return rejectInput(ctx, getMessage("invalid"))
+
+      let processed = str.trim()
 
       if (lowercase) {
         processed = processed.toLowerCase()
