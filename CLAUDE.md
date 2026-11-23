@@ -179,7 +179,7 @@ Taiwan validators implement domain-specific algorithms:
 - Test structure: `describe("validatorName(required) features")` → nested `describe` per feature → `it` cases
 - Type-level behavior (e.g. `z.input` / `z.output`) is asserted with `expectTypeOf` in the test files
 - Source files are organized by domain: `common/` for universal, `taiwan/` for locale-specific
-- CI runs on GitHub Actions (Node 18/20/22): lint, type-check, test, build
+- No GitHub Actions: this repo must not contain `.github/workflows`. All verification runs locally (lint, type-check, test, build, smoke).
 
 ### Backward Compatibility
 
@@ -189,11 +189,12 @@ Taiwan validators implement domain-specific algorithms:
 
 ## Release
 
-1. Bump the version in its own commit: `chore: bump version to X.Y.Z`.
-2. Write release notes following the format in `RELEASE.md`.
-3. The npm account has 2FA, so the user runs `npm publish --access public --otp=<code>` themselves (`prepublishOnly` runs tests + build).
-4. After publishing, confirm the registry's `gitHead` matches `HEAD` (e.g. `npm view @hy_ong/zod-kit@X.Y.Z gitHead`), then create the tag and release with `gh release create vX.Y.Z --target <sha>`.
-5. Always push over HTTPS with `gh` credentials (e.g. `git push https://github.com/hy-ong/zod-kit.git main:main`), not SSH.
+1. Verify locally: `npx eslint src/`, `npx tsc --noEmit`, `npm test -- --run`, `npm run build`, then `node scripts/smoke.mjs` and `node scripts/smoke.cjs` (ESM/CJS import of every subpath).
+2. Bump the version in its own commit: `chore: bump version to X.Y.Z`.
+3. Write release notes following the format in `RELEASE.md`.
+4. The npm account has 2FA, so the user runs `npm publish --access public --otp=<code>` themselves (`prepublishOnly` runs tests + build).
+5. After publishing, confirm the registry's `gitHead` matches `HEAD` (e.g. `npm view @hy_ong/zod-kit@X.Y.Z gitHead`), then create the tag and release with `gh release create vX.Y.Z --target <sha>`.
+6. Always push over HTTPS with `gh` credentials (e.g. `git push https://github.com/hy-ong/zod-kit.git main:main`), not SSH.
 
 ## Build Output
 
