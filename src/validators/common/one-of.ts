@@ -42,6 +42,10 @@ export type OneOfMessages = {
  * @property {boolean} [directIssue=false] - When true, a non-empty invalid value reports the `invalid` message
  *   directly as the top-level issue (`issues[0].message`), instead of a generic union issue with the real
  *   message nested inside. Empty values keep the same behavior (required → `required`, optional → null/default).
+ * @property {boolean} [whitespaceAsEmpty=false] - When true, a string that is empty after trimming (e.g. `"  "`) is treated
+ *   as empty (required → `required`, optional → null/default), same as the option of the same name on number/text.
+ *   The empty check runs before matching `values`, so whitespace-only input is empty even if `values` contains `" "`.
+ *   When false (default), whitespace-only input is matched as-is (invalid unless it is one of `values`).
  */
 export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (string | number)[] = readonly (string | number)[]> = {
   values: V
@@ -50,6 +54,7 @@ export type OneOfOptions<IsRequired extends boolean = true, V extends readonly (
   transform?: (value: V[number]) => V[number]
   i18n?: Partial<Record<Locale, Partial<OneOfMessages>>>
   directIssue?: boolean
+  whitespaceAsEmpty?: boolean
 }
 
 /**
@@ -117,13 +122,17 @@ export type OneOfSchema<IsRequired extends boolean, V extends readonly (string |
  * // Top-level invalid message for safeParse (opt-in)
  * const planSchema = oneOf(true, { values: ["basic", "pro"], directIssue: true })
  * planSchema.safeParse("gold").error?.issues[0].message // "Must be one of: basic, pro"
+ *
+ * // Treat whitespace-only input as empty (opt-in)
+ * const channelSchema = oneOf(true, { values: ["b2b", "b2c"], whitespaceAsEmpty: true })
+ * channelSchema.safeParse("  ").error?.issues[0].message // "Required"
  * ```
  */
 export function oneOf<IsRequired extends boolean = false, const V extends readonly (string | number)[] = readonly (string | number)[]>(
   required?: IsRequired,
   options?: Omit<OneOfOptions<IsRequired, V>, "required">,
 ): OneOfSchema<IsRequired, V> {
-  const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n, directIssue = false } = options ?? {}
+  const { values = [] as unknown as V, defaultValue = null, caseSensitive = true, transform, i18n, directIssue = false, whitespaceAsEmpty = false } = options ?? {}
 
   const isRequired = required ?? (false as IsRequired)
   const valuesArr = values as readonly (string | number)[]
@@ -143,9 +152,10 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
 
   const isEmpty = (v: unknown) => v === "" || v === null || v === undefined
 
-  // Identity preprocess gives the schema optin "optional" (like number/text), so a missing z.object key runs the
+  // Outer preprocess gives the schema optin "optional" (like number/text), so a missing z.object key runs the
   // empty-value logic (null / defaultValue / required) instead of failing with "expected nonoptional".
-  const withOptionalIn = (inner: ZodType) => z.preprocess((input) => input, inner)
+  // Opt-in whitespaceAsEmpty: whitespace-only strings become empty here, before any matching against values.
+  const withOptionalIn = (inner: ZodType) => z.preprocess((input) => (whitespaceAsEmpty && typeof input === "string" && input.trim() === "" ? undefined : input), inner)
 
   // Build the value-matching schema using z.enum() or z.union(z.literal())
   let valueSchema: ZodType

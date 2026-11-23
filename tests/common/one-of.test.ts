@@ -457,3 +457,118 @@ describe("oneOf bug fixes (0.3.1) type inference", () => {
     }
   })
 })
+
+describe.each(locales)("oneOf whitespaceAsEmpty locale: $locale", ({ locale, messages }) => {
+  beforeEach(() => setLocale(locale as Locale))
+
+  const channels = ["b2b", "b2c"] as const
+  const blanks = ["  ", " ", "\t", "\n \t"]
+  const invalidMsg = (vals: string) => (locale === "en-US" ? `Must be one of: ${vals}` : `必須為以下其中一個值：${vals}`)
+
+  describe.each(directIssueModes)("directIssue: %s", (directIssue) => {
+    describe("enabled", () => {
+      it("should report required for whitespace-only input when required", () => {
+        for (const values of [[...channels], [0, 1], ["a", 1]]) {
+          const schema = oneOf(true, { values, directIssue, whitespaceAsEmpty: true })
+          for (const input of blanks) {
+            const result = schema.safeParse(input)
+            expect(result.success).toBe(false)
+            expect(result.error!.issues).toHaveLength(1)
+            expect(result.error!.issues[0].message).toBe(messages.required)
+          }
+        }
+      })
+
+      it("should return null for whitespace-only input when optional", () => {
+        for (const values of [[...channels], [0, 1]]) {
+          const schema = oneOf(false, { values, directIssue, whitespaceAsEmpty: true })
+          for (const input of blanks) expect(schema.parse(input)).toBe(null)
+        }
+      })
+
+      it("should return defaultValue for whitespace-only input", () => {
+        expect(oneOf(false, { values: [...channels], defaultValue: "b2c", directIssue, whitespaceAsEmpty: true }).parse("  ")).toBe("b2c")
+        expect(oneOf(true, { values: [...channels], defaultValue: "b2b", directIssue, whitespaceAsEmpty: true }).parse("  ")).toBe("b2b")
+        expect(oneOf(true, { values: [0, 1], defaultValue: 1, directIssue, whitespaceAsEmpty: true }).parse(" ")).toBe(1)
+      })
+
+      it("should treat whitespace as empty inside z.object", () => {
+        expect(z.object({ r: oneOf(false, { values: [...channels], directIssue, whitespaceAsEmpty: true }) }).parse({ r: "  " })).toEqual({ r: null })
+        expect(z.object({ r: oneOf(false, { values: [...channels], defaultValue: "b2c", directIssue, whitespaceAsEmpty: true }) }).parse({ r: "  " })).toEqual({ r: "b2c" })
+        expect(z.object({ r: oneOf(false, { values: [...channels], directIssue, whitespaceAsEmpty: true }) }).parse({})).toEqual({ r: null })
+
+        const result = z.object({ r: oneOf(true, { values: [...channels], directIssue, whitespaceAsEmpty: true }) }).safeParse({ r: "  " })
+        expect(result.success).toBe(false)
+        expect(result.error!.issues).toHaveLength(1)
+        expect(result.error!.issues[0].path).toEqual(["r"])
+        expect(result.error!.issues[0].message).toBe(messages.required)
+      })
+
+      it("should treat whitespace as empty even if values contains a whitespace string", () => {
+        expect(oneOf(false, { values: [" ", "a"], directIssue, whitespaceAsEmpty: true }).parse(" ")).toBe(null)
+        const result = oneOf(true, { values: [" ", "a"], directIssue, whitespaceAsEmpty: true }).safeParse(" ")
+        expect(result.success).toBe(false)
+        expect(result.error!.issues[0].message).toBe(messages.required)
+      })
+
+      it("should not affect non-blank input", () => {
+        const schema = oneOf(true, { values: [...channels], directIssue, whitespaceAsEmpty: true })
+        expect(schema.parse("b2b")).toBe("b2b")
+        const invalid = schema.safeParse(" b2b ")
+        expect(invalid.success).toBe(false)
+        if (directIssue) expect(invalid.error!.issues[0].message).toBe(invalidMsg("b2b, b2c"))
+        expect(oneOf(true, { values: [0, 1], directIssue, whitespaceAsEmpty: true }).parse("1")).toBe(1)
+        expect(oneOf(true, { values: [...channels], caseSensitive: false, directIssue, whitespaceAsEmpty: true }).parse("B2C")).toBe("b2c")
+      })
+
+      it("should keep the usual handling of '', null and undefined", () => {
+        const schema = oneOf(true, { values: [...channels], directIssue, whitespaceAsEmpty: true })
+        for (const input of ["", null, undefined]) expect(schema.safeParse(input).error!.issues[0].message).toBe(messages.required)
+        expect(oneOf(false, { values: [...channels], directIssue, whitespaceAsEmpty: true }).parse("")).toBe(null)
+      })
+    })
+
+    describe("disabled (default)", () => {
+      it("should keep whitespace-only input invalid", () => {
+        for (const whitespaceAsEmpty of [undefined, false]) {
+          for (const required of [true, false]) {
+            for (const values of [[...channels], [0, 1]]) {
+              const result = oneOf(required, { values, defaultValue: undefined, directIssue, whitespaceAsEmpty }).safeParse("  ")
+              expect(result.success).toBe(false)
+              expect(result.error!.issues).toHaveLength(1)
+              if (directIssue) expect(result.error!.issues[0].message).toBe(invalidMsg(values.join(", ")))
+              else expect(result.error!.issues[0].code).toBe("invalid_union")
+            }
+          }
+        }
+      })
+
+      it("should not fall back to defaultValue for whitespace-only input", () => {
+        expect(oneOf(false, { values: [...channels], defaultValue: "b2c", directIssue }).safeParse("  ").success).toBe(false)
+      })
+
+      it("should match a whitespace string that is itself an option", () => {
+        expect(oneOf(true, { values: [" ", "a"], directIssue }).parse(" ")).toBe(" ")
+      })
+
+      it("should produce identical results with whitespaceAsEmpty: false and omitted", () => {
+        for (const input of ["", "  ", "b2b", "x", null, undefined, 1, {}]) {
+          const a = oneOf(false, { values: [...channels], directIssue }).safeParse(input)
+          const b = oneOf(false, { values: [...channels], directIssue, whitespaceAsEmpty: false }).safeParse(input)
+          expect(b).toEqual(a)
+        }
+      })
+    })
+  })
+})
+
+describe("oneOf whitespaceAsEmpty type inference", () => {
+  it("should keep the same inferred types", () => {
+    const req = oneOf(true, { values: ["b2b", "b2c"], directIssue: true, whitespaceAsEmpty: true })
+    const opt = oneOf(false, { values: ["b2b", "b2c"], whitespaceAsEmpty: true })
+    expectTypeOf<z.output<typeof req>>().toEqualTypeOf<"b2b" | "b2c">()
+    expectTypeOf<z.input<typeof req>>().toEqualTypeOf<"b2b" | "b2c">()
+    expectTypeOf<z.output<typeof opt>>().toEqualTypeOf<"b2b" | "b2c" | null>()
+    expectTypeOf<z.input<typeof opt>>().toEqualTypeOf<"b2b" | "b2c" | "" | null | undefined>()
+  })
+})
