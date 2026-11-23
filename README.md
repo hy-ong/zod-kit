@@ -617,6 +617,7 @@ const userSchema = z.object({
 | `text` | `string \| null \| undefined` | `string` / `string \| null` |
 
 `EmptyValue` is inferred from the `emptyValue` option (default `null`).
+If you declare options containing `emptyValue` as a variable first, specify the generic explicitly (e.g. `const opts: NumberOptions<false, undefined> = { emptyValue: undefined }`); otherwise the type falls back to the default `null`.
 
 This lets form libraries keep raw input values and parsed values separate, e.g. with react-hook-form:
 

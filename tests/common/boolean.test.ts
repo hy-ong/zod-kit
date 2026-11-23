@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf, beforeEach } from "vitest"
 import { z } from "zod"
-import { boolean, setLocale } from "../../src"
+import { boolean, setLocale, type BooleanOptions, type BooleanEmptyValue } from "../../src"
 
 describe("boolean", () => {
   describe("required (default)", () => {
@@ -463,5 +463,160 @@ describe("boolean type inference", () => {
     const form = z.object({ agree: boolean(false) })
     expectTypeOf<{ agree: "" }>().toExtend<z.input<typeof form>>()
     expectTypeOf<z.output<typeof form>>().toEqualTypeOf<{ agree: boolean | null }>()
+  })
+})
+
+describe("boolean default schema stays backward compatible", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should still fail when transform returns undefined", () => {
+    for (const required of [false, true]) {
+      const result = boolean(required, { transform: () => undefined as unknown as boolean }).safeParse("true")
+      expect(result.success).toBe(false)
+      expect(result.error!.issues.map((i) => i.code)).toEqual(["invalid_union"])
+      const issue = result.error!.issues[0] as unknown as { errors: unknown[][] }
+      expect(issue.errors).toHaveLength(3)
+    }
+  })
+
+  it('should still fail when transform returns ""', () => {
+    for (const required of [false, true]) {
+      const result = boolean(required, { transform: () => "" as unknown as boolean }).safeParse(1)
+      expect(result.success).toBe(false)
+      expect(result.error!.issues.map((i) => i.code)).toEqual(["invalid_union"])
+    }
+  })
+
+  it("should keep the same JSON Schema as before emptyValue was added", () => {
+    const expected = {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      anyOf: [
+        { type: "boolean", const: true },
+        { type: "boolean", const: false },
+        { type: "null", const: null },
+      ],
+    }
+    expect(z.toJSONSchema(boolean(false))).toEqual(expected)
+    expect(z.toJSONSchema(boolean(true))).toEqual(expected)
+  })
+
+  it("should only add the empty string branch when emptyValue is an empty string", () => {
+    expect(z.toJSONSchema(boolean(false, { emptyValue: "" })).anyOf).toContainEqual({ type: "string", const: "" })
+    expect(z.toJSONSchema(boolean(false, { emptyValue: null })).anyOf).toHaveLength(3)
+  })
+})
+
+describe("boolean emptyValue combinations", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should not apply transform to empty values", () => {
+    const schema = boolean(false, { transform: (v) => !v, emptyValue: undefined })
+    expect(schema.parse("")).toBe(undefined)
+    expect(schema.parse(null)).toBe(undefined)
+    expect(schema.parse("true")).toBe(false)
+  })
+
+  it("should fail shouldBe: false for empty values", () => {
+    const schema = boolean(false, { shouldBe: false, emptyValue: undefined })
+    expect(() => schema.parse("")).toThrow("Must be False")
+    expect(() => schema.parse(undefined)).toThrow("Must be False")
+    expect(schema.parse("no")).toBe(false)
+  })
+
+  it("should omit missing keys in z.object when emptyValue is undefined (default fills null)", () => {
+    const withUndefined = z.object({ a: boolean(false, { emptyValue: undefined }) }).parse({})
+    expect(withUndefined).toEqual({})
+    expect("a" in withUndefined).toBe(false)
+    expect(z.object({ a: boolean(false) }).parse({})).toEqual({ a: null })
+  })
+
+  it("should combine custom truthyValues / falsyValues with emptyValue", () => {
+    const schema = boolean(false, { truthyValues: ["Y"], falsyValues: ["N"], emptyValue: undefined })
+    expect(schema.parse("Y")).toBe(true)
+    expect(schema.parse("N")).toBe(false)
+    expect(schema.parse("")).toBe(undefined)
+    expect(schema.parse(null)).toBe(undefined)
+    expect(schema.safeParse("true").success).toBe(false)
+
+    const stringEmpty = boolean(false, { truthyValues: ["Y"], falsyValues: ["N"], emptyValue: "" })
+    expect(stringEmpty.parse(undefined)).toBe("")
+  })
+
+  it("should use defaultValue: true for empty input when required", () => {
+    for (const emptyValue of [null, undefined, ""] as const) {
+      const schema = boolean(true, { defaultValue: true, emptyValue })
+      expect(schema.parse("")).toBe(true)
+      expect(schema.parse(null)).toBe(true)
+      expect(schema.parse(undefined)).toBe(true)
+      expect(schema.parse("off")).toBe(false)
+    }
+  })
+})
+
+describe("boolean emptyValue i18n", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should use zh-TW messages", () => {
+    setLocale("zh-TW")
+    expect(() => boolean(true, { emptyValue: undefined }).parse("")).toThrow("必填")
+    expect(() => boolean(true, { emptyValue: "" }).parse(null)).toThrow("必填")
+    expect(() => boolean(false, { shouldBe: false, emptyValue: undefined }).parse("")).toThrow("必須為否")
+  })
+
+  it("should use custom i18n messages", () => {
+    const i18n = { "en-US": { required: "Please choose", shouldBeTrue: "Please agree" }, "zh-TW": { required: "請選擇", shouldBeTrue: "請同意" } }
+    expect(() => boolean(true, { emptyValue: undefined, i18n }).parse("")).toThrow("Please choose")
+    expect(() => boolean(false, { shouldBe: true, emptyValue: "", i18n }).parse(undefined)).toThrow("Please agree")
+    setLocale("zh-TW")
+    expect(() => boolean(true, { emptyValue: "", i18n }).parse(undefined)).toThrow("請選擇")
+    expect(() => boolean(false, { shouldBe: true, emptyValue: undefined, i18n }).parse("")).toThrow("請同意")
+  })
+})
+
+describe("boolean options variable type inference", () => {
+  it("should keep BooleanOptions<false> variables (without emptyValue) as boolean | null (0.2.9 compatible)", () => {
+    const options: BooleanOptions<false> = { strict: false }
+    const schema = boolean(false, options)
+    expectTypeOf<z.output<typeof schema>>().toEqualTypeOf<boolean | null>()
+    expect(schema.parse("")).toBe(null)
+
+    const omitted: Omit<BooleanOptions<false>, "required"> = { strict: false }
+    const omittedSchema = boolean(false, omitted)
+    expectTypeOf<z.output<typeof omittedSchema>>().toEqualTypeOf<boolean | null>()
+  })
+
+  it("should keep BooleanOptions<true> variables as boolean", () => {
+    const options: BooleanOptions<true> = { strict: false }
+    const schema = boolean(true, options)
+    expectTypeOf<z.output<typeof schema>>().toEqualTypeOf<boolean>()
+  })
+
+  it("should infer the explicit EmptyValue generic of a pre-declared options variable", () => {
+    const undefinedOptions: BooleanOptions<false, undefined> = { emptyValue: undefined }
+    const undefinedSchema = boolean(false, undefinedOptions)
+    expectTypeOf<z.output<typeof undefinedSchema>>().toEqualTypeOf<boolean | undefined>()
+    expect(undefinedSchema.parse("")).toBe(undefined)
+
+    const stringOptions: BooleanOptions<false, ""> = { emptyValue: "" }
+    const stringSchema = boolean(false, stringOptions)
+    expectTypeOf<z.output<typeof stringSchema>>().toEqualTypeOf<boolean | "">()
+    expect(stringSchema.parse(null)).toBe("")
+  })
+
+  it("should keep literal inference unchanged", () => {
+    const plain = boolean(false, { strict: true })
+    expectTypeOf<z.output<typeof plain>>().toEqualTypeOf<boolean | null>()
+    const undefinedEmpty = boolean(false, { emptyValue: undefined })
+    expectTypeOf<z.output<typeof undefinedEmpty>>().toEqualTypeOf<boolean | undefined>()
+    expect(boolean(false, { emptyValue: undefined }).parse(null)).toBe(undefined)
+    expect(boolean(true, { strict: true }).parse(true)).toBe(true)
+  })
+
+  it("should reject invalid emptyValue at the type level", () => {
+    // @ts-expect-error 0 is not an allowed emptyValue
+    boolean(false, { emptyValue: 0 })
+    // @ts-expect-error false is not an allowed emptyValue
+    const options: BooleanOptions<false, BooleanEmptyValue> = { emptyValue: false }
+    expect(options).toBeDefined()
   })
 })

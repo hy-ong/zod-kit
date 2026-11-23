@@ -69,6 +69,9 @@ export type NumberMessages = {
  * @property {null | undefined | ""} [emptyValue=null] - Value output for empty input when the field is optional and no defaultValue is set
  * @property {boolean} [whitespaceAsEmpty=false] - Treat whitespace-only strings as empty (required error / emptyValue) instead of parsing them as 0
  * @property {Record<Locale, NumberMessages>} [i18n] - Custom error messages for different locales
+ *
+ * @template EmptyValue - Type of `emptyValue` (default `null`). When declaring an options variable that sets
+ * `emptyValue`, specify it explicitly (e.g. `NumberOptions<false, undefined>`) so the schema output matches the runtime value.
  */
 export type NumberOptions<IsRequired extends boolean = true, EmptyValue extends NumberEmptyValue = null> = {
   min?: number
@@ -250,6 +253,11 @@ export function number<IsRequired extends boolean = false, EmptyValue extends Nu
           // Parse comma-separated numbers like "1,234.56"
           if (parseCommas) {
             processedVal = processedVal.replace(/,/g, "")
+
+            // "," or " , " contains no digits; treat it as empty rather than Number("") === 0
+            if (whitespaceAsEmpty && processedVal.trim() === "") {
+              return actualDefaultValue
+            }
           }
 
           const parsed = Number(processedVal)
@@ -276,7 +284,16 @@ export function number<IsRequired extends boolean = false, EmptyValue extends Nu
 
         return val
       },
-      z.union([z.number(), z.null(), z.undefined(), z.literal(""), z.nan(), z.custom<number>((val) => val === Infinity || val === -Infinity)])
+      z.union([
+        z.number(),
+        z.null(),
+        // Only accept undefined / "" when they can legitimately come from emptyValue, so the default schema
+        // (union members, nested invalid_union errors, JSON Schema) stays identical to the pre-emptyValue version
+        ...(actualDefaultValue === undefined ? [z.undefined()] : []),
+        ...(actualDefaultValue === "" ? [z.literal("")] : []),
+        z.nan(),
+        z.custom<number>((val) => val === Infinity || val === -Infinity),
+      ])
     )
     .superRefine((val, ctx) => {
       // Required check first

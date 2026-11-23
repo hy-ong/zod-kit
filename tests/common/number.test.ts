@@ -1,6 +1,6 @@
-import { describe, it, expect, expectTypeOf, beforeEach } from "vitest"
+import { describe, it, expect, expectTypeOf, beforeEach, vi } from "vitest"
 import { z } from "zod"
-import { number, setLocale } from "../../src"
+import { number, setLocale, type NumberOptions, type NumberEmptyValue } from "../../src"
 
 describe("number(true) features", () => {
   beforeEach(() => setLocale("en-US"))
@@ -383,5 +383,178 @@ describe("number type inference", () => {
     const form = z.object({ amount: number(true) })
     expectTypeOf<{ amount: "" }>().toExtend<z.input<typeof form>>()
     expectTypeOf<z.output<typeof form>>().toEqualTypeOf<{ amount: number }>()
+  })
+})
+
+describe("number default schema stays backward compatible", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should still fail when transform returns undefined (optional)", () => {
+    const result = number(false, { transform: () => undefined as unknown as number }).safeParse("5")
+    expect(result.success).toBe(false)
+    expect(result.error!.issues).toHaveLength(1)
+    expect(result.error!.issues[0].code).toBe("invalid_union")
+  })
+
+  it("should still fail when transform returns undefined (required)", () => {
+    const result = number(true, { transform: () => undefined as unknown as number }).safeParse(5)
+    expect(result.success).toBe(false)
+    expect(result.error!.issues.map((i) => i.code)).toEqual(["invalid_union"])
+  })
+
+  it('should still fail when transform returns "" (optional and required)', () => {
+    for (const required of [false, true]) {
+      const result = number(required, { transform: () => "" as unknown as number }).safeParse("5")
+      expect(result.success).toBe(false)
+      expect(result.error!.issues.map((i) => i.code)).toEqual(["invalid_union"])
+    }
+  })
+
+  it("should keep the original four union branches in nested invalid_union errors", () => {
+    const result = number(false, { transform: () => undefined as unknown as number }).safeParse(1)
+    const issue = result.error!.issues[0] as unknown as { errors: unknown[][] }
+    expect(issue.errors).toHaveLength(4)
+  })
+
+  it("should keep the same JSON Schema as before emptyValue was added", () => {
+    const expected = { $schema: "https://json-schema.org/draft/2020-12/schema", anyOf: [{ type: "number" }, { type: "null" }, {}, {}] }
+    expect(z.toJSONSchema(number(false), { unrepresentable: "any" })).toEqual(expected)
+    expect(z.toJSONSchema(number(true), { unrepresentable: "any" })).toEqual(expected)
+  })
+
+  it("should only add the undefined / empty string branch when emptyValue needs it", () => {
+    expect(z.toJSONSchema(number(false, { emptyValue: undefined }), { unrepresentable: "any" }).anyOf).toHaveLength(5)
+    expect(z.toJSONSchema(number(false, { emptyValue: "" }), { unrepresentable: "any" }).anyOf).toContainEqual({ type: "string", const: "" })
+    expect(z.toJSONSchema(number(false, { emptyValue: null }), { unrepresentable: "any" }).anyOf).toHaveLength(4)
+  })
+
+  it("should report min for whitespace-only strings without whitespaceAsEmpty (whitespace parses as 0)", () => {
+    expect(() => number(false, { min: 5 }).parse("   ")).toThrow("Must be at least 5")
+  })
+})
+
+describe("number whitespaceAsEmpty combinations", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should return null instead of running min for whitespace-only strings", () => {
+    expect(number(false, { whitespaceAsEmpty: true, min: 5 }).parse("   ")).toBe(null)
+  })
+
+  it("should keep parsing comma-only strings as 0 with parseCommas when whitespaceAsEmpty is off", () => {
+    const schema = number(false, { parseCommas: true })
+    expect(schema.parse(",")).toBe(0)
+    expect(schema.parse(" , ")).toBe(0)
+    expect(schema.parse(",,")).toBe(0)
+    expect(schema.parse("1,234")).toBe(1234)
+  })
+
+  it("should treat comma-only strings as empty with parseCommas and whitespaceAsEmpty", () => {
+    const schema = number(false, { parseCommas: true, whitespaceAsEmpty: true })
+    expect(schema.parse(",")).toBe(null)
+    expect(schema.parse(" , ")).toBe(null)
+    expect(schema.parse(", ,")).toBe(null)
+    expect(schema.parse("  ")).toBe(null)
+    expect(schema.parse("1,234.5")).toBe(1234.5)
+    expect(schema.parse(" 0 ")).toBe(0)
+  })
+
+  it("should output emptyValue for comma-only strings with parseCommas and whitespaceAsEmpty", () => {
+    expect(number(false, { parseCommas: true, whitespaceAsEmpty: true, emptyValue: undefined }).parse(",")).toBe(undefined)
+    expect(number(false, { parseCommas: true, whitespaceAsEmpty: true, emptyValue: "" }).parse(" , ")).toBe("")
+    expect(number(false, { parseCommas: true, whitespaceAsEmpty: true, defaultValue: 9 }).parse(",")).toBe(9)
+  })
+
+  it("should report required for comma-only strings with parseCommas and whitespaceAsEmpty", () => {
+    const schema = number(true, { parseCommas: true, whitespaceAsEmpty: true })
+    expect(() => schema.parse(",")).toThrow("Required")
+    expect(() => schema.parse(" , ")).toThrow("Required")
+  })
+
+  it("should not treat comma-only strings as empty without parseCommas", () => {
+    const result = number(false, { whitespaceAsEmpty: true }).safeParse(",")
+    expect(result.success).toBe(false)
+    expect(result.error!.issues[0].message).toBe("Must be a valid number")
+  })
+
+  it("should not apply transform to empty values", () => {
+    const transform = vi.fn((v: number) => v * 2)
+    const schema = number(false, { transform, whitespaceAsEmpty: true, parseCommas: true, emptyValue: undefined })
+    expect(schema.parse("")).toBe(undefined)
+    expect(schema.parse(null)).toBe(undefined)
+    expect(schema.parse(undefined)).toBe(undefined)
+    expect(schema.parse("   ")).toBe(undefined)
+    expect(schema.parse(" , ")).toBe(undefined)
+    expect(transform).not.toHaveBeenCalled()
+    expect(schema.parse("1,000")).toBe(2000)
+    expect(transform).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe("number emptyValue / whitespaceAsEmpty i18n", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should use zh-TW required message", () => {
+    setLocale("zh-TW")
+    expect(() => number(true, { emptyValue: undefined }).parse("")).toThrow("必填")
+    expect(() => number(true, { emptyValue: "" }).parse(undefined)).toThrow("必填")
+    expect(() => number(true, { whitespaceAsEmpty: true }).parse("  ")).toThrow("必填")
+    expect(() => number(true, { whitespaceAsEmpty: true, parseCommas: true }).parse(" , ")).toThrow("必填")
+  })
+
+  it("should use custom i18n required message", () => {
+    const i18n = { "en-US": { required: "Amount needed" }, "zh-TW": { required: "請輸入金額" } }
+    expect(() => number(true, { emptyValue: undefined, i18n }).parse("")).toThrow("Amount needed")
+    expect(() => number(true, { whitespaceAsEmpty: true, i18n }).parse("   ")).toThrow("Amount needed")
+    setLocale("zh-TW")
+    expect(() => number(true, { emptyValue: "", i18n }).parse(null)).toThrow("請輸入金額")
+    expect(() => number(true, { whitespaceAsEmpty: true, i18n }).parse("\t")).toThrow("請輸入金額")
+  })
+})
+
+describe("number options variable type inference", () => {
+  it("should keep NumberOptions<false> variables (without emptyValue) as number | null (0.2.9 compatible)", () => {
+    const options: NumberOptions<false> = { min: 0 }
+    const schema = number(false, options)
+    expectTypeOf<z.output<typeof schema>>().toEqualTypeOf<number | null>()
+    expect(schema.parse("")).toBe(null)
+
+    const omitted: Omit<NumberOptions<false>, "required"> = { min: 0 }
+    const omittedSchema = number(false, omitted)
+    expectTypeOf<z.output<typeof omittedSchema>>().toEqualTypeOf<number | null>()
+  })
+
+  it("should keep NumberOptions<true> variables as number", () => {
+    const options: NumberOptions<true> = { min: 0 }
+    const schema = number(true, options)
+    expectTypeOf<z.output<typeof schema>>().toEqualTypeOf<number>()
+  })
+
+  it("should infer the explicit EmptyValue generic of a pre-declared options variable", () => {
+    const undefinedOptions: NumberOptions<false, undefined> = { emptyValue: undefined }
+    const undefinedSchema = number(false, undefinedOptions)
+    expectTypeOf<z.output<typeof undefinedSchema>>().toEqualTypeOf<number | undefined>()
+    expect(undefinedSchema.parse("")).toBe(undefined)
+
+    const stringOptions: NumberOptions<false, ""> = { emptyValue: "" }
+    const stringSchema = number(false, stringOptions)
+    expectTypeOf<z.output<typeof stringSchema>>().toEqualTypeOf<number | "">()
+    expect(stringSchema.parse(null)).toBe("")
+  })
+
+  it("should keep literal inference unchanged", () => {
+    const plain = number(false, { min: 1 })
+    expectTypeOf<z.output<typeof plain>>().toEqualTypeOf<number | null>()
+    const undefinedEmpty = number(false, { emptyValue: undefined })
+    expectTypeOf<z.output<typeof undefinedEmpty>>().toEqualTypeOf<number | undefined>()
+    expect(number(false, { emptyValue: undefined }).parse(null)).toBe(undefined)
+    expect(number(true, { min: 1 }).parse(1)).toBe(1)
+  })
+
+  it("should reject invalid emptyValue at the type level", () => {
+    // @ts-expect-error 0 is not an allowed emptyValue
+    number(false, { emptyValue: 0 })
+    // @ts-expect-error "none" is not an allowed emptyValue
+    const options: NumberOptions<false, NumberEmptyValue> = { emptyValue: "none" }
+    expect(options).toBeDefined()
   })
 })

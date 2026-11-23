@@ -42,6 +42,9 @@ export type BooleanMessages = {
  * @property {Function} [transform] - Custom transformation function for boolean values
  * @property {null | undefined | ""} [emptyValue=null] - Value output for empty input when the field is optional and no defaultValue is set
  * @property {Record<Locale, BooleanMessages>} [i18n] - Custom error messages for different locales
+ *
+ * @template EmptyValue - Type of `emptyValue` (default `null`). When declaring an options variable that sets
+ * `emptyValue`, specify it explicitly (e.g. `BooleanOptions<false, undefined>`) so the schema output matches the runtime value.
  */
 export type BooleanOptions<IsRequired extends boolean = true, EmptyValue extends BooleanEmptyValue = null> = {
   defaultValue?: IsRequired extends true ? boolean : boolean | null
@@ -185,7 +188,15 @@ export function boolean<IsRequired extends boolean = false, EmptyValue extends B
 
       return val
     },
-    z.union([z.literal(true), z.literal(false), z.literal(null), z.undefined(), z.literal("")])
+    z.union([
+      z.literal(true),
+      z.literal(false),
+      z.literal(null),
+      // Only accept undefined / "" when they can legitimately come from emptyValue, so the default schema
+      // (union members, nested invalid_union errors, JSON Schema) stays identical to the pre-emptyValue version
+      ...(actualDefaultValue === undefined ? [z.undefined()] : []),
+      ...(actualDefaultValue === "" ? [z.literal("")] : []),
+    ])
   )
 
   if (isRequired && isEmpty(actualDefaultValue)) {
