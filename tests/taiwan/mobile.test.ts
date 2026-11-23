@@ -426,4 +426,58 @@ describe("Taiwan twMobile normalize option", () => {
     expect(schema.parse("0912-345-678")).toBe("0912345678")
     expect(() => schema.parse("0812-345-678")).toThrow("無效的手機號碼格式")
   })
+
+  it("should normalize defaultValue when normalize is true", () => {
+    const schema = twMobile(false, { normalize: true, defaultValue: "0912-345-678" })
+    expect(schema.parse("")).toBe("0912345678")
+    expect(schema.parse("   ")).toBe("0912345678")
+    expect(schema.parse(null)).toBe("0912345678")
+    expect(schema.parse(undefined)).toBe("0912345678")
+  })
+
+  it("should keep defaultValue unchanged when normalize is false", () => {
+    const schema = twMobile(false, { normalize: false, defaultValue: "0912-345-678" })
+    expect(schema.parse("")).toBe("0912-345-678")
+    expect(schema.parse(null)).toBe("0912-345-678")
+    expect(twMobile(false, { defaultValue: "0912-345-678" }).parse("")).toBe("0912-345-678")
+  })
+
+  it("should report invalid for separator-only input when optional", () => {
+    const result = twMobile(false, { normalize: true }).safeParse("-")
+    expect(result.success).toBe(false)
+    expect(result.error!.issues[0].message).toBe("Invalid Taiwan mobile phone format")
+  })
+
+  it("should strip tab separators", () => {
+    expect(twMobile(false, { normalize: true }).parse("0912\t345\t678")).toBe("0912345678")
+  })
+
+  it("should match a normalized whitelist entry with separated input", () => {
+    const schema = twMobile(false, { normalize: true, whitelist: ["0800000000"] })
+    expect(schema.parse("0800-000-000")).toBe("0800000000")
+  })
+
+  it("should keep 0.2.9 whitelist behavior when normalize is false", () => {
+    // Exact-match whitelist only: "0800 000 000" does not match "0800-000-000" and is not a valid mobile number
+    const schema = twMobile(false, { normalize: false, whitelist: ["0800-000-000"] })
+    const result = schema.safeParse("0800 000 000")
+    expect(result.success).toBe(false)
+    expect(result.error!.issues[0].message).toBe("Invalid Taiwan mobile phone format")
+    expect(schema.parse("0800-000-000")).toBe("0800-000-000")
+  })
+
+  it("should use custom i18n invalid message when normalize is true", () => {
+    const schema = twMobile(true, {
+      normalize: true,
+      i18n: {
+        "en-US": { invalid: "Bad mobile!" },
+        "zh-TW": { invalid: "手機號碼錯誤！" },
+      },
+    })
+    expect(schema.parse("0912-345-678")).toBe("0912345678")
+    expect(() => schema.parse("0812-345-678")).toThrow("Bad mobile!")
+    expect(() => schema.parse("-")).toThrow("Bad mobile!")
+    setLocale("zh-TW")
+    expect(() => schema.parse("0812-345-678")).toThrow("手機號碼錯誤！")
+  })
 })

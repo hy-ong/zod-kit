@@ -174,7 +174,9 @@ export function twMobile<IsRequired extends boolean = false>(required?: IsRequir
   const isRequired = required ?? false as IsRequired
 
   // Set appropriate default value based on required flag
-  const actualDefaultValue = defaultValue ?? (isRequired ? "" : null)
+  const rawDefaultValue = defaultValue ?? (isRequired ? "" : null)
+  // With normalize, the default value is output in normalized form as well (separator-only defaults are kept as-is)
+  const actualDefaultValue = normalize && typeof rawDefaultValue === "string" && stripSeparators(rawDefaultValue) !== "" ? stripSeparators(rawDefaultValue) : rawDefaultValue
 
   // Helper function to get custom message or fallback to default i18n
   const getMessage = (key: keyof TwMobileMessages, params?: Record<string, any>) => {
