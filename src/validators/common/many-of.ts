@@ -4,7 +4,7 @@
  * Provides multi-select validation that restricts input to an array of values
  * from a predefined set, with min/max selection, duplicate control, and transformation.
  *
- * Avoids z.preprocess() to preserve z.input types for React Hook Form compatibility.
+ * z.input types are declared via ManyOfSchema (not inferred from the schema), keeping React Hook Form compatibility.
  *
  * @author Ong Hoe Yuan
  * @version 0.2.6
@@ -72,7 +72,7 @@ export type ManyOfSchema<IsRequired extends boolean, V extends readonly (string 
 /**
  * Creates a Zod schema for multi-select validation that restricts values to a predefined set
  *
- * Avoids z.preprocess() to preserve z.input types for React Hook Form compatibility.
+ * z.input types are declared via ManyOfSchema (not inferred from the schema), keeping React Hook Form compatibility.
  *
  * @template IsRequired - Whether the field is required (affects return type)
  * @template V - The tuple type of allowed values (inferred via const type parameter)
@@ -206,13 +206,17 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
   // Handle required vs optional
   const fallback = defaultValue as V[number][] | null
 
+  // Identity preprocess gives the schema optin "optional" (like number/text), so a missing z.object key runs the
+  // empty-value logic (null / defaultValue / required) instead of failing with "expected nonoptional".
+  const withOptionalIn = (inner: ZodType) => z.preprocess((input) => input, inner)
+
   if (isRequired && fallback === null) {
     // Required, no default: empty values should fail with "required" message
     const emptyRejectSchema = z
       .union([z.literal("" as const), z.null(), z.undefined()])
       .refine(() => false, { message: getMessage("required") })
 
-    return z.union([arraySchema, singleToArray, emptyRejectSchema]) as unknown as ManyOfSchema<IsRequired, V>
+    return withOptionalIn(z.union([arraySchema, singleToArray, emptyRejectSchema])) as unknown as ManyOfSchema<IsRequired, V>
   }
 
   // Optional or has default: empty values → fallback
@@ -220,5 +224,5 @@ export function manyOf<IsRequired extends boolean = false, const V extends reado
     .union([z.literal("" as const), z.null(), z.undefined()])
     .transform(() => fallback)
 
-  return z.union([arraySchema, singleToArray, emptySchema]) as unknown as ManyOfSchema<IsRequired, V>
+  return withOptionalIn(z.union([arraySchema, singleToArray, emptySchema])) as unknown as ManyOfSchema<IsRequired, V>
 }

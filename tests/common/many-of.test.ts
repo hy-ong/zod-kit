@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect, expectTypeOf, beforeEach } from "vitest"
+import { z } from "zod"
 import { manyOf, setLocale, Locale } from "../../src"
 
 const locales = [
@@ -194,5 +195,64 @@ describe.each(locales)("manyOf(true) locale: $locale", ({ locale, messages }) =>
       const schema = manyOf(true, { values: [...frameworks], min: 1 })
       expect(() => schema.parse([])).toThrow()
     })
+  })
+})
+
+describe.each(locales)("manyOf bug fixes (0.3.1) locale: $locale", ({ locale, messages }) => {
+  beforeEach(() => setLocale(locale as Locale))
+
+  describe("missing z.object key", () => {
+    it("should resolve an optional field to null", () => {
+      const result = z.object({ r: manyOf(false, { values: [...frameworks] }) }).safeParse({})
+      expect(result.success).toBe(true)
+      expect(result.data).toEqual({ r: null })
+    })
+
+    it("should resolve to defaultValue when optional or required with a default", () => {
+      expect(z.object({ r: manyOf(false, { values: [...frameworks], defaultValue: ["vue"] }) }).parse({})).toEqual({ r: ["vue"] })
+      expect(z.object({ r: manyOf(true, { values: [...frameworks], defaultValue: ["react"] }) }).parse({})).toEqual({ r: ["react"] })
+    })
+
+    it("should keep reporting required (not nonoptional) for a required field without default", () => {
+      const result = z.object({ r: manyOf(true, { values: [...frameworks] }) }).safeParse({})
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toHaveLength(1)
+      expect(result.error!.issues[0].path).toEqual(["r"])
+      expect(result.error!.issues[0].message).toBe(messages.required)
+    })
+
+    it("should still validate a present key", () => {
+      const schema = z.object({ r: manyOf(false, { values: [...frameworks] }) })
+      expect(schema.parse({ r: ["react"] })).toEqual({ r: ["react"] })
+      expect(schema.safeParse({ r: ["jquery"] }).success).toBe(false)
+    })
+  })
+
+  describe("caseSensitive: false with numeric values (already correct, regression guard)", () => {
+    it("should accept number input and match strings case-insensitively", () => {
+      const schema = manyOf(true, { values: ["Low", 1, 2], caseSensitive: false })
+      expect(schema.parse([1, "LOW", "2"])).toEqual([1, "Low", 2])
+      expect(schema.parse(1)).toEqual([1])
+      expect(schema.safeParse([3]).success).toBe(false)
+    })
+  })
+
+  describe("whitespace and numeric strings (already correct, regression guard)", () => {
+    it("should not coerce whitespace-only strings to 0", () => {
+      const schema = manyOf(true, { values: [0, 1] })
+      expect(schema.safeParse(" ").success).toBe(false)
+      expect(schema.safeParse([" "]).success).toBe(false)
+      expect(schema.parse("0")).toEqual([0])
+      expect(schema.parse(["0", 1])).toEqual([0, 1])
+    })
+  })
+
+  it("should keep the same inferred types", () => {
+    const req = manyOf(true, { values: ["a", "b"] })
+    const opt = manyOf(false, { values: ["a", "b"] })
+    expectTypeOf<z.output<typeof req>>().toEqualTypeOf<("a" | "b")[]>()
+    expectTypeOf<z.input<typeof req>>().toEqualTypeOf<("a" | "b")[]>()
+    expectTypeOf<z.output<typeof opt>>().toEqualTypeOf<("a" | "b")[] | null>()
+    expectTypeOf<z.input<typeof opt>>().toEqualTypeOf<("a" | "b")[] | "" | null | undefined>()
   })
 })
