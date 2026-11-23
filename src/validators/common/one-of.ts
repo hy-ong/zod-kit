@@ -143,6 +143,10 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
 
   const isEmpty = (v: unknown) => v === "" || v === null || v === undefined
 
+  // Identity preprocess gives the schema optin "optional" (like number/text), so a missing z.object key runs the
+  // empty-value logic (null / defaultValue / required) instead of failing with "expected nonoptional".
+  const withOptionalIn = (inner: ZodType) => z.preprocess((input) => input, inner)
+
   // Build the value-matching schema using z.enum() or z.union(z.literal())
   let valueSchema: ZodType
   if (isAllStrings && valuesArr.length > 0) {
@@ -163,15 +167,13 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
     valueSchema = z.never()
   }
 
-  // Case-insensitive: pipe through a string normalizer
+  // Case-insensitive: normalize string input to the matching option; non-string input (e.g. numbers) passes through unchanged
   if (!caseSensitive) {
-    valueSchema = z
-      .string()
-      .transform((v) => {
-        const match = valuesArr.find((val) => typeof val === "string" && val.toLowerCase() === v.toLowerCase())
-        return (match ?? v) as string
-      })
-      .pipe(valueSchema as ZodType<any, any>)
+    valueSchema = z.preprocess((v) => {
+      if (typeof v !== "string") return v
+      const match = valuesArr.find((val) => typeof val === "string" && val.toLowerCase() === v.toLowerCase())
+      return match ?? v
+    }, valueSchema)
   }
 
   // User transform (applied after validation)
@@ -190,6 +192,8 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
         z
           .string()
           .transform((v) => {
+            // Blank strings are not coerced (Number("") === Number(" ") === 0); "" is handled as empty, whitespace stays invalid
+            if (v.trim() === "") return v
             const n = Number(v)
             return isNaN(n) ? v : n
           })
@@ -197,23 +201,25 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
       )
     }
 
-    return z.unknown().transform((input, ctx) => {
-      if (isEmpty(input)) {
-        if (isRequired && fallback === null) {
-          ctx.addIssue({ code: "custom", message: getMessage("required") })
-          return z.NEVER
+    return withOptionalIn(
+      z.unknown().transform((input, ctx) => {
+        if (isEmpty(input)) {
+          if (isRequired && fallback === null) {
+            ctx.addIssue({ code: "custom", message: getMessage("required") })
+            return z.NEVER
+          }
+          return fallback
         }
-        return fallback
-      }
 
-      for (const candidate of candidates) {
-        const result = candidate.safeParse(input)
-        if (result.success) return result.data
-      }
+        for (const candidate of candidates) {
+          const result = candidate.safeParse(input)
+          if (result.success) return result.data
+        }
 
-      ctx.addIssue({ code: "custom", message: getMessage("invalid", { values: valuesArr.join(", ") }) })
-      return z.NEVER
-    }) as unknown as OneOfSchema<IsRequired, V>
+        ctx.addIssue({ code: "custom", message: getMessage("invalid", { values: valuesArr.join(", ") }) })
+        return z.NEVER
+      })
+    ) as unknown as OneOfSchema<IsRequired, V>
   }
   const emptySchema = z
     .union([z.literal("" as const), z.null(), z.undefined()])
@@ -230,14 +236,16 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
       const numCoerceSchema = z
         .string()
         .transform((v) => {
+          // Blank strings are not coerced (Number("") === Number(" ") === 0); "" is handled as empty, whitespace stays invalid
+          if (v.trim() === "") return v
           const n = Number(v)
           return isNaN(n) ? v : n
         })
         .pipe(valueSchema as ZodType<any, any>)
-      return z.union([valueSchema, numCoerceSchema, emptyRejectSchema]) as unknown as OneOfSchema<IsRequired, V>
+      return withOptionalIn(z.union([valueSchema, numCoerceSchema, emptyRejectSchema])) as unknown as OneOfSchema<IsRequired, V>
     }
 
-    return z.union([valueSchema, emptyRejectSchema]) as unknown as OneOfSchema<IsRequired, V>
+    return withOptionalIn(z.union([valueSchema, emptyRejectSchema])) as unknown as OneOfSchema<IsRequired, V>
   }
 
   // Required with default or optional: empty values → fallback
@@ -245,12 +253,14 @@ export function oneOf<IsRequired extends boolean = false, const V extends readon
     const numCoerceSchema = z
       .string()
       .transform((v) => {
+        // Blank strings are not coerced (Number("") === Number(" ") === 0); "" is handled as empty, whitespace stays invalid
+        if (v.trim() === "") return v
         const n = Number(v)
         return isNaN(n) ? v : n
       })
       .pipe(valueSchema as ZodType<any, any>)
-    return z.union([valueSchema, numCoerceSchema, emptySchema]) as unknown as OneOfSchema<IsRequired, V>
+    return withOptionalIn(z.union([valueSchema, numCoerceSchema, emptySchema])) as unknown as OneOfSchema<IsRequired, V>
   }
 
-  return z.union([valueSchema, emptySchema]) as unknown as OneOfSchema<IsRequired, V>
+  return withOptionalIn(z.union([valueSchema, emptySchema])) as unknown as OneOfSchema<IsRequired, V>
 }

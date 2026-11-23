@@ -283,12 +283,177 @@ describe("oneOf directIssue edge cases", () => {
     const direct = z.object({ r: oneOf(false, { values: ["a", "b"], directIssue: true }) }).safeParse({})
     const fallback = z.object({ r: oneOf(false, { values: ["a", "b"] }) }).safeParse({})
 
-    // Pre-existing behavior (0.2.9): a missing key fails with nonoptional; directIssue must not change it
-    expect(fallback.success).toBe(false)
-    expect(fallback.error!.issues).toHaveLength(1)
-    expect(fallback.error!.issues[0]).toMatchObject({ code: "invalid_type", expected: "nonoptional", path: ["r"] })
+    // A missing optional key resolves to null on both paths (0.2.9–0.3.0 failed with "expected nonoptional")
+    expect(fallback.success).toBe(true)
+    expect(fallback.data).toEqual({ r: null })
+    expect(direct.success).toBe(true)
+    expect(direct.data).toEqual(fallback.data)
+  })
+})
 
-    expect(direct.success).toBe(fallback.success)
-    expect(direct.error!.issues).toEqual(fallback.error!.issues)
+const directIssueModes = [false, true] as const
+
+describe.each(locales)("oneOf bug fixes (0.3.1) locale: $locale", ({ locale, messages }) => {
+  beforeEach(() => setLocale(locale as Locale))
+
+  const numInvalid = (vals: string) => (locale === "en-US" ? `Must be one of: ${vals}` : `必須為以下其中一個值：${vals}`)
+
+  describe.each(directIssueModes)("directIssue: %s", (directIssue) => {
+    describe("missing z.object key", () => {
+      it("should resolve an optional field to null", () => {
+        const result = z.object({ r: oneOf(false, { values: [...stringValues], directIssue }) }).safeParse({})
+        expect(result.success).toBe(true)
+        expect(result.data).toEqual({ r: null })
+      })
+
+      it("should resolve an optional numeric field to null", () => {
+        const result = z.object({ r: oneOf(false, { values: [...numericValues], directIssue }) }).safeParse({})
+        expect(result.success).toBe(true)
+        expect(result.data).toEqual({ r: null })
+      })
+
+      it("should resolve to defaultValue when optional or required with a default", () => {
+        expect(z.object({ r: oneOf(false, { values: [...stringValues], defaultValue: "viewer", directIssue }) }).parse({})).toEqual({ r: "viewer" })
+        expect(z.object({ r: oneOf(true, { values: [...stringValues], defaultValue: "editor", directIssue }) }).parse({})).toEqual({ r: "editor" })
+        expect(z.object({ r: oneOf(true, { values: [...numericValues], defaultValue: 2, directIssue }) }).parse({})).toEqual({ r: 2 })
+      })
+
+      it("should keep reporting required (not nonoptional) for a required field without default", () => {
+        for (const values of [[...stringValues], [...numericValues]]) {
+          const result = z.object({ r: oneOf(true, { values, directIssue }) }).safeParse({})
+          expect(result.success).toBe(false)
+          expect(result.error!.issues).toHaveLength(1)
+          expect(result.error!.issues[0].path).toEqual(["r"])
+          expect(result.error!.issues[0].message).toBe(messages.required)
+          expect(result.error!.issues[0]).not.toMatchObject({ expected: "nonoptional" })
+        }
+      })
+
+      it("should still validate a present key", () => {
+        const schema = z.object({ r: oneOf(false, { values: [...stringValues], directIssue }) })
+        expect(schema.parse({ r: "admin" })).toEqual({ r: "admin" })
+        expect(schema.safeParse({ r: "hacker" }).success).toBe(false)
+        expect(schema.parse({ r: undefined })).toEqual({ r: null })
+      })
+    })
+
+    describe("caseSensitive: false with numeric values", () => {
+      it("should accept number input", () => {
+        const schema = oneOf(true, { values: [1, 2], caseSensitive: false, directIssue })
+        expect(schema.parse(1)).toBe(1)
+        expect(schema.parse(2)).toBe(2)
+      })
+
+      it("should coerce numeric strings to numbers", () => {
+        const schema = oneOf(true, { values: [1, 2], caseSensitive: false, directIssue })
+        expect(schema.parse("1")).toBe(1)
+      })
+
+      it("should reject numbers outside the list", () => {
+        const result = oneOf(true, { values: [1, 2], caseSensitive: false, directIssue }).safeParse(3)
+        expect(result.success).toBe(false)
+        if (directIssue) expect(result.error!.issues[0].message).toBe(numInvalid("1, 2"))
+      })
+
+      it("should match strings case-insensitively and numbers exactly in mixed values", () => {
+        const schema = oneOf(true, { values: ["Low", 1, 2], caseSensitive: false, directIssue })
+        expect(schema.parse("LOW")).toBe("Low")
+        expect(schema.parse("low")).toBe("Low")
+        expect(schema.parse(1)).toBe(1)
+        expect(schema.parse("2")).toBe(2)
+        expect(schema.safeParse("high").success).toBe(false)
+        expect(schema.safeParse(3).success).toBe(false)
+      })
+
+      it("should apply transform to number input", () => {
+        const schema = oneOf(true, { values: [1, 2], caseSensitive: false, transform: (v) => (v === 1 ? 2 : 1), directIssue })
+        expect(schema.parse(1)).toBe(2)
+      })
+    })
+
+    describe("whitespace-only input with numeric values", () => {
+      const expectInvalid = (result: { success: boolean; error?: { issues: { code: string; message: string }[] } }, vals: string) => {
+        expect(result.success).toBe(false)
+        expect(result.error!.issues).toHaveLength(1)
+        if (directIssue) expect(result.error!.issues[0].message).toBe(numInvalid(vals))
+        else expect(result.error!.issues[0].code).toBe("invalid_union")
+      }
+
+      it("should report invalid instead of coercing to 0", () => {
+        for (const required of [true, false]) {
+          const schema = oneOf(required, { values: [0, 1], directIssue })
+          for (const input of [" ", "   ", "\t\n"]) expectInvalid(schema.safeParse(input), "0, 1")
+        }
+      })
+
+      it("should not fall back to defaultValue", () => {
+        expectInvalid(oneOf(false, { values: [0, 1], defaultValue: 1, directIssue }).safeParse(" "), "0, 1")
+        expectInvalid(oneOf(true, { values: [0, 1], defaultValue: 1, directIssue }).safeParse(" "), "0, 1")
+      })
+
+      it("should report invalid in mixed values and with caseSensitive: false", () => {
+        expectInvalid(oneOf(false, { values: ["a", 0], directIssue }).safeParse(" "), "a, 0")
+        expectInvalid(oneOf(true, { values: [0, 1], caseSensitive: false, directIssue }).safeParse(" "), "0, 1")
+      })
+
+      it("should report invalid inside z.object", () => {
+        const result = z.object({ r: oneOf(false, { values: [0, 1], directIssue }) }).safeParse({ r: " " })
+        expect(result.success).toBe(false)
+        expect(result.error!.issues[0].path).toEqual(["r"])
+      })
+
+      it("should still match a whitespace string that is itself an option", () => {
+        expect(oneOf(true, { values: [" ", 1], directIssue }).parse(" ")).toBe(" ")
+        expect(oneOf(true, { values: [" ", 1], directIssue }).parse("1")).toBe(1)
+      })
+
+      it("should treat an empty string as empty instead of coercing to 0", () => {
+        expect(oneOf(false, { values: [0, 1], directIssue }).parse("")).toBe(null)
+        expect(oneOf(false, { values: [0, 1], defaultValue: 1, directIssue }).parse("")).toBe(1)
+        expect(oneOf(true, { values: [0, 1], defaultValue: 1, directIssue }).parse("")).toBe(1)
+        const result = oneOf(true, { values: [0, 1], directIssue }).safeParse("")
+        expect(result.success).toBe(false)
+        expect(result.error!.issues[0].message).toBe(messages.required)
+      })
+
+      it("should still coerce numeric strings and accept 0", () => {
+        const schema = oneOf(true, { values: [0, 1], directIssue })
+        expect(schema.parse(0)).toBe(0)
+        expect(schema.parse("0")).toBe(0)
+        expect(schema.parse("1")).toBe(1)
+      })
+
+      it("should keep whitespace-only input invalid (not empty) for string-only values", () => {
+        for (const required of [true, false]) {
+          const result = oneOf(required, { values: [...stringValues], directIssue }).safeParse(" ")
+          expect(result.success).toBe(false)
+          if (directIssue) expect(result.error!.issues[0].message).toBe(messages.invalid)
+          else expect(result.error!.issues[0].code).toBe("invalid_union")
+        }
+      })
+    })
+  })
+})
+
+describe("oneOf bug fixes (0.3.1) type inference", () => {
+  it("should keep the same inferred types for both paths and option combinations", () => {
+    for (const directIssue of [false, true]) {
+      const req = oneOf(true, { values: ["a", "b"], directIssue })
+      const opt = oneOf(false, { values: ["a", "b"], directIssue })
+      const reqNum = oneOf(true, { values: [1, 2], caseSensitive: false, directIssue })
+      const optNum = oneOf(false, { values: [0, 1], defaultValue: 1, directIssue })
+      expectTypeOf<z.output<typeof req>>().toEqualTypeOf<"a" | "b">()
+      expectTypeOf<z.input<typeof req>>().toEqualTypeOf<"a" | "b">()
+      expectTypeOf<z.output<typeof opt>>().toEqualTypeOf<"a" | "b" | null>()
+      expectTypeOf<z.input<typeof opt>>().toEqualTypeOf<"a" | "b" | "" | null | undefined>()
+      expectTypeOf<z.output<typeof reqNum>>().toEqualTypeOf<1 | 2>()
+      expectTypeOf<z.input<typeof reqNum>>().toEqualTypeOf<1 | 2>()
+      expectTypeOf<z.output<typeof optNum>>().toEqualTypeOf<0 | 1 | null>()
+      expectTypeOf<z.input<typeof optNum>>().toEqualTypeOf<0 | 1 | "" | null | undefined>()
+
+      const obj = z.object({ r: opt, n: req })
+      expectTypeOf<z.output<typeof obj>>().toEqualTypeOf<{ r: "a" | "b" | null; n: "a" | "b" }>()
+      expectTypeOf<z.input<typeof obj>>().toEqualTypeOf<{ r: "a" | "b" | "" | null | undefined; n: "a" | "b" }>()
+    }
   })
 })

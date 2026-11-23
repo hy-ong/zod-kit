@@ -252,6 +252,8 @@ directPlan.safeParse('gold').error?.issues[0].message // "Must be one of: basic,
 
 Other options: `defaultValue`, `transform`, `i18n`. `directIssue` defaults to `false`; it only changes non-empty invalid values (empty values still yield the required message or `null`/`defaultValue`).
 
+Empty values are `''`, `null`, `undefined` and a missing `z.object` key. Blank strings are never coerced to numbers, so a whitespace-only string (e.g. `' '`) is invalid unless it is itself one of the `values`. `caseSensitive: false` only affects string options — numbers are matched as-is.
+
 #### `datetime(required?, options?)`
 
 Validates datetime with comprehensive format support and timezone handling.
