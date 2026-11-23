@@ -183,20 +183,20 @@
     "prepublishOnly": "npm test -- --run && npm run build"
   },
   "dependencies": {
-    "dayjs": "^1.11.20"
+    "dayjs": "^1.11.23"
   },
   "peerDependencies": {
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.9.1",
-    "eslint": "^10.4.0",
+    "@types/node": "^26.6.6",
+    "eslint": "^10.15.0",
     "jiti": "^2.7.0",
-    "prettier": "^3.8.3",
-    "tsup": "^8.5.1",
+    "prettier": "^3.10.1",
+    "tsup": "^9.0.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.4",
-    "vitest": "^4.1.7"
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.1"
   }
 }
