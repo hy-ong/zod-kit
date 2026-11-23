@@ -116,7 +116,7 @@
       "includes": "Mesti mengandungi ${includes}",
       "excludes": "Tidak boleh mengandungi ${excludes}",
       "invalid": "Format tidak sah",
-      "notString": "Mesti berupa rentetan"
+      "notString": "Mesti rentetan"
     },
     "date": {
       "required": "Wajib diisi",

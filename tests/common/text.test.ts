@@ -1,6 +1,16 @@
 import { describe, expect, expectTypeOf, it, beforeEach } from "vitest"
 import { z } from "zod"
 import { Locale, setLocale, text } from "../../src"
+import enUS from "../../src/i18n/locales/en-US.json"
+import enGB from "../../src/i18n/locales/en-GB.json"
+import zhTW from "../../src/i18n/locales/zh-TW.json"
+import zhCN from "../../src/i18n/locales/zh-CN.json"
+import jaJP from "../../src/i18n/locales/ja-JP.json"
+import koKR from "../../src/i18n/locales/ko-KR.json"
+import msMY from "../../src/i18n/locales/ms-MY.json"
+import idID from "../../src/i18n/locales/id-ID.json"
+import thTH from "../../src/i18n/locales/th-TH.json"
+import viVN from "../../src/i18n/locales/vi-VN.json"
 
 const locales = [
   {
@@ -402,6 +412,172 @@ describe("text() whitespaceAsEmpty option", () => {
   it("should keep reporting notEmpty when whitespaceAsEmpty is off", () => {
     const schema = text(false, { notEmpty: true, trimMode: "none" })
     expect(() => schema.parse("   ")).toThrow("Cannot be empty or whitespace only")
+  })
+})
+
+describe("text() non-strict keeps Zod default type error", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  const zodDefault = z.string().safeParse(1)
+
+  it("should report Zod's default invalid_type message when transform returns a non-string", () => {
+    const result = text(true, { transform: () => 1 as any }).safeParse("a")
+    expect(result.success).toBe(false)
+    expect(result.error?.issues).toHaveLength(1)
+    expect(result.error?.issues[0].code).toBe("invalid_type")
+    expect(result.error?.issues[0].message).toBe(zodDefault.error?.issues[0].message)
+    expect(result.error?.issues[0].message).toBe("Invalid input: expected string, received number")
+    expect(result.error?.issues[0].message).not.toBe(enUS.common.text.notString)
+  })
+
+  it("should report Zod's default invalid_type message when defaultValue is a non-string", () => {
+    const required = text(true, { defaultValue: 1 as any }).safeParse(null)
+    expect(required.success).toBe(false)
+    expect(required.error?.issues[0].code).toBe("invalid_type")
+    expect(required.error?.issues[0].message).toBe("Invalid input: expected string, received number")
+
+    const optional = text(false, { defaultValue: 1 as any }).safeParse("")
+    expect(optional.success).toBe(false)
+    expect(optional.error?.issues[0].code).toBe("invalid_type")
+    expect(optional.error?.issues[0].message).not.toBe(enUS.common.text.notString)
+  })
+
+  it("should not use the notString message in other locales either", () => {
+    setLocale("zh-TW")
+    const result = text(true, { transform: () => 1 as any }).safeParse("a")
+    expect(result.error?.issues[0].message).toBe("Invalid input: expected string, received number")
+  })
+})
+
+describe.each([
+  { locale: "en-US", file: enUS },
+  { locale: "en-GB", file: enGB },
+  { locale: "zh-TW", file: zhTW },
+  { locale: "zh-CN", file: zhCN },
+  { locale: "ja-JP", file: jaJP },
+  { locale: "ko-KR", file: koKR },
+  { locale: "ms-MY", file: msMY },
+  { locale: "id-ID", file: idID },
+  { locale: "th-TH", file: thTH },
+  { locale: "vi-VN", file: viVN },
+])("text() strict notString locale: $locale", ({ locale, file }) => {
+  beforeEach(() => setLocale(locale as Locale))
+
+  it("should use the locale's notString message", () => {
+    const expected = file.common.text.notString
+    expect(typeof expected).toBe("string")
+    expect(expected.length).toBeGreaterThan(0)
+    const result = text(true, { strict: true }).safeParse(1)
+    expect(result.success).toBe(false)
+    expect(result.error?.issues).toHaveLength(1)
+    expect(result.error?.issues[0].code).toBe("invalid_type")
+    expect(result.error?.issues[0].message).toBe(expected)
+  })
+})
+
+describe("text() whitespaceAsEmpty combinations", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should fall back to defaultValue for whitespace-only required input", () => {
+    expect(text(true, { whitespaceAsEmpty: true, defaultValue: "x" }).parse("   ")).toBe("x")
+  })
+
+  it("should skip minLength for whitespace-only optional input", () => {
+    expect(text(false, { whitespaceAsEmpty: true, minLength: 3 }).parse("  ")).toBe(null)
+  })
+
+  it("should skip regex and startsWith for whitespace-only optional input", () => {
+    expect(text(false, { whitespaceAsEmpty: true, regex: /^[a-z]+$/ }).parse("  ")).toBe(null)
+    expect(text(false, { whitespaceAsEmpty: true, startsWith: "pre" }).parse("  ")).toBe(null)
+    expect(text(false, { whitespaceAsEmpty: true, trimMode: "none", regex: /^[a-z]+$/, startsWith: "pre" }).parse(" \t ")).toBe(null)
+  })
+
+  it("should skip transform for whitespace-only input", () => {
+    expect(text(false, { whitespaceAsEmpty: true, transform: (v) => v + "X" }).parse("  ")).toBe(null)
+    expect(text(false, { transform: (v) => v + "X" }).parse("  ")).toBe("X")
+  })
+
+  it("should skip casing for whitespace-only input", () => {
+    expect(text(false, { whitespaceAsEmpty: true, casing: "upper" }).parse("  ")).toBe(null)
+    expect(text(false, { whitespaceAsEmpty: true, casing: "title", trimMode: "none" }).parse("   ")).toBe(null)
+    expect(text(false, { whitespaceAsEmpty: true, casing: "upper" }).parse(" ab ")).toBe("AB")
+  })
+
+  it("should treat full-width space (U+3000) as whitespace", () => {
+    const fullWidth = "\u3000"
+    // String.prototype.trim() strips U+3000, so it is whitespace-only input
+    expect(text(false, { whitespaceAsEmpty: true }).parse(fullWidth)).toBe(null)
+    expect(text(false, { whitespaceAsEmpty: true, trimMode: "none" }).parse(fullWidth + " " + fullWidth)).toBe(null)
+    expect(() => text(true, { whitespaceAsEmpty: true, trimMode: "none" }).parse(fullWidth)).toThrow("Required")
+    expect(text(false, { whitespaceAsEmpty: true }).parse(fullWidth + "a" + fullWidth)).toBe("a")
+    // Without whitespaceAsEmpty the default trim also strips it
+    expect(text(false).parse(fullWidth)).toBe("")
+    expect(text(false, { trimMode: "none" }).parse(fullWidth)).toBe(fullWidth)
+  })
+
+  it("should report the zh-TW required message", () => {
+    setLocale("zh-TW")
+    const result = text(true, { whitespaceAsEmpty: true, trimMode: "none" }).safeParse("   ")
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].message).toBe(zhTW.common.text.required)
+    expect(result.error?.issues[0].message).toBe("必填")
+  })
+})
+
+describe("text() strict combinations", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should not fall back to defaultValue for non-string input", () => {
+    const result = text(false, { strict: true, defaultValue: "d" }).safeParse(5)
+    expect(result.success).toBe(false)
+    expect(result.error?.issues).toHaveLength(1)
+    expect(result.error?.issues[0].message).toBe(enUS.common.text.notString)
+  })
+
+  it("should report notString for non-string input even with transform", () => {
+    let called = false
+    const schema = text(true, {
+      strict: true,
+      transform: (v) => {
+        called = true
+        return v + "X"
+      },
+    })
+    const result = schema.safeParse(5)
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].message).toBe(enUS.common.text.notString)
+    expect(called).toBe(false)
+    expect(schema.parse("a")).toBe("aX")
+  })
+
+  it("should report notString when transform returns a non-string in strict mode", () => {
+    const result = text(true, { strict: true, transform: () => 1 as any }).safeParse("a")
+    expect(result.success).toBe(false)
+    expect(result.error?.issues[0].message).toBe(enUS.common.text.notString)
+  })
+
+  it("should report required for whitespace-only input with whitespaceAsEmpty and trimMode none", () => {
+    const result = text(true, { strict: true, whitespaceAsEmpty: true, trimMode: "none" }).safeParse("  ")
+    expect(result.success).toBe(false)
+    expect(result.error?.issues).toHaveLength(1)
+    expect(result.error?.issues[0].message).toBe("Required")
+  })
+
+  it("should keep the field path inside z.object", () => {
+    const result = z.object({ n: text(true, { strict: true }) }).safeParse({ n: 1 })
+    expect(result.success).toBe(false)
+    expect(result.error?.issues).toHaveLength(1)
+    expect(result.error?.issues[0].path).toEqual(["n"])
+    expect(result.error?.issues[0].message).toBe(enUS.common.text.notString)
+  })
+
+  it("should fall back to the built-in notString when the custom message is only set for another locale", () => {
+    const schema = text(true, { strict: true, i18n: { "zh-TW": { notString: "只能是文字" } } })
+    expect(schema.safeParse(1).error?.issues[0].message).toBe(enUS.common.text.notString)
+    setLocale("ja-JP")
+    expect(schema.safeParse(1).error?.issues[0].message).toBe(jaJP.common.text.notString)
+    setLocale("zh-TW")
+    expect(schema.safeParse(1).error?.issues[0].message).toBe("只能是文字")
   })
 })
 

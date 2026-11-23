@@ -248,7 +248,8 @@ export function text<IsRequired extends boolean = false>(required?: IsRequired, 
     return processed
   }
 
-  const stringSchema = z.string({ error: () => getMessage("notString") })
+  // Only override the type error in strict mode; otherwise keep Zod's default message (same as before strict existed)
+  const stringSchema = strict ? z.string({ error: () => getMessage("notString") }) : z.string()
   const baseSchema = isRequired ? z.preprocess(preprocessFn, stringSchema) : z.preprocess(preprocessFn, stringSchema.nullable())
 
   // Single superRefine with all validations for better performance
