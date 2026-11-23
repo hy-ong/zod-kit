@@ -243,3 +243,52 @@ describe("oneOf directIssue type inference", () => {
     expectTypeOf<z.input<typeof opt>>().toEqualTypeOf<"a" | "b" | "" | null | undefined>()
   })
 })
+
+describe("oneOf directIssue edge cases", () => {
+  beforeEach(() => setLocale("en-US"))
+
+  it("should report the invalid message at top level for a single value", () => {
+    const direct = oneOf(true, { values: ["only"], directIssue: true }).safeParse("x")
+    expect(direct.success).toBe(false)
+    expect(direct.error!.issues).toHaveLength(1)
+    expect(direct.error!.issues[0].code).toBe("custom")
+    expect(direct.error!.issues[0].message).toBe("Must be one of: only")
+  })
+
+  it("should keep the default (union) top-level issue for a single value without directIssue", () => {
+    const fallback = oneOf(true, { values: ["only"] }).safeParse("x")
+    expect(fallback.success).toBe(false)
+    expect(fallback.error!.issues).toHaveLength(1)
+    expect(fallback.error!.issues[0].code).toBe("invalid_union")
+    expect(fallback.error!.issues[0].message).toBe("Invalid input")
+  })
+
+  it("should handle mixed string and number values", () => {
+    const schema = oneOf(true, { values: ["a", 1], directIssue: true })
+    expect(schema.parse("1")).toBe(1)
+    expect(schema.parse("a")).toBe("a")
+    // Same as the default path
+    expect(oneOf(true, { values: ["a", 1] }).parse("1")).toBe(1)
+    expect(oneOf(true, { values: ["a", 1] }).parse("a")).toBe("a")
+  })
+
+  it("should reject values with surrounding whitespace", () => {
+    const direct = oneOf(true, { values: ["a"], directIssue: true }).safeParse(" a ")
+    expect(direct.success).toBe(false)
+    expect(direct.error!.issues[0].message).toBe("Must be one of: a")
+    expect(oneOf(true, { values: ["a"] }).safeParse(" a ").success).toBe(false)
+  })
+
+  it("should match the default path for a missing optional key in z.object", () => {
+    const direct = z.object({ r: oneOf(false, { values: ["a", "b"], directIssue: true }) }).safeParse({})
+    const fallback = z.object({ r: oneOf(false, { values: ["a", "b"] }) }).safeParse({})
+
+    // Pre-existing behavior (0.2.9): a missing key fails with nonoptional; directIssue must not change it
+    expect(fallback.success).toBe(false)
+    expect(fallback.error!.issues).toHaveLength(1)
+    expect(fallback.error!.issues[0]).toMatchObject({ code: "invalid_type", expected: "nonoptional", path: ["r"] })
+
+    expect(direct.success).toBe(fallback.success)
+    expect(direct.error!.issues).toEqual(fallback.error!.issues)
+  })
+})
