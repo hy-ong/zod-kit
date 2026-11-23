@@ -191,6 +191,8 @@ wsAsEmpty.parse('  ') // ❌ Required
 
 Other options: `negative`, `nonNegative`, `nonPositive`, `multipleOf`, `precision`, `finite` (default `true`), `parseCommas` (parse `"1,234"` as `1234`), `transform`, `defaultValue`, `i18n`. `defaultValue` takes priority over `emptyValue`; `emptyValue` only applies to optional fields (required fields still fail with the required message).
 
+When both `defaultValue` and `emptyValue` are set, empty input always returns `defaultValue` at runtime and `emptyValue` has no effect, but the output type is still `number | EmptyValue` (e.g. `number(false, { defaultValue: 0, emptyValue: undefined })` is typed `number | undefined`). If you want "send the default when left blank", set only `defaultValue`.
+
 #### `url(required?, options?)`
 
 URL validation with protocol and domain restrictions.
@@ -229,6 +231,8 @@ const undefinedWhenEmpty = boolean(false, { emptyValue: undefined }) // z.output
 
 Other options: `strict` (only accept actual booleans), `transform`, `defaultValue`, `i18n`. `defaultValue` takes priority over `emptyValue`.
 
+When both `defaultValue` and `emptyValue` are set, empty input always returns `defaultValue` at runtime and `emptyValue` has no effect, but the output type is still `boolean | EmptyValue` (e.g. `boolean(false, { defaultValue: false, emptyValue: undefined })` is typed `boolean | undefined`). If you want "send the default when left blank", set only `defaultValue`.
+
 #### `oneOf(required?, options)`
 
 Validates that a value is one of an allowed list of strings or numbers. Numeric strings are matched against numeric values (e.g. `'1'` → `1`).
@@ -250,9 +254,16 @@ const directPlan = oneOf(true, { values: ['basic', 'pro'], directIssue: true })
 directPlan.safeParse('gold').error?.issues[0].message // "Must be one of: basic, pro"
 ```
 
-Other options: `defaultValue`, `transform`, `i18n`. `directIssue` defaults to `false`; it only changes non-empty invalid values (empty values still yield the required message or `null`/`defaultValue`).
+Other options: `defaultValue`, `transform`, `i18n`, `whitespaceAsEmpty`. `directIssue` defaults to `false`; it only changes non-empty invalid values (empty values still yield the required message or `null`/`defaultValue`).
 
-Empty values are `''`, `null`, `undefined` and a missing `z.object` key. Blank strings are never coerced to numbers, so a whitespace-only string (e.g. `' '`) is invalid unless it is itself one of the `values`. `caseSensitive: false` only affects string options — numbers are matched as-is.
+Empty values are `''`, `null`, `undefined` and a missing `z.object` key. Blank strings are never coerced to numbers, so by default a whitespace-only string (e.g. `' '`) is invalid unless it is itself one of the `values`. `caseSensitive: false` only affects string options — numbers are matched as-is.
+
+`whitespaceAsEmpty` (default `false`, same meaning as on `number`/`text`) treats strings that are empty after trimming as empty: required fields fail with the required message, optional fields return `null`/`defaultValue`, with or without `directIssue`. The check runs before matching `values`, so with it enabled whitespace-only input is empty even if `values` contains `' '`.
+
+```typescript
+const channel = oneOf(true, { values: ['b2b', 'b2c'], directIssue: true, whitespaceAsEmpty: true })
+channel.safeParse('  ').error?.issues[0].message // "Required"
+```
 
 #### `datetime(required?, options?)`
 
