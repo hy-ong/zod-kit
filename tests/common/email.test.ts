@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { email, setLocale } from "../../src"
+import { z } from "zod"
+import { email, Locale, setLocale } from "../../src"
+import enUS from "../../src/i18n/locales/en-US.json"
+import zhTW from "../../src/i18n/locales/zh-TW.json"
 
 describe("email(true) features", () => {
   beforeEach(() => setLocale("en-US"))
@@ -241,5 +244,55 @@ describe("email(true) features", () => {
       expect(schema.parse("USER+tag@MAIL.COMPANY.COM")).toBe("user@mail.company.com")
       expect(schema.parse("TEST+alias@COMPANY.COM")).toBe("test@company.com")
     })
+  })
+})
+
+describe.each([
+  { locale: "en-US", messages: enUS.common.email },
+  { locale: "zh-TW", messages: zhTW.common.email },
+])("email() invalid format reports only the localized message: $locale", ({ locale, messages }) => {
+  beforeEach(() => setLocale(locale as Locale))
+
+  const invalidInputs = ["not-an-email", "a@b", "a@b.", "@b.com", "a b@c.com", "a@@b.com", "a@b..com", "abc", 123, true]
+
+  it.each(invalidInputs)("should report a single localized issue for %j (required and optional)", (input) => {
+    for (const required of [true, false]) {
+      const result = email(required).safeParse(input)
+      expect(result.success).toBe(false)
+      expect(result.error!.issues).toHaveLength(1)
+      expect(result.error!.issues[0].message).toBe(messages.invalid)
+    }
+  })
+
+  it("should keep the built-in format issue code with the localized message", () => {
+    const issue = email(true).safeParse("not-an-email").error!.issues[0]
+    expect(issue.code).toBe("invalid_format")
+    expect((issue as { format?: string }).format).toBe("email")
+  })
+
+  it("should put the localized format issue first, followed by other failed checks", () => {
+    const result = email(true, { minLength: 30 }).safeParse("not-an-email")
+    expect(result.error!.issues.map((i) => i.message)).toEqual([messages.invalid, messages.minLength.replace("${minLength}", "30")])
+  })
+
+  it("should not report Zod's default email message", () => {
+    const zodDefault = z.string().email().safeParse("x").error!.issues[0].message
+    const result = email(true, { domain: "example.com", businessOnly: true, noDisposable: true }).safeParse("not-an-email")
+    expect(result.error!.issues.map((i) => i.message)).not.toContain(zodDefault)
+    expect(result.error!.issues[0].message).toBe(messages.invalid)
+  })
+
+  it("should use the custom i18n invalid message for the format issue", () => {
+    const schema = email(true, { i18n: { "en-US": { invalid: "Bad email" }, "zh-TW": { invalid: "信箱錯誤" } } })
+    const result = schema.safeParse("not-an-email")
+    expect(result.error!.issues).toHaveLength(1)
+    expect(result.error!.issues[0].message).toBe(locale === "en-US" ? "Bad email" : "信箱錯誤")
+  })
+
+  it("should keep valid emails and the JSON Schema unchanged", () => {
+    expect(email(true).parse(" User@Example.COM ")).toBe("user@example.com")
+    expect(email(false).parse("")).toBeNull()
+    const jsonSchema = z.toJSONSchema(email(false), { io: "input" }) as { anyOf: Array<{ format?: string }> }
+    expect(jsonSchema.anyOf[0].format).toBe("email")
   })
 })

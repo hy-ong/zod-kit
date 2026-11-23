@@ -206,7 +206,8 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
 
       return processed
     },
-    z.union([z.string().email(), z.null()])
+    // Localize the built-in format issue; its code/format/pattern (and the JSON Schema) stay the same
+    z.union([z.string().email({ error: () => getMessage("invalid") }), z.null()])
   )
 
   const schema = baseSchema.superRefine((val, ctx) => {
@@ -270,13 +271,8 @@ export function email<IsRequired extends boolean = false>(required?: IsRequired,
 
     // Extract domain from email
     const emailDomain = val.split("@")[1]?.toLowerCase()
-    if (!emailDomain) {
-      ctx.addIssue({
-        code: "custom",
-        message: getMessage("invalid"),
-      })
-      return
-    }
+    // No domain means the built-in format check above already failed and reported the "invalid" message
+    if (!emailDomain) return
 
     // Business email check (should come before domain validation)
     if (businessOnly) {
